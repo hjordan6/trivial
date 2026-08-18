@@ -245,10 +245,25 @@ Answer matching is a pure function with no database access, so it can be
 exhaustively table-tested.
 
 Normalization: lowercase; strip diacritics; strip punctuation; collapse
-whitespace; drop leading articles (`the`, `a`, `an`). The input is compared
-against the question's normalized aliases, first exactly, then with a
-Levenshtein tolerance that scales with length (distance ≤1 up to 8 characters,
-≤2 beyond).
+whitespace; drop leading articles (`the`, `a`, `an`), but never when the article
+is the entire answer. The input is compared against the question's normalized
+aliases, first exactly, then with a Damerau-Levenshtein tolerance — the
+transposition-aware variant, because swapped letters are the most common typing
+error and plain Levenshtein scores them as two edits.
+
+The tolerance is deliberately asymmetric:
+
+| Normalized alias | Allowed distance |
+|------------------|------------------|
+| Contains any digit | 0 — exact only |
+| 1–4 characters | 0 — exact only |
+| 5–8 characters | 1 |
+| 9+ characters | 2 |
+
+Numeric answers get no tolerance at all: `1945` and `1946` are one edit apart,
+and a date question that accepts the wrong year is worse than one that rejects a
+typo. Short answers are excluded for the same reason — at four characters,
+one edit reaches too many other valid words.
 
 Every near-miss — inside a slightly wider distance than the accept threshold —
 is logged with the question id and the submitted text. That log is the raw
