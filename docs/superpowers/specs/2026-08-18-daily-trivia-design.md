@@ -23,7 +23,7 @@ Play is anonymous, identified by a cookie. Accounts come last.
 - Sharing is one tap and produces text that pastes cleanly into any messenger.
 - The question library supports imported, hand-written, and AI-generated
   content without schema changes.
-- Questions may repeat, but not within a long cooldown window.
+- A question is never re-served within six months of its last use.
 
 ### Non-goals
 
@@ -260,35 +260,37 @@ complaint this design will reliably generate: "I typed the right answer."
 `GenerateFor(date)` is deterministic and idempotent. It seeds an RNG from the
 date, so regenerating a day produces the same puzzle.
 
-1. Select three active topics outside the topic cooldown (default 7 days),
-   preferring least-recently-used, with the seeded RNG breaking ties.
-2. For each topic and each difficulty, select one eligible question outside
-   the question cooldown (default 90 days) by the same rule.
-3. Insert the puzzle and its nine rows in one transaction.
+1. Shuffle the active topics with the seeded RNG.
+2. Walk the shuffled list, and for each candidate topic try to select one
+   eligible question at each of the three difficulties, excluding any question
+   used within the **question cooldown** (default 180 days). A topic that can
+   fill all three difficulties is accepted; a topic that cannot is skipped.
+3. Stop at three accepted topics and insert the puzzle and its nine rows in one
+   transaction.
 
-If a pool cannot satisfy a cooldown, the window is relaxed in steps and a
-warning is emitted naming the topic and difficulty. Running out of hard
-questions in a topic is the natural failure mode of a thin library; it should
-be visible in logs and metrics before it is visible to players.
+There is no topic cooldown — topics are chosen at random each day and may
+repeat freely. This makes the question cooldown a **hard constraint**: it is
+never relaxed. Since topic choice is free, an exhausted pool is absorbed by
+skipping to a different topic rather than by re-serving a recent question.
 
-### What the cooldowns demand of the library
+Generation fails, loudly and without writing a partial puzzle, only when fewer
+than three topics in the entire library can field an uncooled question at all
+three difficulties. Because days are generated well ahead of time (§ CLI), that
+failure surfaces as a cron alert weeks before any player could be affected.
+Each skipped topic is logged with the difficulty that starved it, which is the
+signal that the library needs content in a specific place.
 
-Both cooldowns are configuration, not constants, because their defaults imply a
-library far larger than a starting seed set.
+### What the cooldown demands of the library
 
-With `T` active topics and three chosen per day, a seven-day topic cooldown
-requires at least `3 × 7 + 3 = 24` active topics before the generator can honour
-it. Each topic then appears on roughly `3/T` of days — about `270/T` times
-inside a 90-day question cooldown — so each topic needs that many questions *at
-each difficulty*. At `T = 24` that is 12 questions per topic per difficulty, or
-roughly 860 questions in total to run indefinitely without ever relaxing a
-cooldown.
+The arithmetic is direct: nine distinct questions a day with no repeat inside
+180 days means **1,620 eligible questions** — 540 at each difficulty — to run
+indefinitely. Random topic selection adds variance on top of that, so a
+comfortable library carries headroom above the floor and spreads it evenly
+across topics, since a topic starved at one difficulty is simply never chosen.
 
-That is the steady-state target, not the launch requirement. Development and
-early production run with shorter cooldowns (`TOPIC_COOLDOWN_DAYS`,
-`QUESTION_COOLDOWN_DAYS`) and lengthen them as the library grows. The relax path
-in the generator is what makes a small library merely repetitive rather than
-broken.
+That is the steady-state target, not the launch requirement.
+`QUESTION_COOLDOWN_DAYS` is configuration: development and early production run
+it short, and lengthen it toward 180 as the library fills out.
 
 Exposed as a CLI so days can be pre-generated and hand-edited:
 
@@ -368,10 +370,11 @@ limiting by IP. Wordle has the same hole; policing it costs more than it
 returns, and any real fix requires the accounts that are deliberately last in
 the plan. Revisit only if shared scores stop looking plausible.
 
-**Content exhaustion.** With three topics a day and a 90-day question cooldown,
-the library must be deep enough per topic and difficulty or the generator will
-start relaxing cooldowns. Surfaced as warnings and a metric rather than
-prevented.
+**Content exhaustion.** The 180-day question cooldown is never relaxed, so a
+library too thin to satisfy it stops producing puzzles rather than repeating
+questions. Pre-generating a month ahead converts this from an outage into an
+alert with weeks of lead time, but it does mean content supply is a hard
+operational dependency, not a soft one.
 
 **135 seconds may be too short.** Nine questions with a two-stage answer flow
 inside 135 seconds is unproven. The value is per-day configuration precisely so
@@ -382,7 +385,7 @@ it can be tuned once real completion rates exist.
 | # | Phase | Delivers |
 |---|-------|----------|
 | 0 | Scaffold | Go module, Vue + Vite app, docker-compose Postgres, migration tooling, Makefile, CI |
-| 1 | Schema and seed content | Migrations, eligibility constraints, hand-written seed set (~6 topics × 3 difficulties × 3 questions) with dev cooldowns set short enough to generate a month |
+| 1 | Schema and seed content | Migrations, eligibility constraints, hand-written seed set (~6 topics × 3 difficulties × 3 questions) with a short dev cooldown |
 | 2 | Puzzle generator | Cooldown selection, determinism, CLI, fully tested — no HTTP |
 | 3 | Grading engine | Normalizer and alias matching, pure and heavily tested — no HTTP |
 | 4 | Run API | Cookie identity, start/resume, reveal options, answer, expiry sweep, finish |
