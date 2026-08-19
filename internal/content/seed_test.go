@@ -62,9 +62,29 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			wantErr: "distractor",
 		},
 		{
+			name:    "distractor duplicates an alias",
+			mutate:  func(s string) string { return strings.Replace(s, `"Marseille"`, `"Paris, France"`, 1) },
+			wantErr: "distractor",
+		},
+		{
+			name: "duplicate distractor collapses below five distinct",
+			mutate: func(s string) string {
+				// Two raw entries, "Toulouse" replaced with a repeat of
+				// "Lyon", so the file still lists 5 distractors but only 4
+				// are distinct after normalization.
+				return strings.Replace(s, `"Nice", "Toulouse"`, `"Nice", "Lyon"`, 1)
+			},
+			wantErr: "at least 5 distractors",
+		},
+		{
 			name:    "empty prompt",
 			mutate:  func(s string) string { return strings.Replace(s, `"What is the capital of France?"`, `""`, 1) },
 			wantErr: "prompt",
+		},
+		{
+			name:    "empty answer",
+			mutate:  func(s string) string { return strings.Replace(s, `"answer": "Paris"`, `"answer": ""`, 1) },
+			wantErr: "answer",
 		},
 		{
 			name:    "missing external id",
@@ -75,6 +95,23 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			name: "duplicate external id",
 			mutate: func(s string) string {
 				return strings.Replace(s, `"questions": [`, `"questions": [`+duplicateQuestion+`,`, 1)
+			},
+			wantErr: "duplicate",
+		},
+		{
+			name:    "empty topic slug",
+			mutate:  func(s string) string { return strings.Replace(s, `"slug": "geography"`, `"slug": ""`, 1) },
+			wantErr: "slug",
+		},
+		{
+			name:    "empty topic name",
+			mutate:  func(s string) string { return strings.Replace(s, `"name": "World Geography"`, `"name": ""`, 1) },
+			wantErr: "name",
+		},
+		{
+			name: "duplicate topic slug",
+			mutate: func(s string) string {
+				return strings.Replace(s, `"topics": [`, `"topics": [`+duplicateTopic+`,`, 1)
 			},
 			wantErr: "duplicate",
 		},
@@ -104,6 +141,12 @@ const duplicateQuestion = `{
   "answer": "Paris",
   "aliases": [],
   "distractors": ["a", "b", "c", "d", "e"]
+}`
+
+const duplicateTopic = `{
+  "slug": "geography",
+  "name": "Geography Two",
+  "questions": []
 }`
 
 func contains(haystack []string, needle string) bool {

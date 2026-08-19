@@ -1,6 +1,7 @@
 package grading
 
 import (
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -61,11 +62,22 @@ func Grade(input string, normalizedAliases []string) Result {
 // apart, and accepting the wrong year is a worse failure than rejecting a
 // typo. Very short answers are excluded for the same reason — at four
 // characters, one edit reaches too many other valid words.
+//
+// The same reasoning applies to Roman numerals: "Henry VIII" and "Henry
+// VII", or "Nicholas II" and "Nicholas I", are one edit apart but name
+// different people, so a trailing numeral token also gets no tolerance. The
+// check only looks at the alias's final whitespace-separated token, and only
+// when the alias has more than one token, so a bare one-word answer that
+// happens to be spelled from the letters i, v, x, l, c, d, m — "mix",
+// "civil" — is unaffected and keeps its length-based tolerance.
 func toleranceFor(alias string) int {
 	for _, r := range alias {
 		if unicode.IsDigit(r) {
 			return 0
 		}
+	}
+	if tokens := strings.Fields(alias); len(tokens) > 1 && isRomanNumeralToken(tokens[len(tokens)-1]) {
+		return 0
 	}
 	switch n := utf8.RuneCountInString(alias); {
 	case n <= 4:
@@ -75,4 +87,24 @@ func toleranceFor(alias string) int {
 	default:
 		return 2
 	}
+}
+
+// isRomanNumeralToken reports whether token consists entirely of the letters
+// used in Roman numerals. It does not validate that the letters form a
+// well-formed numeral (e.g. "vix" would pass) — toleranceFor only calls it on
+// a trailing token of a multi-word alias, where a false positive merely
+// tightens tolerance rather than loosening it, so an overly permissive match
+// is the safe direction to err in.
+func isRomanNumeralToken(token string) bool {
+	if token == "" {
+		return false
+	}
+	for _, r := range token {
+		switch r {
+		case 'i', 'v', 'x', 'l', 'c', 'd', 'm':
+		default:
+			return false
+		}
+	}
+	return true
 }

@@ -16,6 +16,11 @@ func TestToleranceFor(t *testing.T) {
 		{"jupiter", 1},
 		{"washington", 2},
 		{"mississippi", 2},
+		{"henry viii", 0},
+		{"nicholas ii", 0},
+		{"louis xiv", 0},
+		{"world war ii", 0},
+		{"george washington", 2},
 	}
 	for _, tt := range tests {
 		if got := toleranceFor(tt.alias); got != tt.want {
@@ -45,6 +50,7 @@ func TestGrade(t *testing.T) {
 		{"rejects empty input", "", []string{"paris"}, false, false},
 		{"rejects punctuation-only input", "???", []string{"paris"}, false, false},
 		{"rejects a wrong number in a long phrase", "world war 3", []string{"world war 2"}, false, true},
+		{"rejects a different king with the same trailing numeral length", "Henry VII", []string{"henry viii"}, false, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

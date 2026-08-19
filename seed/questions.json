@@ -25,7 +25,7 @@
           "difficulty": "easy",
           "prompt": "What is the tallest mountain in the world, measured from sea level to peak?",
           "answer": "Everest",
-          "aliases": ["Mount Everest"],
+          "aliases": ["Mount Everest", "Mt Everest"],
           "distractors": ["K2", "Kangchenjunga", "Lhotse", "Makalu", "Annapurna"]
         },
         {
@@ -57,7 +57,7 @@
           "difficulty": "hard",
           "prompt": "Which sea in the North Atlantic Ocean is the only sea in the world with no land boundary, bounded instead by ocean currents?",
           "answer": "Sargasso Sea",
-          "aliases": [],
+          "aliases": ["Sargasso"],
           "distractors": ["Coral Sea", "Tasman Sea", "Weddell Sea", "Bering Sea", "Timor Sea"]
         },
         {
@@ -102,8 +102,8 @@
           "external_id": "science-and-nature-easy-3",
           "difficulty": "easy",
           "prompt": "What is the organelle often called the 'powerhouse of the cell'?",
-          "answer": "Mitochondria",
-          "aliases": ["Mitochondrion"],
+          "answer": "Mitochondrion",
+          "aliases": ["Mitochondria"],
           "distractors": ["Ribosome", "Nucleus", "Golgi apparatus", "Chloroplast", "Lysosome"]
         },
         {
@@ -125,34 +125,34 @@
         {
           "external_id": "science-and-nature-medium-3",
           "difficulty": "medium",
-          "prompt": "Which blood type is known as the 'universal donor' for red blood cell transfusions?",
-          "answer": "O negative",
-          "aliases": ["O-"],
-          "distractors": ["A positive", "B negative", "AB positive", "O positive", "A negative"]
+          "prompt": "What is the pH value of a neutral solution, such as pure water, on the standard 0-14 pH scale?",
+          "answer": "7",
+          "aliases": [],
+          "distractors": ["6", "8", "5", "9", "4"]
         },
         {
           "external_id": "science-and-nature-hard-1",
           "difficulty": "hard",
-          "prompt": "What is the term for the process by which plants lose water vapor through pores in their leaves?",
-          "answer": "Transpiration",
+          "prompt": "What term describes atoms of the same element that have the same number of protons but different numbers of neutrons?",
+          "answer": "Isotopes",
           "aliases": [],
-          "distractors": ["Respiration", "Photosynthesis", "Germination", "Osmosis", "Evaporation"]
+          "distractors": ["Isomers", "Isobars", "Allotropes", "Ions", "Nuclides"]
         },
         {
           "external_id": "science-and-nature-hard-2",
           "difficulty": "hard",
-          "prompt": "Which is the only mammal capable of true, sustained flight?",
-          "answer": "Bat",
-          "aliases": [],
-          "distractors": ["Flying squirrel", "Sugar glider", "Colugo", "Scaly-tailed squirrel", "Feathertail glider"]
+          "prompt": "Rodents are the most species-rich order of mammals. Which order is the second most diverse, making up roughly a fifth of all mammal species?",
+          "answer": "Bats",
+          "aliases": ["Bat"],
+          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Marsupials", "Whales"]
         },
         {
           "external_id": "science-and-nature-hard-3",
           "difficulty": "hard",
-          "prompt": "What is the general term for a substance that speeds up a chemical reaction without itself being consumed?",
-          "answer": "Catalyst",
+          "prompt": "What term describes the minimum energy input needed to start a chemical reaction?",
+          "answer": "Activation energy",
           "aliases": [],
-          "distractors": ["Reagent", "Solvent", "Reactant", "Precipitate", "Buffer"]
+          "distractors": ["Bond energy", "Ionization energy", "Free energy", "Lattice energy", "Kinetic energy"]
         }
       ]
     },
@@ -165,13 +165,13 @@
           "difficulty": "easy",
           "prompt": "Who directed the 1975 film Jaws?",
           "answer": "Steven Spielberg",
-          "aliases": [],
+          "aliases": ["Spielberg"],
           "distractors": ["George Lucas", "Martin Scorsese", "Francis Ford Coppola", "James Cameron", "Ridley Scott"]
         },
         {
           "external_id": "film-and-television-easy-2",
           "difficulty": "easy",
-          "prompt": "What is the name of the boy wizard in the book series written by J.K. Rowling?",
+          "prompt": "What is the name of the boy wizard in the film series based on the novels of J.K. Rowling?",
           "answer": "Harry Potter",
           "aliases": [],
           "distractors": ["Ron Weasley", "Neville Longbottom", "Draco Malfoy", "Seamus Finnigan", "Dean Thomas"]
@@ -189,13 +189,13 @@
           "difficulty": "medium",
           "prompt": "Which actor played Captain Jack Sparrow in the Pirates of the Caribbean films?",
           "answer": "Johnny Depp",
-          "aliases": [],
+          "aliases": ["Depp"],
           "distractors": ["Orlando Bloom", "Geoffrey Rush", "Javier Bardem", "Bill Nighy", "Chow Yun-fat"]
         },
         {
           "external_id": "film-and-television-medium-2",
           "difficulty": "medium",
-          "prompt": "Which 1994 film features the line 'Life is like a box of chocolates'?",
+          "prompt": "Which 1994 film features the line about life being like a box of chocolates?",
           "answer": "Forrest Gump",
           "aliases": [],
           "distractors": ["Pulp Fiction", "The Shawshank Redemption", "Dumb and Dumber", "Speed", "True Lies"]
@@ -213,23 +213,23 @@
           "difficulty": "hard",
           "prompt": "Which actor won the Academy Award for Best Actor for playing Ray Charles in the 2004 film Ray?",
           "answer": "Jamie Foxx",
-          "aliases": [],
+          "aliases": ["Foxx"],
           "distractors": ["Denzel Washington", "Forest Whitaker", "Don Cheadle", "Terrence Howard", "Will Smith"]
         },
         {
           "external_id": "film-and-television-hard-2",
           "difficulty": "hard",
-          "prompt": "In the original 1977 Star Wars film, what is the name of Luke Skywalker's home planet?",
-          "answer": "Tatooine",
+          "prompt": "Which 1927 film became the first ever winner of the Academy Award for Best Picture?",
+          "answer": "Wings",
           "aliases": [],
-          "distractors": ["Alderaan", "Naboo", "Hoth", "Dagobah", "Endor"]
+          "distractors": ["Sunrise", "The Broadway Melody", "All Quiet on the Western Front", "The Big Parade", "Metropolis"]
         },
         {
           "external_id": "film-and-television-hard-3",
           "difficulty": "hard",
-          "prompt": "Which composer wrote the film scores for both Jaws and Star Wars?",
+          "prompt": "Which prolific film composer also wrote 'The Mission', the fanfare theme used for NBC Nightly News, and the official theme for the 1984 Los Angeles Olympics?",
           "answer": "John Williams",
-          "aliases": [],
+          "aliases": ["Williams"],
           "distractors": ["Hans Zimmer", "John Barry", "Jerry Goldsmith", "Danny Elfman", "Alan Silvestri"]
         }
       ]
@@ -251,7 +251,7 @@
           "difficulty": "easy",
           "prompt": "Who was the first President of the United States?",
           "answer": "George Washington",
-          "aliases": [],
+          "aliases": ["Washington"],
           "distractors": ["John Adams", "Thomas Jefferson", "Benjamin Franklin", "James Madison", "Alexander Hamilton"]
         },
         {
@@ -259,7 +259,7 @@
           "difficulty": "easy",
           "prompt": "Which ancient civilization built the pyramids at Giza?",
           "answer": "Egyptians",
-          "aliases": ["Ancient Egyptians"],
+          "aliases": ["Ancient Egyptians", "Egypt", "Ancient Egypt"],
           "distractors": ["Mayans", "Romans", "Greeks", "Babylonians", "Aztecs"]
         },
         {
@@ -267,7 +267,7 @@
           "difficulty": "medium",
           "prompt": "Which French military leader and emperor was exiled to the island of Elba in 1814?",
           "answer": "Napoleon",
-          "aliases": ["Bonaparte"],
+          "aliases": ["Bonaparte", "Napoleon Bonaparte"],
           "distractors": ["Robespierre", "Louis XVI", "Charles de Gaulle", "Talleyrand", "Murat"]
         },
         {
@@ -297,10 +297,10 @@
         {
           "external_id": "history-hard-2",
           "difficulty": "hard",
-          "prompt": "Who was the last Tsar of Russia?",
+          "prompt": "Which Russian Tsar issued the October Manifesto of 1905, establishing the country's first elected legislative body, the State Duma?",
           "answer": "Nicholas II",
-          "aliases": [],
-          "distractors": ["Alexander III", "Alexander II", "Nicholas I", "Peter the Great", "Ivan the Terrible"]
+          "aliases": ["Tsar Nicholas II"],
+          "distractors": ["Alexander II", "Alexander III", "Peter the Great", "Catherine the Great", "Nicholas I"]
         },
         {
           "external_id": "history-hard-3",
@@ -321,7 +321,7 @@
           "difficulty": "easy",
           "prompt": "Which pop icon is known as the 'King of Pop'?",
           "answer": "Michael Jackson",
-          "aliases": ["MJ"],
+          "aliases": ["MJ", "Jackson"],
           "distractors": ["Elvis Presley", "Prince", "James Brown", "Justin Timberlake", "Usher"]
         },
         {
@@ -354,12 +354,12 @@
           "prompt": "The clarinet belongs to which family of musical instruments?",
           "answer": "Woodwind",
           "aliases": ["Woodwinds"],
-          "distractors": ["Brass", "Percussion", "Strings", "Keyboard", "Electronic"]
+          "distractors": ["Brass", "Percussion", "Strings", "Keyboard", "Free reed"]
         },
         {
           "external_id": "music-medium-3",
           "difficulty": "medium",
-          "prompt": "Which Queen song, the closing track on their 1975 album A Night at the Opera, is famous for its operatic middle section?",
+          "prompt": "Which Queen song, the penultimate track on their 1975 album A Night at the Opera, is famous for its operatic middle section?",
           "answer": "Bohemian Rhapsody",
           "aliases": [],
           "distractors": ["Radio Ga Ga", "Don't Stop Me Now", "We Will Rock You", "Somebody to Love", "Killer Queen"]
@@ -383,10 +383,10 @@
         {
           "external_id": "music-hard-3",
           "difficulty": "hard",
-          "prompt": "Which Baroque composer wrote the violin concertos known as The Four Seasons?",
-          "answer": "Vivaldi",
-          "aliases": ["Antonio Vivaldi"],
-          "distractors": ["Bach", "Handel", "Corelli", "Telemann", "Scarlatti"]
+          "prompt": "Which composer wrote the opera Nabucco, whose chorus 'Va, pensiero' became an anthem of Italian national sentiment?",
+          "answer": "Verdi",
+          "aliases": ["Giuseppe Verdi"],
+          "distractors": ["Puccini", "Bellini", "Donizetti", "Mascagni", "Leoncavallo"]
         }
       ]
     },
@@ -421,18 +421,18 @@
         {
           "external_id": "sport-medium-1",
           "difficulty": "medium",
-          "prompt": "How many interlocking rings appear on the Olympic flag?",
-          "answer": "Five",
-          "aliases": ["5"],
-          "distractors": ["Four", "Six", "Seven", "Three", "Eight"]
+          "prompt": "How many players does each side have on the field in a standard game of rugby union?",
+          "answer": "Fifteen",
+          "aliases": ["15"],
+          "distractors": ["Thirteen", "Twelve", "Fourteen", "Eleven", "Sixteen"]
         },
         {
           "external_id": "sport-medium-2",
           "difficulty": "medium",
-          "prompt": "In tennis, what is the term for a score of zero?",
-          "answer": "Love",
+          "prompt": "In baseball, what is the term for a game in which a pitcher retires every batter faced, with no opponent ever reaching base?",
+          "answer": "Perfect game",
           "aliases": [],
-          "distractors": ["Deuce", "Ace", "Fault", "Let", "Advantage"]
+          "distractors": ["No-hitter", "Shutout", "Complete game", "Immaculate inning", "Grand slam"]
         },
         {
           "external_id": "sport-medium-3",
@@ -461,10 +461,10 @@
         {
           "external_id": "sport-hard-3",
           "difficulty": "hard",
-          "prompt": "Which horse race held annually at Aintree is the longest National Hunt steeplechase in the world?",
+          "prompt": "Which world-famous steeplechase is held annually at Aintree Racecourse in England?",
           "answer": "Grand National",
           "aliases": [],
-          "distractors": ["Kentucky Derby", "Epsom Derby", "Melbourne Cup", "Prix de l'Arc de Triomphe", "Cheltenham Gold Cup"]
+          "distractors": ["Irish Grand National", "Scottish Grand National", "Velká pardubická", "Prix de l'Arc de Triomphe", "Cheltenham Gold Cup"]
         }
       ]
     }

@@ -88,27 +88,45 @@ func ParseSeed(data []byte) (SeedFile, error) {
 			if q.Answer == "" {
 				return SeedFile{}, fmt.Errorf("%s: answer is required", where)
 			}
-			if len(q.Distractors) < 5 {
-				return SeedFile{}, fmt.Errorf("%s: has %d distractors, want at least 5 distractors", where, len(q.Distractors))
+
+			// accepted collects the normalized form of every answer a grader
+			// would mark correct: the canonical answer plus every alias. A
+			// distractor is only a real wrong option if it normalizes to
+			// something outside this set — matching an alias would put two
+			// correct options on the board just as surely as matching the
+			// canonical answer would.
+			answerKey := grading.Normalize(q.Answer)
+			accepted := map[string]bool{answerKey: true}
+			hasAnswerAlias := false
+			for _, a := range q.Aliases {
+				ak := grading.Normalize(a)
+				accepted[ak] = true
+				if ak == answerKey {
+					hasAnswerAlias = true
+				}
 			}
 
-			answerKey := grading.Normalize(q.Answer)
+			// Distractors are counted by normalized form, not raw count: a
+			// duplicate distractor (same text, or merely the same after
+			// normalization) collapses to one row in ReplaceDistractors, so
+			// counting raw entries would let a file with fewer than five
+			// real options pass validation and then silently fall short of
+			// EligibleQuestions' >= 5 requirement with no error anywhere.
+			distractorKeys := map[string]bool{}
 			for _, d := range q.Distractors {
-				if grading.Normalize(d) == answerKey {
-					return SeedFile{}, fmt.Errorf("%s: distractor %q is the correct answer", where, d)
+				dk := grading.Normalize(d)
+				if accepted[dk] {
+					return SeedFile{}, fmt.Errorf("%s: distractor %q matches an accepted answer", where, d)
 				}
+				distractorKeys[dk] = true
+			}
+			if len(distractorKeys) < 5 {
+				return SeedFile{}, fmt.Errorf("%s: has %d distinct distractors, want at least 5 distractors", where, len(distractorKeys))
 			}
 
 			// The canonical answer is always accepted, whether or not it was
 			// listed among the aliases.
-			hasAnswer := false
-			for _, a := range q.Aliases {
-				if grading.Normalize(a) == answerKey {
-					hasAnswer = true
-					break
-				}
-			}
-			if !hasAnswer {
+			if !hasAnswerAlias {
 				q.Aliases = append([]string{q.Answer}, q.Aliases...)
 			}
 		}
@@ -118,6 +136,11 @@ func ParseSeed(data []byte) (SeedFile, error) {
 
 // ApplySeed writes a parsed seed file to the database, upserting by
 // (source, external_id) so it can be run repeatedly.
+//
+// ApplySeed is not internally atomic: it issues one statement per topic and
+// per question/alias/distractor write, with no transaction of its own. A
+// failure partway through leaves earlier writes in place. Callers that need
+// all-or-nothing behavior must pass a q that is itself a transaction.
 func ApplySeed(ctx context.Context, q db.DBTX, seed SeedFile) (SeedStats, error) {
 	var stats SeedStats
 
