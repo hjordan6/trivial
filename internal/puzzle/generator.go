@@ -58,6 +58,17 @@ func (e *InsufficientContentError) Error() string {
 // unchanged. It is deterministic: the same date and the same library always
 // produce the same board, because the shuffle and every pick come from an RNG
 // seeded off the date.
+//
+// GenerateFor does not open a transaction of its own: it issues every read
+// and write through g.DB exactly as given, and db.DBTX is satisfied by both
+// pgx.Tx and *pgxpool.Pool. Callers MUST pass a transaction, not a pool. If
+// g.DB is a pool and a failure happens partway through Insert, the
+// daily_puzzles row plus whatever entries already landed commit durably as a
+// short, incomplete board. A later call for the same date then finds that
+// short board via Get, treats it as already generated, and returns it
+// unchanged — the day is permanently broken and no retry will repair it.
+// Passing a transaction lets the caller roll the whole attempt back on any
+// error, which is the only way GenerateFor's idempotency guarantee holds.
 func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, error) {
 	existing, err := Get(ctx, g.DB, date)
 	if err != nil {

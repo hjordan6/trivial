@@ -87,7 +87,12 @@ func TestGenerateForDifferentDatesDiffer(t *testing.T) {
 	tx := testsupport.Tx(t, testsupport.MustPool(t))
 	ctx := context.Background()
 
-	for _, slug := range []string{"alpha", "beta", "gamma", "delta", "epsilon", "zeta"} {
+	// Seed exactly three topics — a board uses exactly three (topicsPerDay) —
+	// so both dates are forced to draw from the same pool. With more topics
+	// than a board needs, the date-seeded shuffle can hand the two days
+	// disjoint topic sets, and the zero-overlap assertion below would pass
+	// on topic selection alone without the cooldown ever being exercised.
+	for _, slug := range []string{"alpha", "beta", "gamma"} {
 		seedTopic(t, tx, slug)
 	}
 	g := puzzle.Generator{DB: tx, CooldownDays: 180, TimeLimitSeconds: 135}
