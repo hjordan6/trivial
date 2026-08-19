@@ -1,0 +1,4 @@
+/trivial
+/web/node_modules
+/web/dist
+.env
