@@ -127,24 +127,24 @@
           "difficulty": "medium",
           "prompt": "What is the pH value of a neutral solution, such as pure water, on the standard 0-14 pH scale?",
           "answer": "7",
-          "aliases": [],
+          "aliases": ["Seven"],
           "distractors": ["6", "8", "5", "9", "4"]
         },
         {
           "external_id": "science-and-nature-hard-1",
           "difficulty": "hard",
-          "prompt": "What term describes atoms of the same element that have the same number of protons but different numbers of neutrons?",
-          "answer": "Isotopes",
+          "prompt": "What is the freezing point of pure water in Kelvin, to the nearest whole degree?",
+          "answer": "273",
           "aliases": [],
-          "distractors": ["Isomers", "Isobars", "Allotropes", "Ions", "Nuclides"]
+          "distractors": ["373", "300", "0", "274", "272"]
         },
         {
           "external_id": "science-and-nature-hard-2",
           "difficulty": "hard",
           "prompt": "Rodents are the most species-rich order of mammals. Which order is the second most diverse, making up roughly a fifth of all mammal species?",
           "answer": "Bats",
-          "aliases": ["Bat"],
-          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Marsupials", "Whales"]
+          "aliases": ["Bat", "Chiroptera"],
+          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Lagomorpha", "Eulipotyphla"]
         },
         {
           "external_id": "science-and-nature-hard-3",
@@ -222,12 +222,12 @@
           "prompt": "Which 1927 film became the first ever winner of the Academy Award for Best Picture?",
           "answer": "Wings",
           "aliases": [],
-          "distractors": ["Sunrise", "The Broadway Melody", "All Quiet on the Western Front", "The Big Parade", "Metropolis"]
+          "distractors": ["The Passion of Joan of Arc", "The Broadway Melody", "All Quiet on the Western Front", "The Big Parade", "Metropolis"]
         },
         {
           "external_id": "film-and-television-hard-3",
           "difficulty": "hard",
-          "prompt": "Which prolific film composer also wrote 'The Mission', the fanfare theme used for NBC Nightly News, and the official theme for the 1984 Los Angeles Olympics?",
+          "prompt": "Which prolific film composer also wrote the NBC Nightly News theme 'The Mission' and the official theme for the 1984 Los Angeles Olympics?",
           "answer": "John Williams",
           "aliases": ["Williams"],
           "distractors": ["Hans Zimmer", "John Barry", "Jerry Goldsmith", "Danny Elfman", "Alan Silvestri"]
@@ -299,7 +299,7 @@
           "difficulty": "hard",
           "prompt": "Which Russian Tsar issued the October Manifesto of 1905, establishing the country's first elected legislative body, the State Duma?",
           "answer": "Nicholas II",
-          "aliases": ["Tsar Nicholas II"],
+          "aliases": ["Tsar Nicholas II", "Czar Nicholas II"],
           "distractors": ["Alexander II", "Alexander III", "Peter the Great", "Catherine the Great", "Nicholas I"]
         },
         {
