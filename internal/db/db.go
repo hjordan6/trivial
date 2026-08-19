@@ -5,6 +5,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -48,11 +49,31 @@ func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
+// minMigrationConns is the fewest pool connections Migrate can safely run
+// with: one connection is pinned for the whole call to hold the advisory
+// lock, and goose needs a second, independent connection from the same pool
+// to run the actual DDL. With only one connection available, the DDL request
+// blocks forever waiting for a connection the lock-holder is never going to
+// release — a silent hang rather than an error. Failing fast here trades that
+// hang for an immediate, actionable error.
+const minMigrationConns = 2
+
+// advisoryUnlockTimeout bounds the deferred pg_advisory_unlock call. The
+// unlock must still run when the caller's context has been canceled, but it
+// must not be allowed to block forever on a wedged connection, so it runs
+// under its own short deadline rather than the caller's (possibly infinite)
+// one.
+const advisoryUnlockTimeout = 5 * time.Second
+
 // Migrate applies or rolls back schema migrations. It takes a Postgres
 // advisory lock first so concurrent callers — several test binaries starting
 // at once, or two application instances booting together — serialize instead
 // of racing goose's version table.
 func Migrate(ctx context.Context, pool *pgxpool.Pool, direction Direction) error {
+	if maxConns := pool.Config().MaxConns; maxConns < minMigrationConns {
+		return fmt.Errorf("migrate: pool allows %d connection(s), need at least %d: one to hold the advisory lock and one for goose's migration DDL", maxConns, minMigrationConns)
+	}
+
 	sqlDB := stdlib.OpenDBFromPool(pool)
 	defer sqlDB.Close()
 
@@ -67,7 +88,9 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool, direction Direction) error
 		return fmt.Errorf("acquire migration lock: %w", err)
 	}
 	defer func() {
-		_, _ = conn.ExecContext(context.WithoutCancel(ctx), "SELECT pg_advisory_unlock($1)", lockID)
+		unlockCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), advisoryUnlockTimeout)
+		defer cancel()
+		_, _ = conn.ExecContext(unlockCtx, "SELECT pg_advisory_unlock($1)", lockID)
 	}()
 
 	goose.SetBaseFS(migrationsFS)
