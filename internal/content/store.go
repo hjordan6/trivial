@@ -70,7 +70,7 @@ func UpsertQuestion(ctx context.Context, q db.DBTX, in QuestionInput) (int64, er
 	err := q.QueryRow(ctx, `
 		INSERT INTO questions
 			(topic_id, difficulty, prompt, canonical_answer, status, source, external_id)
-		VALUES ($1, $2::difficulty, $3, $4, $5::question_status, $6, $7)
+		VALUES ($1, $2::difficulty, $3, $4, $5::question_status, $6, NULLIF($7, ''))
 		ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL
 		DO UPDATE SET
 			topic_id         = EXCLUDED.topic_id,

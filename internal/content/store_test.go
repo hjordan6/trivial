@@ -126,6 +126,76 @@ func TestUpsertQuestionUpdatesByExternalID(t *testing.T) {
 	}
 }
 
+// TestUpsertQuestionTreatsEmptyExternalIDAsDistinct pins that an empty
+// ExternalID is stored as SQL NULL, not empty string, so it never
+// participates in the (source, external_id) uniqueness the partial index
+// enforces. Content with no natural key must insert fresh every time; only
+// content that supplies a real external id gets upsert-by-key behavior.
+func TestUpsertQuestionTreatsEmptyExternalIDAsDistinct(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	topicID, err := content.UpsertTopic(ctx, tx, "geography", "Geography")
+	if err != nil {
+		t.Fatalf("UpsertTopic: %v", err)
+	}
+
+	firstID, err := content.UpsertQuestion(ctx, tx, content.QuestionInput{
+		TopicID: topicID, Difficulty: content.Easy,
+		Prompt: "Capital of France?", CanonicalAnswer: "Paris",
+		Status: "active", Source: "manual", ExternalID: "",
+	})
+	if err != nil {
+		t.Fatalf("first UpsertQuestion: %v", err)
+	}
+	secondID, err := content.UpsertQuestion(ctx, tx, content.QuestionInput{
+		TopicID: topicID, Difficulty: content.Easy,
+		Prompt: "Capital of Japan?", CanonicalAnswer: "Tokyo",
+		Status: "active", Source: "manual", ExternalID: "",
+	})
+	if err != nil {
+		t.Fatalf("second UpsertQuestion: %v", err)
+	}
+	if firstID == secondID {
+		t.Errorf("UpsertQuestion with empty ExternalID returned the same id %d twice, want distinct rows", firstID)
+	}
+
+	var count int
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM questions`).Scan(&count); err != nil {
+		t.Fatalf("count questions: %v", err)
+	}
+	if count != 2 {
+		t.Errorf("question count = %d, want 2", count)
+	}
+
+	// The existing non-empty ExternalID behavior — upsert by (source,
+	// external_id) — must still hold alongside the above.
+	in := content.QuestionInput{
+		TopicID: topicID, Difficulty: content.Easy,
+		Prompt: "Capital of Italy?", CanonicalAnswer: "Rome",
+		Status: "active", Source: "manual", ExternalID: "geo-easy-2",
+	}
+	thirdID, err := content.UpsertQuestion(ctx, tx, in)
+	if err != nil {
+		t.Fatalf("third UpsertQuestion: %v", err)
+	}
+	in.Prompt = "What is the capital of Italy?"
+	fourthID, err := content.UpsertQuestion(ctx, tx, in)
+	if err != nil {
+		t.Fatalf("fourth UpsertQuestion: %v", err)
+	}
+	if thirdID != fourthID {
+		t.Errorf("UpsertQuestion with non-empty ExternalID returned %d then %d, want the same id", thirdID, fourthID)
+	}
+
+	if err := tx.QueryRow(ctx, `SELECT count(*) FROM questions`).Scan(&count); err != nil {
+		t.Fatalf("count questions: %v", err)
+	}
+	if count != 3 {
+		t.Errorf("question count = %d, want 3 (two distinct empty-external-id rows plus one upserted row)", count)
+	}
+}
+
 func TestReplaceAliasesNormalizesAndDeduplicates(t *testing.T) {
 	tx := testsupport.Tx(t, testsupport.MustPool(t))
 	ctx := context.Background()
@@ -257,6 +327,21 @@ func TestEligibleQuestionsFiltersIneligibleContent(t *testing.T) {
 		got, _ := content.EligibleQuestions(ctx, tx, topicID, content.Easy, when, 180)
 		if len(got) != 0 {
 			t.Errorf("got %d eligible questions, want 0", len(got))
+		}
+	})
+
+	t.Run("includes a question used exactly at the future cooldown boundary", func(t *testing.T) {
+		tx := testsupport.Tx(t, pool)
+		topicID, _ := content.UpsertTopic(ctx, tx, "geography", "Geography")
+		id := makeQuestion(t, tx, topicID, content.Easy, "future-boundary-1")
+		useQuestion(t, tx, id, topicID, content.Easy, when.AddDays(180))
+
+		got, _ := content.EligibleQuestions(ctx, tx, topicID, content.Easy, when, 180)
+		if len(got) != 1 {
+			t.Fatalf("got %d eligible questions, want 1", len(got))
+		}
+		if got[0].ID != id {
+			t.Errorf("eligible question id = %d, want %d", got[0].ID, id)
 		}
 	})
 
