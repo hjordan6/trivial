@@ -14,6 +14,23 @@ import (
 
 var apostropheStripper = strings.NewReplacer("'", "", "’", "", "ʼ", "")
 
+// specialLetterFolder maps letters that are their own Unicode base — they
+// have no canonical decomposition into a base letter plus a combining mark,
+// so the NFD/Mn stage below never touches them — to their plain-ASCII
+// equivalent. Some map one-to-many (æ, œ, ß), which is why this is a string
+// replacer rather than a rune-wise table.
+var specialLetterFolder = strings.NewReplacer(
+	"ø", "o", "Ø", "o",
+	"ł", "l", "Ł", "l",
+	"æ", "ae", "Æ", "ae",
+	"œ", "oe", "Œ", "oe",
+	"ß", "ss",
+	"þ", "th", "Þ", "th",
+	"ð", "d", "Ð", "d",
+	"ı", "i",
+	"đ", "d", "Đ", "d",
+)
+
 var leadingArticles = map[string]bool{"the": true, "a": true, "an": true}
 
 // Normalize reduces an answer to its comparable form: no diacritics, no
@@ -24,6 +41,7 @@ var leadingArticles = map[string]bool{"the": true, "a": true, "an": true}
 // when something follows it, so the answer "The" survives intact.
 func Normalize(s string) string {
 	s = apostropheStripper.Replace(s)
+	s = specialLetterFolder.Replace(s)
 
 	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
 	if folded, _, err := transform.String(t, s); err == nil {

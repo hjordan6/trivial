@@ -44,6 +44,7 @@ func TestGrade(t *testing.T) {
 		{"rejects an unrelated answer", "elephant", []string{"paris"}, false, false},
 		{"rejects empty input", "", []string{"paris"}, false, false},
 		{"rejects punctuation-only input", "???", []string{"paris"}, false, false},
+		{"rejects a wrong number in a long phrase", "world war 3", []string{"world war 2"}, false, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -55,5 +56,23 @@ func TestGrade(t *testing.T) {
 				t.Errorf("Grade(%q, %v).NearMiss = %v, want %v", tt.input, tt.aliases, got.NearMiss, tt.wantNearMiss)
 			}
 		})
+	}
+}
+
+// TestGradeNearMissOrderIndependent pins that NearMiss depends on the best
+// slack (distance minus that alias's own tolerance), not on which alias
+// happens to come first in the slice. "abcd" (4 chars, tolerance 0) and
+// "abxyzq" (6 chars, tolerance 1) both sit at raw distance 2 from "abxy", but
+// their slack differs (2 vs. 1), so the alias with the smaller slack must
+// win regardless of order.
+func TestGradeNearMissOrderIndependent(t *testing.T) {
+	forward := Grade("abxy", []string{"abcd", "abxyzq"})
+	backward := Grade("abxy", []string{"abxyzq", "abcd"})
+
+	if forward.NearMiss != backward.NearMiss {
+		t.Errorf("NearMiss depends on alias order: forward=%v backward=%v", forward.NearMiss, backward.NearMiss)
+	}
+	if !forward.NearMiss {
+		t.Errorf("Grade(%q, %v).NearMiss = %v, want true (slack 1 via %q)", "abxy", []string{"abcd", "abxyzq"}, forward.NearMiss, "abxyzq")
 	}
 }

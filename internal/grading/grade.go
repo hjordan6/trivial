@@ -27,18 +27,29 @@ func Grade(input string, normalizedAliases []string) Result {
 		return Result{Distance: -1}
 	}
 
+	// best is ranked by slack — how far its distance falls outside its own
+	// tolerance — not by raw distance. Two aliases can tie on raw distance
+	// while having different tolerances (a short alias vs. a long one), and
+	// ranking by raw distance alone made NearMiss depend on slice order.
+	// Ties in slack are broken by the smaller raw distance.
 	best := Result{Distance: -1}
+	haveBest := false
+	bestSlack := 0
 	for _, alias := range normalizedAliases {
 		distance := damerauLevenshtein(normalized, alias)
-		if distance <= toleranceFor(alias) {
+		tolerance := toleranceFor(alias)
+		if distance <= tolerance {
 			return Result{Correct: true, Matched: alias, Distance: distance}
 		}
-		if best.Distance < 0 || distance < best.Distance {
+		slack := distance - tolerance
+		if !haveBest || slack < bestSlack || (slack == bestSlack && distance < best.Distance) {
 			best = Result{Matched: alias, Distance: distance}
+			haveBest = true
+			bestSlack = slack
 		}
 	}
 
-	if best.Distance >= 0 && best.Distance <= toleranceFor(best.Matched)+1 {
+	if haveBest && bestSlack <= 1 {
 		best.NearMiss = true
 	}
 	return best
