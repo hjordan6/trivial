@@ -2,5 +2,5 @@
 /web/node_modules
 !/web/dist/
 /web/dist/*
-!/web/dist/.keep
+!/web/dist/embed-placeholder.txt
 .env

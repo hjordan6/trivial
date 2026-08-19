@@ -9,7 +9,7 @@ lerna-debug.log*
 
 node_modules
 dist/*
-!dist/.keep
+!dist/embed-placeholder.txt
 dist-ssr
 *.local
 
