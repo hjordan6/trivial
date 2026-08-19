@@ -96,6 +96,9 @@ func ParseSeed(data []byte) (SeedFile, error) {
 			// correct options on the board just as surely as matching the
 			// canonical answer would.
 			answerKey := grading.Normalize(q.Answer)
+			if answerKey == "" {
+				return SeedFile{}, fmt.Errorf("%s: answer %q normalizes to empty", where, q.Answer)
+			}
 			accepted := map[string]bool{answerKey: true}
 			hasAnswerAlias := false
 			for _, a := range q.Aliases {
@@ -109,6 +112,17 @@ func ParseSeed(data []byte) (SeedFile, error) {
 				}
 			}
 
+			// acceptedList is the normalized form of every answer a grader
+			// would mark correct. Distractors are checked against it with the
+			// real grader, not with exact string match: grading is fuzzy, so a
+			// distractor one edit away from an accepted answer would still be
+			// graded CORRECT at play time even though it fails an exact-match
+			// check here.
+			acceptedList := make([]string, 0, len(accepted))
+			for k := range accepted {
+				acceptedList = append(acceptedList, k)
+			}
+
 			// Distractors are counted by normalized form, not raw count: a
 			// duplicate distractor (same text, or merely the same after
 			// normalization) collapses to one row in ReplaceDistractors, so
@@ -117,11 +131,10 @@ func ParseSeed(data []byte) (SeedFile, error) {
 			// EligibleQuestions' >= 5 requirement with no error anywhere.
 			distractorKeys := map[string]bool{}
 			for _, d := range q.Distractors {
-				dk := grading.Normalize(d)
-				if accepted[dk] {
-					return SeedFile{}, fmt.Errorf("%s: distractor %q matches an accepted answer", where, d)
+				if grading.Grade(d, acceptedList).Correct {
+					return SeedFile{}, fmt.Errorf("%s: distractor %q would be graded correct", where, d)
 				}
-				distractorKeys[dk] = true
+				distractorKeys[grading.Normalize(d)] = true
 			}
 			if len(distractorKeys) < 5 {
 				return SeedFile{}, fmt.Errorf("%s: has %d distinct distractors, want at least 5 distractors", where, len(distractorKeys))

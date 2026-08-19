@@ -14,6 +14,7 @@ func TestToleranceFor(t *testing.T) {
 		{"paris", 1},
 		{"napoleon", 1},
 		{"jupiter", 1},
+		{"chocolate", 2},
 		{"washington", 2},
 		{"mississippi", 2},
 		{"henry viii", 0},

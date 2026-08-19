@@ -10,12 +10,11 @@ import (
 
 // TestSeedDistractorsAreNeverGradedCorrect is a sweep over every question in
 // the seed file asserting that none of its distractors would be accepted as
-// a correct free-text answer. This is the invariant behind the item 1 bug
-// fix in toleranceFor: a distractor is worthless — worse than worthless,
-// actively harmful — if a player who types it is told they were right. It
-// mirrors runtime behavior: distractors are graded as raw player input
-// (grading.Grade normalizes internally) against the question's aliases,
-// pre-normalized exactly as ReplaceAliases stores them.
+// a correct free-text answer: a distractor is worthless — worse than
+// worthless, actively harmful — if a player who types it is told they were
+// right. It mirrors runtime behavior: distractors are graded as raw player
+// input (grading.Grade normalizes internally) against the question's
+// aliases, pre-normalized exactly as ReplaceAliases stores them.
 func TestSeedDistractorsAreNeverGradedCorrect(t *testing.T) {
 	data, err := os.ReadFile("../../seed/questions.json")
 	if err != nil {

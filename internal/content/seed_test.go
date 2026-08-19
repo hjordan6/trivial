@@ -67,10 +67,25 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			wantErr: "distractor",
 		},
 		{
+			// "Pariss" is not an exact match for the accepted answer "paris",
+			// but it is one edit away, and grading.Grade would accept it: the
+			// validator must run the real grader rather than exact string
+			// comparison, or a distractor this close would be graded correct
+			// at play time.
+			name:    "distractor is a fuzzy match for an accepted answer",
+			mutate:  func(s string) string { return strings.Replace(s, `"Lyon"`, `"Pariss"`, 1) },
+			wantErr: "would be graded correct",
+		},
+		{
 			name: "alias normalizes to empty",
 			mutate: func(s string) string {
 				return strings.Replace(s, `"aliases": ["Paris, France"]`, `"aliases": ["Paris, France", "???"]`, 1)
 			},
+			wantErr: "normalizes to empty",
+		},
+		{
+			name:    "answer normalizes to empty",
+			mutate:  func(s string) string { return strings.Replace(s, `"answer": "Paris"`, `"answer": "???"`, 1) },
 			wantErr: "normalizes to empty",
 		},
 		{

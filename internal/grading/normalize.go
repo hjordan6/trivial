@@ -39,6 +39,11 @@ var leadingArticles = map[string]bool{"the": true, "a": true, "an": true}
 // Apostrophes are deleted rather than replaced with a space, so "O'Brien"
 // becomes "obrien" rather than "o brien". A leading article is only stripped
 // when something follows it, so the answer "The" survives intact.
+//
+// Normalize is not idempotent: article stripping runs once per call, so
+// Normalize("The The Who") is "the who", and normalizing that result again
+// yields "who". Callers must apply it exactly once to any given input —
+// never normalize an already-normalized value.
 func Normalize(s string) string {
 	s = apostropheStripper.Replace(s)
 	s = specialLetterFolder.Replace(s)
