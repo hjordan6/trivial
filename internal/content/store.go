@@ -150,7 +150,10 @@ func ActiveTopics(ctx context.Context, q db.DBTX) ([]Topic, error) {
 		}
 		topics = append(topics, t)
 	}
-	return topics, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read active topics: %w", err)
+	}
+	return topics, nil
 }
 
 // EligibleQuestions returns the questions that may be used for a topic and
@@ -197,5 +200,8 @@ func EligibleQuestions(
 		}
 		questions = append(questions, qn)
 	}
-	return questions, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read eligible questions for topic %d %s: %w", topicID, difficulty, err)
+	}
+	return questions, nil
 }

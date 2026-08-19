@@ -2,6 +2,7 @@ package content_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/jackc/pgx/v5"
@@ -356,4 +357,57 @@ func TestEligibleQuestionsFiltersIneligibleContent(t *testing.T) {
 			t.Errorf("got %d eligible questions, want 1 (regeneration must not block itself)", len(got))
 		}
 	})
+}
+
+// TestEligibleQuestionsOrdersByIDRegardlessOfHeapOrder pins the ORDER BY q.id
+// in EligibleQuestions, which is what makes puzzle generation deterministic.
+// `questions.id` is a bigserial — a plain column with a sequence-derived
+// default — so it accepts an explicit value on insert. This test uses that to
+// insert rows whose ids are deliberately out of physical (heap) insertion
+// order: without ORDER BY, a sequential scan returns rows in the order they
+// were physically written, which here disagrees with id order. That gap
+// between "how it happens to come back today" and "what the id column says"
+// is exactly what a heap reorder (e.g. a re-run of `seed apply`, which
+// rewrites every existing question row) could expose in production.
+func TestEligibleQuestionsOrdersByIDRegardlessOfHeapOrder(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+	when := target(t)
+
+	topicID, err := content.UpsertTopic(ctx, tx, "geography", "Geography")
+	if err != nil {
+		t.Fatalf("UpsertTopic: %v", err)
+	}
+
+	// Physical insertion order (1000, 500, 1500) deliberately disagrees with
+	// id order (500, 1000, 1500).
+	insertOrder := []int64{1000, 500, 1500}
+	for _, id := range insertOrder {
+		if _, err := tx.Exec(ctx, `
+			INSERT INTO questions (id, topic_id, difficulty, prompt, canonical_answer, status, source, external_id)
+			VALUES ($1, $2, 'easy'::difficulty, $3, $4, 'active'::question_status, 'test', $5)`,
+			id, topicID, fmt.Sprintf("Prompt %d", id), fmt.Sprintf("Answer %d", id), fmt.Sprintf("order-%d", id)); err != nil {
+			t.Fatalf("insert question %d: %v", id, err)
+		}
+		if err := content.ReplaceAliases(ctx, tx, id, []string{fmt.Sprintf("Answer %d", id)}); err != nil {
+			t.Fatalf("ReplaceAliases: %v", err)
+		}
+		if err := content.ReplaceDistractors(ctx, tx, id, []string{"w1", "w2", "w3", "w4", "w5"}); err != nil {
+			t.Fatalf("ReplaceDistractors: %v", err)
+		}
+	}
+
+	got, err := content.EligibleQuestions(ctx, tx, topicID, content.Easy, when, 180)
+	if err != nil {
+		t.Fatalf("EligibleQuestions: %v", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("got %d eligible questions, want 3", len(got))
+	}
+	want := []int64{500, 1000, 1500}
+	for i, q := range got {
+		if q.ID != want[i] {
+			t.Errorf("entry %d has id %d, want %d (id-ascending order)", i, q.ID, want[i])
+		}
+	}
 }
