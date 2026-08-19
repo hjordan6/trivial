@@ -1,0 +1,472 @@
+{
+  "topics": [
+    {
+      "slug": "world-geography",
+      "name": "World Geography",
+      "questions": [
+        {
+          "external_id": "world-geography-easy-1",
+          "difficulty": "easy",
+          "prompt": "What is the capital city of Italy?",
+          "answer": "Rome",
+          "aliases": [],
+          "distractors": ["Milan", "Naples", "Turin", "Florence", "Venice"]
+        },
+        {
+          "external_id": "world-geography-easy-2",
+          "difficulty": "easy",
+          "prompt": "On which continent is the Sahara Desert located?",
+          "answer": "Africa",
+          "aliases": [],
+          "distractors": ["Asia", "South America", "Australia", "Europe", "North America"]
+        },
+        {
+          "external_id": "world-geography-easy-3",
+          "difficulty": "easy",
+          "prompt": "What is the tallest mountain in the world, measured from sea level to peak?",
+          "answer": "Everest",
+          "aliases": ["Mount Everest", "Mt Everest"],
+          "distractors": ["K2", "Kangchenjunga", "Lhotse", "Makalu", "Annapurna"]
+        },
+        {
+          "external_id": "world-geography-medium-1",
+          "difficulty": "medium",
+          "prompt": "Which African country was formerly known as Abyssinia?",
+          "answer": "Ethiopia",
+          "aliases": [],
+          "distractors": ["Eritrea", "Somalia", "Sudan", "Kenya", "Djibouti"]
+        },
+        {
+          "external_id": "world-geography-medium-2",
+          "difficulty": "medium",
+          "prompt": "Which river is the longest in South America?",
+          "answer": "Amazon",
+          "aliases": ["Amazon River"],
+          "distractors": ["Orinoco", "Paraná", "Magdalena", "São Francisco", "Tocantins"]
+        },
+        {
+          "external_id": "world-geography-medium-3",
+          "difficulty": "medium",
+          "prompt": "Which strait separates Europe and Africa at its narrowest point?",
+          "answer": "Gibraltar",
+          "aliases": ["Strait of Gibraltar"],
+          "distractors": ["Bosphorus", "Dardanelles", "Hormuz", "Malacca", "Messina"]
+        },
+        {
+          "external_id": "world-geography-hard-1",
+          "difficulty": "hard",
+          "prompt": "Which sea in the North Atlantic Ocean is the only sea in the world with no land boundary, bounded instead by ocean currents?",
+          "answer": "Sargasso Sea",
+          "aliases": ["Sargasso"],
+          "distractors": ["Coral Sea", "Tasman Sea", "Weddell Sea", "Bering Sea", "Timor Sea"]
+        },
+        {
+          "external_id": "world-geography-hard-2",
+          "difficulty": "hard",
+          "prompt": "Which landlocked country is entirely surrounded by South Africa?",
+          "answer": "Lesotho",
+          "aliases": [],
+          "distractors": ["Eswatini", "Botswana", "Namibia", "Zimbabwe", "Malawi"]
+        },
+        {
+          "external_id": "world-geography-hard-3",
+          "difficulty": "hard",
+          "prompt": "Ouagadougou is the capital of which West African country?",
+          "answer": "Burkina Faso",
+          "aliases": ["Upper Volta"],
+          "distractors": ["Mali", "Niger", "Ghana", "Ivory Coast", "Benin"]
+        }
+      ]
+    },
+    {
+      "slug": "science-and-nature",
+      "name": "Science & Nature",
+      "questions": [
+        {
+          "external_id": "science-and-nature-easy-1",
+          "difficulty": "easy",
+          "prompt": "Which planet in our solar system is known as the Red Planet?",
+          "answer": "Mars",
+          "aliases": [],
+          "distractors": ["Venus", "Jupiter", "Saturn", "Mercury", "Neptune"]
+        },
+        {
+          "external_id": "science-and-nature-easy-2",
+          "difficulty": "easy",
+          "prompt": "Which gas do plants absorb from the air to use in photosynthesis?",
+          "answer": "Carbon dioxide",
+          "aliases": ["CO2"],
+          "distractors": ["Oxygen", "Nitrogen", "Hydrogen", "Methane", "Helium"]
+        },
+        {
+          "external_id": "science-and-nature-easy-3",
+          "difficulty": "easy",
+          "prompt": "What is the organelle often called the 'powerhouse of the cell'?",
+          "answer": "Mitochondrion",
+          "aliases": ["Mitochondria"],
+          "distractors": ["Ribosome", "Nucleus", "Golgi apparatus", "Chloroplast", "Lysosome"]
+        },
+        {
+          "external_id": "science-and-nature-medium-1",
+          "difficulty": "medium",
+          "prompt": "What is the hardest naturally occurring mineral on Earth?",
+          "answer": "Diamond",
+          "aliases": [],
+          "distractors": ["Quartz", "Corundum", "Topaz", "Emerald", "Graphite"]
+        },
+        {
+          "external_id": "science-and-nature-medium-2",
+          "difficulty": "medium",
+          "prompt": "Which gland in the human body produces insulin?",
+          "answer": "Pancreas",
+          "aliases": [],
+          "distractors": ["Thyroid gland", "Adrenal gland", "Pituitary gland", "Thymus gland", "Parathyroid gland"]
+        },
+        {
+          "external_id": "science-and-nature-medium-3",
+          "difficulty": "medium",
+          "prompt": "What is the pH value of a neutral solution, such as pure water, on the standard 0-14 pH scale?",
+          "answer": "7",
+          "aliases": ["Seven"],
+          "distractors": ["6", "8", "5", "9", "4"]
+        },
+        {
+          "external_id": "science-and-nature-hard-1",
+          "difficulty": "hard",
+          "prompt": "What is the atomic number of gold on the periodic table, i.e. how many protons does a gold atom have?",
+          "answer": "79",
+          "aliases": [],
+          "distractors": ["78", "80", "47", "82", "29"]
+        },
+        {
+          "external_id": "science-and-nature-hard-2",
+          "difficulty": "hard",
+          "prompt": "Rodents are the most species-rich order of mammals. Which order is the second most diverse, making up roughly a fifth of all mammal species?",
+          "answer": "Bats",
+          "aliases": ["Bat", "Chiroptera"],
+          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Rabbits and hares", "Hedgehogs and shrews"]
+        },
+        {
+          "external_id": "science-and-nature-hard-3",
+          "difficulty": "hard",
+          "prompt": "What term describes the minimum energy input needed to start a chemical reaction?",
+          "answer": "Activation energy",
+          "aliases": [],
+          "distractors": ["Bond energy", "Ionization energy", "Free energy", "Lattice energy", "Kinetic energy"]
+        }
+      ]
+    },
+    {
+      "slug": "film-and-television",
+      "name": "Film & Television",
+      "questions": [
+        {
+          "external_id": "film-and-television-easy-1",
+          "difficulty": "easy",
+          "prompt": "Who directed the 1975 film Jaws?",
+          "answer": "Steven Spielberg",
+          "aliases": ["Spielberg"],
+          "distractors": ["George Lucas", "Martin Scorsese", "Francis Ford Coppola", "James Cameron", "Ridley Scott"]
+        },
+        {
+          "external_id": "film-and-television-easy-2",
+          "difficulty": "easy",
+          "prompt": "What is the name of the boy wizard in the film series based on the novels of J.K. Rowling?",
+          "answer": "Harry Potter",
+          "aliases": [],
+          "distractors": ["Ron Weasley", "Neville Longbottom", "Draco Malfoy", "Seamus Finnigan", "Dean Thomas"]
+        },
+        {
+          "external_id": "film-and-television-easy-3",
+          "difficulty": "easy",
+          "prompt": "Which television sitcom is set largely in a coffee shop called Central Perk?",
+          "answer": "Friends",
+          "aliases": [],
+          "distractors": ["Seinfeld", "Cheers", "How I Met Your Mother", "The Big Bang Theory", "Frasier"]
+        },
+        {
+          "external_id": "film-and-television-medium-1",
+          "difficulty": "medium",
+          "prompt": "Which actor played Captain Jack Sparrow in the Pirates of the Caribbean films?",
+          "answer": "Johnny Depp",
+          "aliases": ["Depp"],
+          "distractors": ["Orlando Bloom", "Geoffrey Rush", "Javier Bardem", "Bill Nighy", "Chow Yun-fat"]
+        },
+        {
+          "external_id": "film-and-television-medium-2",
+          "difficulty": "medium",
+          "prompt": "Which 1994 film features the line about life being like a box of chocolates?",
+          "answer": "Forrest Gump",
+          "aliases": [],
+          "distractors": ["Pulp Fiction", "The Shawshank Redemption", "Dumb and Dumber", "Speed", "True Lies"]
+        },
+        {
+          "external_id": "film-and-television-medium-3",
+          "difficulty": "medium",
+          "prompt": "What is the name of the fictional African country in the film Black Panther?",
+          "answer": "Wakanda",
+          "aliases": [],
+          "distractors": ["Zamunda", "Genovia", "Latveria", "Sokovia", "Elbonia"]
+        },
+        {
+          "external_id": "film-and-television-hard-1",
+          "difficulty": "hard",
+          "prompt": "Which actor won the Academy Award for Best Actor for playing Ray Charles in the 2004 film Ray?",
+          "answer": "Jamie Foxx",
+          "aliases": ["Foxx"],
+          "distractors": ["Denzel Washington", "Forest Whitaker", "Don Cheadle", "Terrence Howard", "Will Smith"]
+        },
+        {
+          "external_id": "film-and-television-hard-2",
+          "difficulty": "hard",
+          "prompt": "Which 1927 film became the first ever winner of the Academy Award for Best Picture?",
+          "answer": "Wings",
+          "aliases": [],
+          "distractors": ["The Passion of Joan of Arc", "The Broadway Melody", "All Quiet on the Western Front", "The Big Parade", "Metropolis"]
+        },
+        {
+          "external_id": "film-and-television-hard-3",
+          "difficulty": "hard",
+          "prompt": "Which prolific film composer also wrote the NBC Nightly News theme 'The Mission' and the official theme for the 1984 Los Angeles Olympics?",
+          "answer": "John Williams",
+          "aliases": ["Williams"],
+          "distractors": ["Hans Zimmer", "John Barry", "Jerry Goldsmith", "Danny Elfman", "Alan Silvestri"]
+        }
+      ]
+    },
+    {
+      "slug": "history",
+      "name": "History",
+      "questions": [
+        {
+          "external_id": "history-easy-1",
+          "difficulty": "easy",
+          "prompt": "In which year did World War II end?",
+          "answer": "1945",
+          "aliases": [],
+          "distractors": ["1943", "1944", "1946", "1947", "1918"]
+        },
+        {
+          "external_id": "history-easy-2",
+          "difficulty": "easy",
+          "prompt": "Who was the first President of the United States?",
+          "answer": "George Washington",
+          "aliases": ["Washington"],
+          "distractors": ["John Adams", "Thomas Jefferson", "Benjamin Franklin", "James Madison", "Alexander Hamilton"]
+        },
+        {
+          "external_id": "history-easy-3",
+          "difficulty": "easy",
+          "prompt": "Which ancient civilization built the pyramids at Giza?",
+          "answer": "Egyptians",
+          "aliases": ["Ancient Egyptians", "Egypt", "Ancient Egypt"],
+          "distractors": ["Mayans", "Romans", "Greeks", "Babylonians", "Aztecs"]
+        },
+        {
+          "external_id": "history-medium-1",
+          "difficulty": "medium",
+          "prompt": "Which French military leader and emperor was exiled to the island of Elba in 1814?",
+          "answer": "Napoleon",
+          "aliases": ["Bonaparte", "Napoleon Bonaparte"],
+          "distractors": ["Robespierre", "Louis XVI", "Charles de Gaulle", "Talleyrand", "Murat"]
+        },
+        {
+          "external_id": "history-medium-2",
+          "difficulty": "medium",
+          "prompt": "In which year did the Berlin Wall fall?",
+          "answer": "1989",
+          "aliases": [],
+          "distractors": ["1987", "1988", "1990", "1991", "1961"]
+        },
+        {
+          "external_id": "history-medium-3",
+          "difficulty": "medium",
+          "prompt": "Which English king was married six times?",
+          "answer": "Henry VIII",
+          "aliases": ["Henry the Eighth"],
+          "distractors": ["Henry VII", "Edward VI", "Richard III", "James I", "Charles I"]
+        },
+        {
+          "external_id": "history-hard-1",
+          "difficulty": "hard",
+          "prompt": "The Peace of Westphalia, ending the Thirty Years' War, was signed in which year?",
+          "answer": "1648",
+          "aliases": [],
+          "distractors": ["1618", "1638", "1658", "1668", "1698"]
+        },
+        {
+          "external_id": "history-hard-2",
+          "difficulty": "hard",
+          "prompt": "Which Russian Tsar issued the October Manifesto of 1905, establishing the country's first elected legislative body, the State Duma?",
+          "answer": "Nicholas II",
+          "aliases": ["Tsar Nicholas II", "Czar Nicholas II"],
+          "distractors": ["Alexander II", "Alexander III", "Peter the Great", "Catherine the Great", "Nicholas I"]
+        },
+        {
+          "external_id": "history-hard-3",
+          "difficulty": "hard",
+          "prompt": "The Rosetta Stone bears the same text in hieroglyphic, Demotic, and which other script?",
+          "answer": "Greek",
+          "aliases": ["Ancient Greek"],
+          "distractors": ["Latin", "Coptic", "Aramaic", "Phoenician", "Hebrew"]
+        }
+      ]
+    },
+    {
+      "slug": "music",
+      "name": "Music",
+      "questions": [
+        {
+          "external_id": "music-easy-1",
+          "difficulty": "easy",
+          "prompt": "Which pop icon is known as the 'King of Pop'?",
+          "answer": "Michael Jackson",
+          "aliases": ["MJ", "Jackson"],
+          "distractors": ["Elvis Presley", "Prince", "James Brown", "Justin Timberlake", "Usher"]
+        },
+        {
+          "external_id": "music-easy-2",
+          "difficulty": "easy",
+          "prompt": "How many strings does a standard guitar have?",
+          "answer": "Six",
+          "aliases": ["6"],
+          "distractors": ["Four", "Five", "Seven", "Eight", "Twelve"]
+        },
+        {
+          "external_id": "music-easy-3",
+          "difficulty": "easy",
+          "prompt": "Which British rock band recorded the album Abbey Road?",
+          "answer": "The Beatles",
+          "aliases": ["Fab Four"],
+          "distractors": ["The Rolling Stones", "The Who", "Pink Floyd", "Led Zeppelin", "Queen"]
+        },
+        {
+          "external_id": "music-medium-1",
+          "difficulty": "medium",
+          "prompt": "Which composer completed his Ninth Symphony after he had gone almost completely deaf?",
+          "answer": "Beethoven",
+          "aliases": ["Ludwig van Beethoven"],
+          "distractors": ["Mozart", "Brahms", "Haydn", "Schubert", "Bach"]
+        },
+        {
+          "external_id": "music-medium-2",
+          "difficulty": "medium",
+          "prompt": "The clarinet belongs to which family of musical instruments?",
+          "answer": "Woodwind",
+          "aliases": ["Woodwinds"],
+          "distractors": ["Brass", "Percussion", "Strings", "Keyboard", "Free reed"]
+        },
+        {
+          "external_id": "music-medium-3",
+          "difficulty": "medium",
+          "prompt": "Which Queen song, the penultimate track on their 1975 album A Night at the Opera, is famous for its operatic middle section?",
+          "answer": "Bohemian Rhapsody",
+          "aliases": [],
+          "distractors": ["Radio Ga Ga", "Don't Stop Me Now", "We Will Rock You", "Somebody to Love", "Killer Queen"]
+        },
+        {
+          "external_id": "music-hard-1",
+          "difficulty": "hard",
+          "prompt": "Which Italian composer wrote the opera The Barber of Seville?",
+          "answer": "Rossini",
+          "aliases": ["Gioachino Rossini"],
+          "distractors": ["Verdi", "Puccini", "Donizetti", "Bellini", "Leoncavallo"]
+        },
+        {
+          "external_id": "music-hard-2",
+          "difficulty": "hard",
+          "prompt": "What musical term describes a virtuosic solo passage, often improvised, that typically appears near the end of a piece?",
+          "answer": "Cadenza",
+          "aliases": [],
+          "distractors": ["Coda", "Crescendo", "Ostinato", "Fugue", "Overture"]
+        },
+        {
+          "external_id": "music-hard-3",
+          "difficulty": "hard",
+          "prompt": "Which composer wrote the opera Nabucco, whose chorus 'Va, pensiero' became an anthem of Italian national sentiment?",
+          "answer": "Verdi",
+          "aliases": ["Giuseppe Verdi"],
+          "distractors": ["Puccini", "Bellini", "Donizetti", "Mascagni", "Leoncavallo"]
+        }
+      ]
+    },
+    {
+      "slug": "sport",
+      "name": "Sport",
+      "questions": [
+        {
+          "external_id": "sport-easy-1",
+          "difficulty": "easy",
+          "prompt": "In which sport would a player perform a slam dunk?",
+          "answer": "Basketball",
+          "aliases": [],
+          "distractors": ["Volleyball", "Netball", "Handball", "Tennis", "Badminton"]
+        },
+        {
+          "external_id": "sport-easy-2",
+          "difficulty": "easy",
+          "prompt": "How many players does each team have on the field in a standard game of soccer, including the goalkeeper?",
+          "answer": "Eleven",
+          "aliases": ["11"],
+          "distractors": ["Ten", "Nine", "Twelve", "Thirteen", "Seven"]
+        },
+        {
+          "external_id": "sport-easy-3",
+          "difficulty": "easy",
+          "prompt": "In which sport do competitors hit a shuttlecock over a net?",
+          "answer": "Badminton",
+          "aliases": [],
+          "distractors": ["Squash", "Tennis", "Table tennis", "Racquetball", "Pickleball"]
+        },
+        {
+          "external_id": "sport-medium-1",
+          "difficulty": "medium",
+          "prompt": "How many players does each side have on the field in a standard game of rugby union?",
+          "answer": "Fifteen",
+          "aliases": ["15"],
+          "distractors": ["Thirteen", "Twelve", "Fourteen", "Eleven", "Sixteen"]
+        },
+        {
+          "external_id": "sport-medium-2",
+          "difficulty": "medium",
+          "prompt": "In baseball, what is the term for a game in which a pitcher retires every batter faced, with no opponent ever reaching base?",
+          "answer": "Perfect game",
+          "aliases": [],
+          "distractors": ["No-hitter", "Shutout", "Complete game", "Immaculate inning", "Grand slam"]
+        },
+        {
+          "external_id": "sport-medium-3",
+          "difficulty": "medium",
+          "prompt": "In golf, what is the term for finishing a hole one stroke under par?",
+          "answer": "Birdie",
+          "aliases": [],
+          "distractors": ["Bogey", "Eagle", "Albatross", "Par", "Double bogey"]
+        },
+        {
+          "external_id": "sport-hard-1",
+          "difficulty": "hard",
+          "prompt": "In which year were the first modern Olympic Games held in Athens?",
+          "answer": "1896",
+          "aliases": [],
+          "distractors": ["1900", "1904", "1892", "1888", "1912"]
+        },
+        {
+          "external_id": "sport-hard-2",
+          "difficulty": "hard",
+          "prompt": "What is the maximum possible break in a single frame of snooker, assuming no fouls or free balls?",
+          "answer": "147",
+          "aliases": [],
+          "distractors": ["155", "180", "100", "120", "200"]
+        },
+        {
+          "external_id": "sport-hard-3",
+          "difficulty": "hard",
+          "prompt": "Which world-famous steeplechase is held annually at Aintree Racecourse in England?",
+          "answer": "Grand National",
+          "aliases": [],
+          "distractors": ["Irish Grand National", "Scottish Grand National", "Velká pardubická", "Prix de l'Arc de Triomphe", "Cheltenham Gold Cup"]
+        }
+      ]
+    }
+  ]
+}

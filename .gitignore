@@ -1,0 +1,6 @@
+/trivial
+/web/node_modules
+!/web/dist/
+/web/dist/*
+!/web/dist/embed-placeholder.txt
+.env
