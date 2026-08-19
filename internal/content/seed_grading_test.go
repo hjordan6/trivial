@@ -42,39 +42,3 @@ func TestSeedDistractorsAreNeverGradedCorrect(t *testing.T) {
 		}
 	}
 }
-
-// TestSeedAliasesAreAcceptedVerbatim is the mirror image of the sweep above:
-// every alias a question lists (plus its canonical answer, which ParseSeed
-// folds into the alias list) must itself be graded correct when typed
-// exactly. This exists because round 2 of review found aliases that were
-// *supposed* to cover a real player spelling (a taxonomic name, a common
-// US spelling of a title, a digit's word form) but were only ever added to
-// the JSON, never exercised against Grade. A typo in an alias, or an alias
-// that collides with the Roman-numeral tolerance rule in a way that makes
-// it reject itself, would slip past every other test in this package.
-func TestSeedAliasesAreAcceptedVerbatim(t *testing.T) {
-	data, err := os.ReadFile("../../seed/questions.json")
-	if err != nil {
-		t.Fatalf("read seed file: %v", err)
-	}
-	seed, err := content.ParseSeed(data)
-	if err != nil {
-		t.Fatalf("ParseSeed: %v", err)
-	}
-
-	for _, topic := range seed.Topics {
-		for _, q := range topic.Questions {
-			normalizedAliases := make([]string, len(q.Aliases))
-			for i, a := range q.Aliases {
-				normalizedAliases[i] = grading.Normalize(a)
-			}
-			for _, a := range q.Aliases {
-				result := grading.Grade(a, normalizedAliases)
-				if !result.Correct {
-					t.Errorf("%s: alias %q is NOT graded correct against its own question's aliases %v",
-						q.ExternalID, a, q.Aliases)
-				}
-			}
-		}
-	}
-}

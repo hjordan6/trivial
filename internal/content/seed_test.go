@@ -67,6 +67,13 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			wantErr: "distractor",
 		},
 		{
+			name: "alias normalizes to empty",
+			mutate: func(s string) string {
+				return strings.Replace(s, `"aliases": ["Paris, France"]`, `"aliases": ["Paris, France", "???"]`, 1)
+			},
+			wantErr: "normalizes to empty",
+		},
+		{
 			name: "duplicate distractor collapses below five distinct",
 			mutate: func(s string) string {
 				// Two raw entries, "Toulouse" replaced with a repeat of

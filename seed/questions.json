@@ -133,10 +133,10 @@
         {
           "external_id": "science-and-nature-hard-1",
           "difficulty": "hard",
-          "prompt": "What is the freezing point of pure water in Kelvin, to the nearest whole degree?",
-          "answer": "273",
+          "prompt": "What is the atomic number of gold on the periodic table, i.e. how many protons does a gold atom have?",
+          "answer": "79",
           "aliases": [],
-          "distractors": ["373", "300", "0", "274", "272"]
+          "distractors": ["78", "80", "47", "82", "29"]
         },
         {
           "external_id": "science-and-nature-hard-2",
@@ -144,7 +144,7 @@
           "prompt": "Rodents are the most species-rich order of mammals. Which order is the second most diverse, making up roughly a fifth of all mammal species?",
           "answer": "Bats",
           "aliases": ["Bat", "Chiroptera"],
-          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Lagomorpha", "Eulipotyphla"]
+          "distractors": ["Primates", "Carnivores", "Even-toed ungulates", "Rabbits and hares", "Hedgehogs and shrews"]
         },
         {
           "external_id": "science-and-nature-hard-3",

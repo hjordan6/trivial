@@ -100,6 +100,9 @@ func ParseSeed(data []byte) (SeedFile, error) {
 			hasAnswerAlias := false
 			for _, a := range q.Aliases {
 				ak := grading.Normalize(a)
+				if ak == "" {
+					return SeedFile{}, fmt.Errorf("%s: alias %q normalizes to empty", where, a)
+				}
 				accepted[ak] = true
 				if ak == answerKey {
 					hasAnswerAlias = true
