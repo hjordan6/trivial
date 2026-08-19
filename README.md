@@ -30,7 +30,11 @@ go run ./cmd/trivial migrate up|down
 go run ./cmd/trivial seed apply [--file seed/questions.json]
 go run ./cmd/trivial puzzles generate [--from YYYY-MM-DD] [--days N]
 go run ./cmd/trivial puzzles show YYYY-MM-DD
+go run ./cmd/trivial serve
 ```
+
+For local play, `make serve` builds the Vue application, migrates the database,
+and starts the game at `http://localhost:8080`.
 
 ## Starter library limits
 

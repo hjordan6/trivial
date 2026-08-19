@@ -1,7 +1,7 @@
 DATABASE_URL ?= postgres://trivial:trivial@localhost:5432/trivial?sslmode=disable
 TEST_DATABASE_URL ?= postgres://trivial:trivial@localhost:5433/trivial_test?sslmode=disable
 
-.PHONY: db-up db-down migrate seed test lint fmt
+.PHONY: db-up db-down migrate seed test lint fmt web-build serve
 
 db-up:
 	docker compose up -d db testdb
@@ -26,3 +26,9 @@ fmt:
 lint:
 	go vet ./...
 	@test -z "$$(gofmt -l .)" || { echo "gofmt needed:"; gofmt -l .; exit 1; }
+
+web-build:
+	cd web && npm run build
+
+serve: web-build migrate
+	DATABASE_URL="$(DATABASE_URL)" COOKIE_SECURE=false go run ./cmd/trivial serve
