@@ -7,9 +7,10 @@ import (
 	"math/rand/v2"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
+
 	"github.com/hjordan6/trivial/internal/clock"
 	"github.com/hjordan6/trivial/internal/content"
-	"github.com/hjordan6/trivial/internal/db"
 )
 
 // topicsPerDay is how many topics appear on a board.
@@ -17,7 +18,7 @@ const topicsPerDay = 3
 
 // Generator builds the daily board.
 type Generator struct {
-	DB               db.DBTX
+	DB               pgx.Tx
 	CooldownDays     int
 	TimeLimitSeconds int
 }
@@ -60,15 +61,9 @@ func (e *InsufficientContentError) Error() string {
 // seeded off the date.
 //
 // GenerateFor does not open a transaction of its own: it issues every read
-// and write through g.DB exactly as given, and db.DBTX is satisfied by both
-// pgx.Tx and *pgxpool.Pool. Callers MUST pass a transaction, not a pool. If
-// g.DB is a pool and a failure happens partway through Insert, the
-// daily_puzzles row plus whatever entries already landed commit durably as a
-// short, incomplete board. A later call for the same date then finds that
-// short board via Get, treats it as already generated, and returns it
-// unchanged — the day is permanently broken and no retry will repair it.
-// Passing a transaction lets the caller roll the whole attempt back on any
-// error, which is the only way GenerateFor's idempotency guarantee holds.
+// and write through g.DB exactly as given. g.DB is typed as pgx.Tx, so the
+// caller always supplies a transaction; committing on success and rolling
+// back on any error is what makes GenerateFor's idempotency guarantee hold.
 func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, error) {
 	existing, err := Get(ctx, g.DB, date)
 	if err != nil {

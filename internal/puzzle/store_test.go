@@ -133,3 +133,44 @@ func TestInsertAndGetPreserveBoardOrder(t *testing.T) {
 		}
 	}
 }
+
+// TestGetErrorsOnPartiallyWrittenBoard pins that a board with more than zero
+// but fewer than nine entries is reported as an error rather than read back
+// as a complete puzzle. Without this, a partial write that slipped past the
+// generator's transaction (or any future writer) would look identical to a
+// finished nine-question board to every caller, including a future HTTP
+// handler.
+func TestGetErrorsOnPartiallyWrittenBoard(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+	date := mustDate(t, "2026-08-18")
+
+	topic := seedTopic(t, tx, "alpha")
+
+	var entries []puzzle.Entry
+	for _, d := range []content.Difficulty{content.Easy, content.Medium} {
+		candidates, err := content.EligibleQuestions(ctx, tx, topic.ID, d, date, 180)
+		if err != nil {
+			t.Fatalf("EligibleQuestions: %v", err)
+		}
+		if len(candidates) == 0 {
+			t.Fatalf("no eligible %s questions for topic %s", d, topic.Slug)
+		}
+		entries = append(entries, puzzle.Entry{
+			TopicID: topic.ID, TopicSlug: topic.Slug, TopicName: topic.Name,
+			TopicPosition: 0, Difficulty: d,
+			QuestionID: candidates[0].ID, Prompt: candidates[0].Prompt,
+		})
+	}
+
+	// Deliberately write a two-entry board — never zero, never nine.
+	short := &puzzle.Puzzle{Date: date, TimeLimitSeconds: 135, Entries: entries}
+	if err := puzzle.Insert(ctx, tx, short); err != nil {
+		t.Fatalf("Insert() error = %v", err)
+	}
+
+	_, err := puzzle.Get(ctx, tx, date)
+	if err == nil {
+		t.Fatal("Get() error = nil, want an error for a partially written board")
+	}
+}

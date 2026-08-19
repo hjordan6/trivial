@@ -62,10 +62,14 @@ func Get(ctx context.Context, q db.DBTX, date clock.Date) (*Puzzle, error) {
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("read puzzle rows: %w", err)
 	}
-	if len(p.Entries) == 0 {
+	switch len(p.Entries) {
+	case 0:
 		return nil, nil
+	case 9:
+		return p, nil
+	default:
+		return nil, fmt.Errorf("puzzle %s has %d entries, want 0 or 9: partially written board", date, len(p.Entries))
 	}
-	return p, nil
 }
 
 // Insert writes a puzzle and its entries. Callers that need atomicity — the
