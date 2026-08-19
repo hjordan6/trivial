@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -17,6 +16,12 @@ import (
 	"github.com/hjordan6/trivial/internal/db"
 	"github.com/hjordan6/trivial/internal/puzzle"
 )
+
+// nowClock is the time source used to resolve "today" when a command (such
+// as `puzzles generate` with no --from) needs the current date. Production
+// uses the real clock; tests substitute a clock.Fake so the no-date ("cron")
+// path is testable without depending on the real clock.
+var nowClock clock.Clock = clock.Real{}
 
 const usage = `trivial — daily trivia administration
 
@@ -104,13 +109,12 @@ func runSeed(ctx context.Context, args []string, stdout io.Writer) error {
 	}
 	defer pool.Close()
 
-	// Amendment B: content.ApplySeed issues roughly 380 statements with no
-	// transaction of its own. ReplaceAliases in particular deletes a
-	// question's aliases before reinserting them, so a mid-run failure
-	// against the bare pool could leave an existing question with zero
-	// aliases — silently dropping it out of EligibleQuestions rather than
-	// raising anything. Running the whole seed inside one transaction makes
-	// the apply all-or-nothing.
+	// content.ApplySeed issues roughly 380 statements with no transaction of
+	// its own. ReplaceAliases in particular deletes a question's aliases
+	// before reinserting them, so a mid-run failure against the bare pool
+	// could leave an existing question with zero aliases — silently dropping
+	// it out of EligibleQuestions rather than raising anything. Running the
+	// whole seed inside one transaction makes the apply all-or-nothing.
 	stats, err := applySeedInTx(ctx, pool, seed)
 	if err != nil {
 		return err
@@ -182,7 +186,7 @@ func runPuzzlesGenerate(ctx context.Context, args []string, stdout io.Writer) er
 	defer pool.Close()
 
 	if *from == "" {
-		start = clock.PuzzleDateAt(time.Now(), cfg.PuzzleTimezone)
+		start = clock.PuzzleDateAt(nowClock.Now(), cfg.PuzzleTimezone)
 	}
 
 	for i := 0; i < *days; i++ {
@@ -199,7 +203,7 @@ func runPuzzlesGenerate(ctx context.Context, args []string, stdout io.Writer) er
 // generateOneInTx generates the puzzle for a single date inside its own
 // transaction.
 //
-// Amendment A: puzzle.Insert writes one daily_puzzles row and then nine
+// puzzle.Insert writes one daily_puzzles row and then nine
 // daily_puzzle_questions rows as separate statements. Against the bare pool,
 // a failure partway through would leave a puzzle row with fewer than nine
 // entries, and a later run's puzzle.Get would return that partial board as if
