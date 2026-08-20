@@ -11,6 +11,9 @@ import (
 // Config holds every environment-driven setting the application needs.
 type Config struct {
 	DatabaseURL          string
+	HTTPAddress          string
+	CookieSecure         bool
+	DevelopmentMode      bool
 	PuzzleTimezone       *time.Location
 	QuestionCooldownDays int
 	TimeLimitSeconds     int
@@ -20,10 +23,18 @@ type Config struct {
 // rejecting values that would fail later in less obvious ways.
 func Load() (Config, error) {
 	var cfg Config
+	var err error
 
 	cfg.DatabaseURL = os.Getenv("DATABASE_URL")
 	if cfg.DatabaseURL == "" {
 		return Config{}, fmt.Errorf("DATABASE_URL is required")
+	}
+	cfg.HTTPAddress = envOr("HTTP_ADDRESS", ":8080")
+	if cfg.CookieSecure, err = boolValue("COOKIE_SECURE", true); err != nil {
+		return Config{}, err
+	}
+	if cfg.DevelopmentMode, err = boolValue("DEVELOPMENT_MODE", false); err != nil {
+		return Config{}, err
 	}
 
 	tzName := envOr("PUZZLE_TIMEZONE", "America/Denver")
@@ -40,6 +51,18 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	return cfg, nil
+}
+
+func boolValue(key string, fallback bool) (bool, error) {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback, nil
+	}
+	v, err := strconv.ParseBool(raw)
+	if err != nil {
+		return false, fmt.Errorf("%s %q is not a boolean: %w", key, raw, err)
+	}
+	return v, nil
 }
 
 func envOr(key, fallback string) string {

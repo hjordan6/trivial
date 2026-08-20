@@ -4,6 +4,7 @@ package clock
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
 	"time"
 )
@@ -54,6 +55,10 @@ func ParseDate(s string) (Date, error) {
 func (d Date) String() string {
 	return d.time().Format(dateLayout)
 }
+
+// MarshalJSON keeps API dates as calendar-date strings rather than exposing
+// the implementation's Year/Month/Day fields.
+func (d Date) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
 
 // AddDays returns the date n days after d. n may be negative.
 func (d Date) AddDays(n int) Date {

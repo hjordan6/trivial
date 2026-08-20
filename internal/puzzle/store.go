@@ -12,20 +12,20 @@ import (
 
 // Entry is one cell of the board: a question at a difficulty within a topic.
 type Entry struct {
-	TopicID       int64
-	TopicSlug     string
-	TopicName     string
-	TopicPosition int
-	Difficulty    content.Difficulty
-	QuestionID    int64
-	Prompt        string
+	TopicID       int64              `json:"-"`
+	TopicSlug     string             `json:"topic_slug"`
+	TopicName     string             `json:"topic_name"`
+	TopicPosition int                `json:"topic_position"`
+	Difficulty    content.Difficulty `json:"difficulty"`
+	QuestionID    int64              `json:"question_id"`
+	Prompt        string             `json:"prompt"`
 }
 
 // Puzzle is one day's board of nine questions.
 type Puzzle struct {
-	Date             clock.Date
-	TimeLimitSeconds int
-	Entries          []Entry
+	Date             clock.Date `json:"date"`
+	TimeLimitSeconds int        `json:"time_limit_seconds"`
+	Entries          []Entry    `json:"questions"`
 }
 
 // Get returns the puzzle for a date, or nil when none has been generated.

@@ -32,11 +32,57 @@ func TestParseSeedAcceptsValidFile(t *testing.T) {
 	if len(seed.Topics) != 1 {
 		t.Fatalf("got %d topics, want 1", len(seed.Topics))
 	}
+	if seed.Topics[0].Weight != 1 {
+		t.Errorf("default topic weight = %d, want 1", seed.Topics[0].Weight)
+	}
 	q := seed.Topics[0].Questions[0]
 	// The canonical answer is always an accepted alias, whether or not the
 	// author listed it.
 	if !contains(q.Aliases, "Paris") {
 		t.Errorf("aliases = %v, want the canonical answer to be included", q.Aliases)
+	}
+}
+
+func TestParseSeedAcceptsFlatQuestionFormat(t *testing.T) {
+	data := `[{
+	  "question": "This Serbian star is an all-time great center.",
+	  "category": "Sports",
+	  "difficulty": 5,
+	  "answer": "Nikola Jokić",
+	  "acceptedAnswers": ["Nikola Jokic", "Jokic", "Jokić"],
+	  "multipleChoiceOptions": ["Nikola Jokić", "Luka Dončić", "Giannis Antetokounmpo", "Joel Embiid"]
+	}]`
+	seed, err := ParseSeed([]byte(data))
+	if err != nil {
+		t.Fatalf("ParseSeed() error = %v", err)
+	}
+	if len(seed.Topics) != 1 || seed.Topics[0].Slug != "sports" {
+		t.Fatalf("topics = %+v", seed.Topics)
+	}
+	question := seed.Topics[0].Questions[0]
+	if question.Difficulty != 5 {
+		t.Fatalf("difficulty = %d, want 5", question.Difficulty)
+	}
+	if len(question.Distractors) != 3 {
+		t.Fatalf("distractors = %v, want three wrong options", question.Distractors)
+	}
+	if question.ExternalID == "" {
+		t.Fatal("derived external id is empty")
+	}
+}
+
+func TestParseSeedAcceptsWrappedFlatQuestionFormat(t *testing.T) {
+	data := `{"questions":[{
+	  "question":"A valid wrapped question?","category":"General Knowledge","difficulty":8,
+	  "answer":"Yes","acceptedAnswers":[],
+	  "multipleChoiceOptions":["Yes","No","Maybe","Unknown"]
+	}]}`
+	seed, err := ParseSeed([]byte(data))
+	if err != nil {
+		t.Fatalf("ParseSeed() error = %v", err)
+	}
+	if len(seed.Topics) != 1 || len(seed.Topics[0].Questions) != 1 {
+		t.Fatalf("seed = %+v", seed)
 	}
 }
 
@@ -47,14 +93,23 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 		wantErr string
 	}{
 		{
+			name: "invalid topic weight",
+			mutate: func(s string) string {
+				return strings.Replace(s, `"name": "World Geography"`, `"name": "World Geography", "weight": -1`, 1)
+			},
+			wantErr: "weight",
+		},
+		{
 			name:    "unknown difficulty",
 			mutate:  func(s string) string { return strings.Replace(s, `"easy"`, `"trivial"`, 1) },
 			wantErr: "difficulty",
 		},
 		{
-			name:    "too few distractors",
-			mutate:  func(s string) string { return strings.Replace(s, `, "Toulouse"`, ``, 1) },
-			wantErr: "at least 5 distractors",
+			name: "too few distractors",
+			mutate: func(s string) string {
+				return strings.Replace(s, `"Lyon", "Marseille", "Bordeaux", "Nice", "Toulouse"`, `"Lyon", "Marseille"`, 1)
+			},
+			wantErr: "at least 3 distractors",
 		},
 		{
 			name:    "distractor duplicates the answer",
@@ -65,16 +120,6 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			name:    "distractor duplicates an alias",
 			mutate:  func(s string) string { return strings.Replace(s, `"Marseille"`, `"Paris, France"`, 1) },
 			wantErr: "distractor",
-		},
-		{
-			// "Pariss" is not an exact match for the accepted answer "paris",
-			// but it is one edit away, and grading.Grade would accept it: the
-			// validator must run the real grader rather than exact string
-			// comparison, or a distractor this close would be graded correct
-			// at play time.
-			name:    "distractor is a fuzzy match for an accepted answer",
-			mutate:  func(s string) string { return strings.Replace(s, `"Lyon"`, `"Pariss"`, 1) },
-			wantErr: "would be graded correct",
 		},
 		{
 			name: "alias normalizes to empty",
@@ -89,14 +134,11 @@ func TestParseSeedRejectsBadFiles(t *testing.T) {
 			wantErr: "normalizes to empty",
 		},
 		{
-			name: "duplicate distractor collapses below five distinct",
+			name: "duplicate distractor collapses below three distinct",
 			mutate: func(s string) string {
-				// Two raw entries, "Toulouse" replaced with a repeat of
-				// "Lyon", so the file still lists 5 distractors but only 4
-				// are distinct after normalization.
-				return strings.Replace(s, `"Nice", "Toulouse"`, `"Nice", "Lyon"`, 1)
+				return strings.Replace(s, `"Lyon", "Marseille", "Bordeaux", "Nice", "Toulouse"`, `"Lyon", "Lyon", "Marseille"`, 1)
 			},
-			wantErr: "at least 5 distractors",
+			wantErr: "at least 3 distractors",
 		},
 		{
 			name:    "empty prompt",

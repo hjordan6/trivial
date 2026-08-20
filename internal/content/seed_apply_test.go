@@ -107,7 +107,11 @@ func TestSeedFileIsRichEnoughToGenerate(t *testing.T) {
 	for _, topic := range seed.Topics {
 		counts := map[content.Difficulty]int{}
 		for _, q := range topic.Questions {
-			counts[q.Difficulty]++
+			band, err := content.BandForRating(int(q.Difficulty))
+			if err != nil {
+				t.Fatalf("topic %s: %v", topic.Slug, err)
+			}
+			counts[band]++
 		}
 		for _, d := range content.AllDifficulties {
 			if counts[d] < 3 {
