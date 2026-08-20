@@ -28,13 +28,16 @@ make test
 ```
 go run ./cmd/trivial migrate up|down
 go run ./cmd/trivial seed apply [--file seed/questions.json]
+go run ./cmd/trivial seed replace --file question_dump.json
 go run ./cmd/trivial puzzles generate [--from YYYY-MM-DD] [--days N]
 go run ./cmd/trivial puzzles show YYYY-MM-DD
 go run ./cmd/trivial serve
 ```
 
 For local play, `make serve` builds the Vue application, migrates the database,
-and starts the game at `http://localhost:8080`.
+starts the game at `http://localhost:8080`, and enables a local-only reset
+button so the same daily puzzle can be replayed during development. The reset
+endpoint is disabled unless `DEVELOPMENT_MODE=true`.
 
 ## Starter library limits
 
@@ -57,6 +60,48 @@ library is therefore expected, not a bug: it's the no-repeat guarantee
 refusing to re-serve a question that's still on cooldown, and the generator
 deliberately writes nothing for a day it can't fully fill rather than
 producing a partial one.
+
+## Topic weights
+
+Each topic has a positive integer `weight` in `seed/questions.json`. Weights
+are relative: on each topic draw, a topic weighted `3` is three times as likely
+to be selected as one weighted `1`. Selection is without replacement, so a
+topic still appears at most once per board. All starter topics default to `1`.
+
+After changing weights, run `make seed`. The new weights affect puzzles
+generated afterward; already-generated puzzles remain unchanged.
+
+## Importing questions
+
+The seed command also accepts a flat JSON array. Difficulty is stored on a
+1–10 scale but players see only the derived band: 1–4 easy, 5–7 medium, and
+8–10 hard. Each item uses this shape:
+
+```json
+{
+  "question": "Which Serbian center is a multiple-time NBA MVP?",
+  "category": "Sports",
+  "difficulty": 5,
+  "answer": "Nikola Jokić",
+  "acceptedAnswers": ["Nikola Jokic", "Jokic", "Jokić"],
+  "multipleChoiceOptions": [
+    "Nikola Jokić",
+    "Luka Dončić",
+    "Giannis Antetokounmpo",
+    "Joel Embiid"
+  ]
+}
+```
+
+Put one or more objects in a JSON array, then import them with:
+
+```bash
+go run ./cmd/trivial seed apply --file path/to/questions.json
+```
+
+The importer groups questions by category, derives stable external IDs from
+their prompts, removes accepted answers from the distractor set, and requires
+at least three distinct wrong options.
 
 For local work, generate in short batches (e.g. `--days 5`) instead of
 trying to fill a long run at once. To actually sustain a full year at the

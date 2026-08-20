@@ -90,6 +90,28 @@ func TestUpsertTopicIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestUpsertTopicWithWeightPersistsAndUpdatesWeight(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+	id, err := content.UpsertTopicWithWeight(ctx, tx, "science", "Science", 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := content.UpsertTopicWithWeight(ctx, tx, "science", "Science & Nature", 7); err != nil {
+		t.Fatal(err)
+	}
+	var weight int
+	if err := tx.QueryRow(ctx, `SELECT selection_weight FROM topics WHERE id=$1`, id).Scan(&weight); err != nil {
+		t.Fatal(err)
+	}
+	if weight != 7 {
+		t.Fatalf("selection weight = %d, want 7", weight)
+	}
+	if _, err := content.UpsertTopicWithWeight(ctx, tx, "bad", "Bad", 0); err == nil {
+		t.Fatal("zero weight accepted")
+	}
+}
+
 func TestUpsertQuestionUpdatesByExternalID(t *testing.T) {
 	tx := testsupport.Tx(t, testsupport.MustPool(t))
 	ctx := context.Background()
@@ -264,11 +286,11 @@ func TestEligibleQuestionsFiltersIneligibleContent(t *testing.T) {
 		}
 	})
 
-	t.Run("excludes questions with fewer than five distractors", func(t *testing.T) {
+	t.Run("excludes questions with fewer than three distractors", func(t *testing.T) {
 		tx := testsupport.Tx(t, pool)
 		topicID, _ := content.UpsertTopic(ctx, tx, "geography", "Geography")
 		id := makeQuestion(t, tx, topicID, content.Easy, "thin-1")
-		if err := content.ReplaceDistractors(ctx, tx, id, []string{"1", "2", "3", "4"}); err != nil {
+		if err := content.ReplaceDistractors(ctx, tx, id, []string{"1", "2"}); err != nil {
 			t.Fatalf("ReplaceDistractors: %v", err)
 		}
 
