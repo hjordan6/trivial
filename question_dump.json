@@ -1,0 +1,2954 @@
+{
+  "questions": [
+    {
+      "question": "This Virginian wrote the Declaration of Independence, doubled the nation's size with the Louisiana Purchase, and preferred to be remembered as a founder of the University of Virginia.",
+      "category": "U.S. History",
+      "difficulty": 3,
+      "answer": "Thomas Jefferson",
+      "acceptedAnswers": [
+        "Jefferson"
+      ],
+      "multipleChoiceOptions": [
+        "Thomas Jefferson",
+        "James Madison",
+        "John Adams",
+        "James Monroe"
+      ]
+    },
+    {
+      "question": "This president led the Union through the Civil War, issued the Emancipation Proclamation, and delivered a famously brief address at Gettysburg.",
+      "category": "U.S. History",
+      "difficulty": 2,
+      "answer": "Abraham Lincoln",
+      "acceptedAnswers": [
+        "Lincoln"
+      ],
+      "multipleChoiceOptions": [
+        "Abraham Lincoln",
+        "Ulysses S. Grant",
+        "Andrew Johnson",
+        "William H. Seward"
+      ]
+    },
+    {
+      "question": "This movement's best-known bus boycott began after Rosa Parks refused to give up her seat in Montgomery, Alabama.",
+      "category": "U.S. History",
+      "difficulty": 4,
+      "answer": "The Civil Rights Movement",
+      "acceptedAnswers": [
+        "Civil Rights Movement"
+      ],
+      "multipleChoiceOptions": [
+        "The Civil Rights Movement",
+        "The Progressive Movement",
+        "The Temperance Movement",
+        "The Populist Movement"
+      ]
+    },
+    {
+      "question": "This 19th-century purchase from Russia added a vast northern territory that critics initially mocked as a frozen folly.",
+      "category": "U.S. History",
+      "difficulty": 3,
+      "answer": "Alaska",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Alaska",
+        "Louisiana",
+        "Florida",
+        "Oregon"
+      ]
+    },
+    {
+      "question": "This amendment abolished slavery in the United States after the Civil War.",
+      "category": "U.S. History",
+      "difficulty": 4,
+      "answer": "The 13th Amendment",
+      "acceptedAnswers": [
+        "13th Amendment",
+        "Thirteenth Amendment"
+      ],
+      "multipleChoiceOptions": [
+        "The 13th Amendment",
+        "The 14th Amendment",
+        "The 15th Amendment",
+        "The 19th Amendment"
+      ]
+    },
+    {
+      "question": "This Boston protest turned taxed tea into harbor water and helped push the colonies toward revolution.",
+      "category": "U.S. History",
+      "difficulty": 4,
+      "answer": "The Boston Tea Party",
+      "acceptedAnswers": [
+        "Boston Tea Party"
+      ],
+      "multipleChoiceOptions": [
+        "The Boston Tea Party",
+        "The Boston Massacre",
+        "Shays' Rebellion",
+        "The Stamp Act Congress"
+      ]
+    },
+    {
+      "question": "This president warned against 'entangling alliances' in his Farewell Address and set the precedent of leaving office after two terms.",
+      "category": "U.S. History",
+      "difficulty": 5,
+      "answer": "George Washington",
+      "acceptedAnswers": [
+        "Washington"
+      ],
+      "multipleChoiceOptions": [
+        "George Washington",
+        "John Adams",
+        "Thomas Jefferson",
+        "James Madison"
+      ]
+    },
+    {
+      "question": "This president's doctrine told European powers that the Western Hemisphere was no longer open to new colonization, even though his secretary of state did much of the intellectual heavy lifting.",
+      "category": "U.S. History",
+      "difficulty": 6,
+      "answer": "James Monroe",
+      "acceptedAnswers": [
+        "Monroe"
+      ],
+      "multipleChoiceOptions": [
+        "James Monroe",
+        "John Quincy Adams",
+        "Andrew Jackson",
+        "James Madison"
+      ]
+    },
+    {
+      "question": "This muckraking novel about Chicago meatpacking helped spur federal food-safety laws, even though its author was more interested in workers than sausages.",
+      "category": "U.S. History",
+      "difficulty": 6,
+      "answer": "The Jungle",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "The Jungle",
+        "Main Street",
+        "The Octopus",
+        "Sister Carrie"
+      ]
+    },
+    {
+      "question": "This Supreme Court case arose from a Black man who sued for freedom after living in free territory and ended with one of the Court's most infamous rulings.",
+      "category": "U.S. History",
+      "difficulty": 7,
+      "answer": "Dred Scott v. Sandford",
+      "acceptedAnswers": [
+        "Dred Scott",
+        "Dred Scott v Sandford"
+      ],
+      "multipleChoiceOptions": [
+        "Dred Scott v. Sandford",
+        "Plessy v. Ferguson",
+        "Worcester v. Georgia",
+        "Korematsu v. United States"
+      ]
+    },
+    {
+      "question": "This woman escaped slavery, returned south repeatedly to guide others to freedom, and later served the Union cause during the Civil War.",
+      "category": "U.S. History",
+      "difficulty": 6,
+      "answer": "Harriet Tubman",
+      "acceptedAnswers": [
+        "Tubman"
+      ],
+      "multipleChoiceOptions": [
+        "Harriet Tubman",
+        "Sojourner Truth",
+        "Ida B. Wells",
+        "Frederick Douglass"
+      ]
+    },
+    {
+      "question": "This president was a former general nicknamed 'Old Hickory,' expanded presidential power, and presided over the forced removal of Native peoples from the Southeast.",
+      "category": "U.S. History",
+      "difficulty": 7,
+      "answer": "Andrew Jackson",
+      "acceptedAnswers": [
+        "Jackson"
+      ],
+      "multipleChoiceOptions": [
+        "Andrew Jackson",
+        "Zachary Taylor",
+        "William Henry Harrison",
+        "Martin Van Buren"
+      ]
+    },
+    {
+      "question": "This one-term president entered office with an ambitious four-part agenda, settled a northwestern boundary dispute, and left behind a war that dramatically enlarged the United States.",
+      "category": "U.S. History",
+      "difficulty": 8,
+      "answer": "James K. Polk",
+      "acceptedAnswers": [
+        "James Polk",
+        "Polk"
+      ],
+      "multipleChoiceOptions": [
+        "James K. Polk",
+        "John Tyler",
+        "Zachary Taylor",
+        "Franklin Pierce"
+      ]
+    },
+    {
+      "question": "A young Virginia officer surrendered at Fort Necessity after an expedition into the Ohio Country helped widen a colonial dispute into the French and Indian War; decades later, his military résumé improved considerably.",
+      "category": "U.S. History",
+      "difficulty": 8,
+      "answer": "George Washington",
+      "acceptedAnswers": [
+        "Washington"
+      ],
+      "multipleChoiceOptions": [
+        "George Washington",
+        "Horatio Gates",
+        "Charles Lee",
+        "Daniel Morgan"
+      ]
+    },
+    {
+      "question": "This senator's name became shorthand for anti-communist accusations after televised hearings exposed just how much of his case rested on bluster.",
+      "category": "U.S. History",
+      "difficulty": 9,
+      "answer": "Joseph McCarthy",
+      "acceptedAnswers": [
+        "McCarthy"
+      ],
+      "multipleChoiceOptions": [
+        "Joseph McCarthy",
+        "Richard Russell",
+        "Robert Taft",
+        "Estes Kefauver"
+      ]
+    },
+    {
+      "question": "This reformer published The North Star, escaped slavery, became a leading abolitionist speaker, and later argued forcefully for women's suffrage.",
+      "category": "U.S. History",
+      "difficulty": 8,
+      "answer": "Frederick Douglass",
+      "acceptedAnswers": [
+        "Douglass"
+      ],
+      "multipleChoiceOptions": [
+        "Frederick Douglass",
+        "William Lloyd Garrison",
+        "Booker T. Washington",
+        "W.E.B. Du Bois"
+      ]
+    },
+    {
+      "question": "This 19th-century compromise admitted Missouri as a slave state and Maine as a free state while drawing a geographic line through the Louisiana Territory that proved anything but permanent.",
+      "category": "U.S. History",
+      "difficulty": 9,
+      "answer": "The Missouri Compromise",
+      "acceptedAnswers": [
+        "Missouri Compromise"
+      ],
+      "multipleChoiceOptions": [
+        "The Missouri Compromise",
+        "The Compromise of 1850",
+        "The Kansas-Nebraska Act",
+        "The Wilmot Proviso"
+      ]
+    },
+    {
+      "question": "This secretary of state negotiated the purchase of Alaska and survived an assassination attempt the same night Lincoln was killed.",
+      "category": "U.S. History",
+      "difficulty": 9,
+      "answer": "William H. Seward",
+      "acceptedAnswers": [
+        "William Seward",
+        "Seward"
+      ],
+      "multipleChoiceOptions": [
+        "William H. Seward",
+        "Salmon P. Chase",
+        "Edwin Stanton",
+        "Thaddeus Stevens"
+      ]
+    },
+    {
+      "question": "This conqueror from Macedonia was tutored by Aristotle and built an empire stretching from Greece to India before dying in his early thirties.",
+      "category": "World History",
+      "difficulty": 2,
+      "answer": "Alexander the Great",
+      "acceptedAnswers": [
+        "Alexander"
+      ],
+      "multipleChoiceOptions": [
+        "Alexander the Great",
+        "Cyrus the Great",
+        "Hannibal",
+        "Julius Caesar"
+      ]
+    },
+    {
+      "question": "This French heroine said she was guided by divine voices, helped lift the siege of Orléans, and was later burned at the stake.",
+      "category": "World History",
+      "difficulty": 3,
+      "answer": "Joan of Arc",
+      "acceptedAnswers": [
+        "Joan"
+      ],
+      "multipleChoiceOptions": [
+        "Joan of Arc",
+        "Eleanor of Aquitaine",
+        "Catherine de' Medici",
+        "Marie Antoinette"
+      ]
+    },
+    {
+      "question": "This ancient Egyptian queen allied herself with both Julius Caesar and Mark Antony as Rome tightened its grip on the Mediterranean.",
+      "category": "World History",
+      "difficulty": 4,
+      "answer": "Cleopatra",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Cleopatra",
+        "Nefertiti",
+        "Hatshepsut",
+        "Boudica"
+      ]
+    },
+    {
+      "question": "This empire centered on Rome once stretched from Britain to North Africa and left behind roads, aqueducts, and more political metaphors than modern republics can count.",
+      "category": "World History",
+      "difficulty": 3,
+      "answer": "The Roman Empire",
+      "acceptedAnswers": [
+        "Roman Empire"
+      ],
+      "multipleChoiceOptions": [
+        "The Roman Empire",
+        "The Byzantine Empire",
+        "The Persian Empire",
+        "The Ottoman Empire"
+      ]
+    },
+    {
+      "question": "This wall fell in 1989, becoming the most visible symbol of the collapse of communist rule in Eastern Europe.",
+      "category": "World History",
+      "difficulty": 4,
+      "answer": "The Berlin Wall",
+      "acceptedAnswers": [
+        "Berlin Wall"
+      ],
+      "multipleChoiceOptions": [
+        "The Berlin Wall",
+        "Hadrian's Wall",
+        "The Iron Curtain",
+        "The Great Wall of China"
+      ]
+    },
+    {
+      "question": "This pandemic swept through Europe in the 14th century, killing an enormous share of the population and reshaping medieval society.",
+      "category": "World History",
+      "difficulty": 4,
+      "answer": "The Black Death",
+      "acceptedAnswers": [
+        "Black Death",
+        "Bubonic Plague"
+      ],
+      "multipleChoiceOptions": [
+        "The Black Death",
+        "The Spanish Flu",
+        "The Great Plague of London",
+        "Smallpox"
+      ]
+    },
+    {
+      "question": "This emperor crowned himself ruler of France, reshaped European law, and met his final major defeat near a Belgian village.",
+      "category": "World History",
+      "difficulty": 5,
+      "answer": "Napoleon Bonaparte",
+      "acceptedAnswers": [
+        "Napoleon"
+      ],
+      "multipleChoiceOptions": [
+        "Napoleon Bonaparte",
+        "Louis XIV",
+        "Otto von Bismarck",
+        "Charles de Gaulle"
+      ]
+    },
+    {
+      "question": "This 1215 charter forced an English king to accept limits on royal authority and became a surprisingly durable symbol of the rule of law.",
+      "category": "World History",
+      "difficulty": 6,
+      "answer": "Magna Carta",
+      "acceptedAnswers": [
+        "The Magna Carta"
+      ],
+      "multipleChoiceOptions": [
+        "Magna Carta",
+        "Petition of Right",
+        "Domesday Book",
+        "Act of Settlement"
+      ]
+    },
+    {
+      "question": "This Indian leader used mass civil disobedience and a famous salt march to challenge British rule without building his movement around armed revolt.",
+      "category": "World History",
+      "difficulty": 6,
+      "answer": "Mahatma Gandhi",
+      "acceptedAnswers": [
+        "Gandhi"
+      ],
+      "multipleChoiceOptions": [
+        "Mahatma Gandhi",
+        "Jawaharlal Nehru",
+        "Subhas Chandra Bose",
+        "Muhammad Ali Jinnah"
+      ]
+    },
+    {
+      "question": "This empire's rulers called themselves Roman emperors from Constantinople long after the western empire disappeared, and endured until the city fell in 1453.",
+      "category": "World History",
+      "difficulty": 7,
+      "answer": "The Byzantine Empire",
+      "acceptedAnswers": [
+        "Byzantine Empire",
+        "Byzantium"
+      ],
+      "multipleChoiceOptions": [
+        "The Byzantine Empire",
+        "The Holy Roman Empire",
+        "The Ottoman Empire",
+        "The Abbasid Caliphate"
+      ]
+    },
+    {
+      "question": "This Chinese dynasty gave its name to the country's largest ethnic group and oversaw major expansion along the Silk Road.",
+      "category": "World History",
+      "difficulty": 6,
+      "answer": "The Han Dynasty",
+      "acceptedAnswers": [
+        "Han",
+        "Han Dynasty"
+      ],
+      "multipleChoiceOptions": [
+        "The Han Dynasty",
+        "The Tang Dynasty",
+        "The Ming Dynasty",
+        "The Qin Dynasty"
+      ]
+    },
+    {
+      "question": "This North African general crossed the Alps with elephants and handed Rome one of its worst battlefield defeats at Cannae.",
+      "category": "World History",
+      "difficulty": 7,
+      "answer": "Hannibal",
+      "acceptedAnswers": [
+        "Hannibal Barca"
+      ],
+      "multipleChoiceOptions": [
+        "Hannibal",
+        "Scipio Africanus",
+        "Pyrrhus",
+        "Marius"
+      ]
+    },
+    {
+      "question": "This Prussian statesman used wars against Denmark, Austria, and France to help unify Germany, then spent years trying to preserve the balance he had upset.",
+      "category": "World History",
+      "difficulty": 8,
+      "answer": "Otto von Bismarck",
+      "acceptedAnswers": [
+        "Bismarck"
+      ],
+      "multipleChoiceOptions": [
+        "Otto von Bismarck",
+        "Klemens von Metternich",
+        "Giuseppe Garibaldi",
+        "Helmuth von Moltke"
+      ]
+    },
+    {
+      "question": "This Haitian revolutionary was born enslaved, became the dominant leader of the revolution, and died in a French prison before independence was formally declared.",
+      "category": "World History",
+      "difficulty": 9,
+      "answer": "Toussaint Louverture",
+      "acceptedAnswers": [
+        "Toussaint",
+        "Louverture"
+      ],
+      "multipleChoiceOptions": [
+        "Toussaint Louverture",
+        "Jean-Jacques Dessalines",
+        "Simón Bolívar",
+        "Henri Christophe"
+      ]
+    },
+    {
+      "question": "This Russian ruler crushed the Streltsy, built a new capital on the Baltic, and tried to drag his country westward by force, shipbuilding, and occasionally beard taxes.",
+      "category": "World History",
+      "difficulty": 8,
+      "answer": "Peter the Great",
+      "acceptedAnswers": [
+        "Peter I"
+      ],
+      "multipleChoiceOptions": [
+        "Peter the Great",
+        "Ivan the Terrible",
+        "Nicholas I",
+        "Alexander II"
+      ]
+    },
+    {
+      "question": "This conference of 1884–85 set rules for European claims in Africa and became shorthand for carving up a continent without much concern for the people already living there.",
+      "category": "World History",
+      "difficulty": 9,
+      "answer": "The Berlin Conference",
+      "acceptedAnswers": [
+        "Berlin Conference"
+      ],
+      "multipleChoiceOptions": [
+        "The Berlin Conference",
+        "The Congress of Vienna",
+        "The Bandung Conference",
+        "The Treaty of Tordesillas"
+      ]
+    },
+    {
+      "question": "This Mughal emperor commissioned a white marble mausoleum for his wife, a monument whose beauty has rather outlived the imperial finances it strained.",
+      "category": "World History",
+      "difficulty": 9,
+      "answer": "Shah Jahan",
+      "acceptedAnswers": [
+        "Shah Jahan I"
+      ],
+      "multipleChoiceOptions": [
+        "Shah Jahan",
+        "Akbar",
+        "Aurangzeb",
+        "Babur"
+      ]
+    },
+    {
+      "question": "This South American liberator helped free Venezuela, Colombia, Ecuador, Peru, and Bolivia, only to watch his dream of a durable continental union unravel.",
+      "category": "World History",
+      "difficulty": 8,
+      "answer": "Simón Bolívar",
+      "acceptedAnswers": [
+        "Simon Bolivar",
+        "Bolívar",
+        "Bolivar"
+      ],
+      "multipleChoiceOptions": [
+        "Simón Bolívar",
+        "José de San Martín",
+        "Bernardo O'Higgins",
+        "Antonio José de Sucre"
+      ]
+    },
+    {
+      "question": "This country is shaped like a boot, contains Rome and Venice, and has Sicily just off its toe.",
+      "category": "Geography",
+      "difficulty": 2,
+      "answer": "Italy",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Italy",
+        "Greece",
+        "Portugal",
+        "Croatia"
+      ]
+    },
+    {
+      "question": "This river runs through Egypt and helped sustain one of the world's earliest great civilizations.",
+      "category": "Geography",
+      "difficulty": 3,
+      "answer": "The Nile",
+      "acceptedAnswers": [
+        "Nile"
+      ],
+      "multipleChoiceOptions": [
+        "The Nile",
+        "The Congo",
+        "The Niger",
+        "The Zambezi"
+      ]
+    },
+    {
+      "question": "This country is home to Mount Fuji, the cities of Tokyo and Kyoto, and an island chain stretching along the Pacific Ring of Fire.",
+      "category": "Geography",
+      "difficulty": 3,
+      "answer": "Japan",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Japan",
+        "South Korea",
+        "Taiwan",
+        "Philippines"
+      ]
+    },
+    {
+      "question": "This South American country contains most of the Amazon rainforest and speaks Portuguese rather than Spanish.",
+      "category": "Geography",
+      "difficulty": 4,
+      "answer": "Brazil",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Brazil",
+        "Peru",
+        "Colombia",
+        "Argentina"
+      ]
+    },
+    {
+      "question": "This European capital is famous for the Eiffel Tower, the Louvre, and a river called the Seine.",
+      "category": "Geography",
+      "difficulty": 4,
+      "answer": "Paris",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Paris",
+        "Brussels",
+        "Madrid",
+        "Vienna"
+      ]
+    },
+    {
+      "question": "This desert covers much of northern Africa and is the largest hot desert on Earth.",
+      "category": "Geography",
+      "difficulty": 4,
+      "answer": "The Sahara",
+      "acceptedAnswers": [
+        "Sahara"
+      ],
+      "multipleChoiceOptions": [
+        "The Sahara",
+        "The Gobi",
+        "The Kalahari",
+        "The Atacama"
+      ]
+    },
+    {
+      "question": "This landlocked European country is known for the Alps, four national languages, and a long tradition of political neutrality.",
+      "category": "Geography",
+      "difficulty": 5,
+      "answer": "Switzerland",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Switzerland",
+        "Austria",
+        "Belgium",
+        "Slovenia"
+      ]
+    },
+    {
+      "question": "This European capital sits on the Danube, is known for thermal baths, and has a grand neo-Gothic parliament building facing the river.",
+      "category": "Geography",
+      "difficulty": 6,
+      "answer": "Budapest",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Budapest",
+        "Vienna",
+        "Bratislava",
+        "Belgrade"
+      ]
+    },
+    {
+      "question": "This country controls the Bosporus, spans Europe and Asia, and has Ankara rather than Istanbul as its capital.",
+      "category": "Geography",
+      "difficulty": 6,
+      "answer": "Turkey",
+      "acceptedAnswers": [
+        "Türkiye",
+        "Turkiye"
+      ],
+      "multipleChoiceOptions": [
+        "Turkey",
+        "Greece",
+        "Georgia",
+        "Bulgaria"
+      ]
+    },
+    {
+      "question": "This country contains Petra, borders Israel and Saudi Arabia, and is ruled from Amman.",
+      "category": "Geography",
+      "difficulty": 7,
+      "answer": "Jordan",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Jordan",
+        "Lebanon",
+        "Oman",
+        "Syria"
+      ]
+    },
+    {
+      "question": "This island nation lies southeast of India and was once widely known as Ceylon.",
+      "category": "Geography",
+      "difficulty": 6,
+      "answer": "Sri Lanka",
+      "acceptedAnswers": [
+        "Ceylon"
+      ],
+      "multipleChoiceOptions": [
+        "Sri Lanka",
+        "Maldives",
+        "Mauritius",
+        "Madagascar"
+      ]
+    },
+    {
+      "question": "This African country is home to the Atlas Mountains, the cities of Fez and Marrakesh, and a coastline on both the Atlantic and Mediterranean.",
+      "category": "Geography",
+      "difficulty": 7,
+      "answer": "Morocco",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Morocco",
+        "Algeria",
+        "Tunisia",
+        "Mauritania"
+      ]
+    },
+    {
+      "question": "This French Riviera city spent centuries under rulers tied to Savoy, became definitively French in the 19th century, and gives its name to a salad built around Mediterranean ingredients.",
+      "category": "Geography",
+      "difficulty": 8,
+      "answer": "Nice",
+      "acceptedAnswers": [
+        "Nice, France"
+      ],
+      "multipleChoiceOptions": [
+        "Nice",
+        "Toulon",
+        "Nîmes",
+        "Montpellier"
+      ]
+    },
+    {
+      "question": "This landlocked West African country takes its modern name from a medieval empire that lay partly beyond today's borders; Bamako is its capital.",
+      "category": "Geography",
+      "difficulty": 9,
+      "answer": "Mali",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Mali",
+        "Niger",
+        "Burkina Faso",
+        "Chad"
+      ]
+    },
+    {
+      "question": "This European country has Ljubljana as its capital, a short Adriatic coastline, and a name often confused with that of a nearby nation whose capital is Bratislava.",
+      "category": "Geography",
+      "difficulty": 8,
+      "answer": "Slovenia",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Slovenia",
+        "Slovakia",
+        "Croatia",
+        "Serbia"
+      ]
+    },
+    {
+      "question": "This mountainous country in the Caucasus is home to Lake Sevan, has Yerevan as its capital, and was the first state traditionally credited with adopting Christianity as a state religion.",
+      "category": "Geography",
+      "difficulty": 9,
+      "answer": "Armenia",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Armenia",
+        "Georgia",
+        "Azerbaijan",
+        "Moldova"
+      ]
+    },
+    {
+      "question": "This capital on the Tagus became the center of a maritime empire, was devastated by a famous 18th-century earthquake, and is known for steep streets and yellow trams.",
+      "category": "Geography",
+      "difficulty": 8,
+      "answer": "Lisbon",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Lisbon",
+        "Porto",
+        "Seville",
+        "Valencia"
+      ]
+    },
+    {
+      "question": "This Central Asian country has Bishkek as its capital, is dominated by the Tian Shan mountains, and shares the enormous alpine lake Issyk-Kul with no other country because the lake lies entirely within its borders.",
+      "category": "Geography",
+      "difficulty": 9,
+      "answer": "Kyrgyzstan",
+      "acceptedAnswers": [
+        "Kyrgyz Republic"
+      ],
+      "multipleChoiceOptions": [
+        "Kyrgyzstan",
+        "Kazakhstan",
+        "Tajikistan",
+        "Uzbekistan"
+      ]
+    },
+    {
+      "question": "This planet is home to Olympus Mons, has moons named Phobos and Deimos, and is famous for its rusty red appearance.",
+      "category": "Science & Nature",
+      "difficulty": 2,
+      "answer": "Mars",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Mars",
+        "Venus",
+        "Mercury",
+        "Jupiter"
+      ]
+    },
+    {
+      "question": "This process lets plants use sunlight to turn carbon dioxide and water into chemical energy, with oxygen as a useful byproduct for the rest of us.",
+      "category": "Science & Nature",
+      "difficulty": 3,
+      "answer": "Photosynthesis",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Photosynthesis",
+        "Respiration",
+        "Fermentation",
+        "Transpiration"
+      ]
+    },
+    {
+      "question": "This mammal is the largest animal known to have ever lived, beating even the biggest dinosaurs for sheer mass.",
+      "category": "Science & Nature",
+      "difficulty": 3,
+      "answer": "Blue whale",
+      "acceptedAnswers": [
+        "The blue whale"
+      ],
+      "multipleChoiceOptions": [
+        "Blue whale",
+        "Sperm whale",
+        "African elephant",
+        "Whale shark"
+      ]
+    },
+    {
+      "question": "This organ pumps blood through the body and has four chambers in a healthy human adult.",
+      "category": "Science & Nature",
+      "difficulty": 4,
+      "answer": "The heart",
+      "acceptedAnswers": [
+        "Heart"
+      ],
+      "multipleChoiceOptions": [
+        "The heart",
+        "The liver",
+        "The lungs",
+        "The kidneys"
+      ]
+    },
+    {
+      "question": "This force keeps planets in orbit, gives objects weight, and made Newton's falling-apple story famous whether or not the apple actually hit him.",
+      "category": "Science & Nature",
+      "difficulty": 4,
+      "answer": "Gravity",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Gravity",
+        "Magnetism",
+        "Friction",
+        "Inertia"
+      ]
+    },
+    {
+      "question": "This gas makes up most of Earth's atmosphere, even though oxygen gets most of the publicity for keeping us alive.",
+      "category": "Science & Nature",
+      "difficulty": 4,
+      "answer": "Nitrogen",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Nitrogen",
+        "Oxygen",
+        "Carbon dioxide",
+        "Argon"
+      ]
+    },
+    {
+      "question": "This scientist sailed on HMS Beagle and later proposed natural selection as a mechanism for evolution.",
+      "category": "Science & Nature",
+      "difficulty": 5,
+      "answer": "Charles Darwin",
+      "acceptedAnswers": [
+        "Darwin"
+      ],
+      "multipleChoiceOptions": [
+        "Charles Darwin",
+        "Gregor Mendel",
+        "Louis Pasteur",
+        "Alfred Wegener"
+      ]
+    },
+    {
+      "question": "This layer of Earth lies beneath the crust, is mostly solid rock that can flow over long timescales, and drives much of plate tectonics through convection.",
+      "category": "Science & Nature",
+      "difficulty": 6,
+      "answer": "The mantle",
+      "acceptedAnswers": [
+        "Mantle"
+      ],
+      "multipleChoiceOptions": [
+        "The mantle",
+        "The outer core",
+        "The inner core",
+        "The lithosphere"
+      ]
+    },
+    {
+      "question": "This particle has no electric charge, lives in atomic nuclei, and helps explain why isotopes of the same element can have different masses.",
+      "category": "Science & Nature",
+      "difficulty": 6,
+      "answer": "The neutron",
+      "acceptedAnswers": [
+        "Neutron"
+      ],
+      "multipleChoiceOptions": [
+        "The neutron",
+        "The proton",
+        "The electron",
+        "The positron"
+      ]
+    },
+    {
+      "question": "This moon of Saturn has a thick nitrogen-rich atmosphere and lakes of liquid methane and ethane on its surface.",
+      "category": "Science & Nature",
+      "difficulty": 7,
+      "answer": "Titan",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Titan",
+        "Europa",
+        "Ganymede",
+        "Enceladus"
+      ]
+    },
+    {
+      "question": "This molecule carries genetic instructions using four chemical bases and a double-helix structure.",
+      "category": "Science & Nature",
+      "difficulty": 6,
+      "answer": "DNA",
+      "acceptedAnswers": [
+        "Deoxyribonucleic acid"
+      ],
+      "multipleChoiceOptions": [
+        "DNA",
+        "RNA",
+        "ATP",
+        "Collagen"
+      ]
+    },
+    {
+      "question": "This boundary around a black hole marks the point beyond which light cannot escape, giving astronomy one of its more ominous terms.",
+      "category": "Science & Nature",
+      "difficulty": 7,
+      "answer": "The event horizon",
+      "acceptedAnswers": [
+        "Event horizon"
+      ],
+      "multipleChoiceOptions": [
+        "The event horizon",
+        "The accretion disk",
+        "The photon sphere",
+        "The singularity"
+      ]
+    },
+    {
+      "question": "This Austrian physicist lent his name to an exclusion principle that helps explain electron structure and why ordinary matter does not collapse into itself.",
+      "category": "Science & Nature",
+      "difficulty": 8,
+      "answer": "Wolfgang Pauli",
+      "acceptedAnswers": [
+        "Pauli"
+      ],
+      "multipleChoiceOptions": [
+        "Wolfgang Pauli",
+        "Erwin Schrödinger",
+        "Max Born",
+        "Paul Dirac"
+      ]
+    },
+    {
+      "question": "This biologist's experiments with pea plants revealed patterns of inheritance decades before chromosomes gave genetics a physical mechanism.",
+      "category": "Science & Nature",
+      "difficulty": 9,
+      "answer": "Gregor Mendel",
+      "acceptedAnswers": [
+        "Mendel"
+      ],
+      "multipleChoiceOptions": [
+        "Gregor Mendel",
+        "Thomas Hunt Morgan",
+        "Robert Hooke",
+        "Antonie van Leeuwenhoek"
+      ]
+    },
+    {
+      "question": "This giant Pacific weather pattern begins with unusually warm surface water in the central and eastern tropical ocean and can disrupt rainfall around the globe.",
+      "category": "Science & Nature",
+      "difficulty": 8,
+      "answer": "El Niño",
+      "acceptedAnswers": [
+        "El Nino"
+      ],
+      "multipleChoiceOptions": [
+        "El Niño",
+        "La Niña",
+        "The Pacific Decadal Oscillation",
+        "The Madden-Julian Oscillation"
+      ]
+    },
+    {
+      "question": "This tiny organelle is often nicknamed the cell's 'powerhouse' because it produces much of a eukaryotic cell's ATP through respiration.",
+      "category": "Science & Nature",
+      "difficulty": 9,
+      "answer": "The mitochondrion",
+      "acceptedAnswers": [
+        "Mitochondria",
+        "Mitochondrion"
+      ],
+      "multipleChoiceOptions": [
+        "The mitochondrion",
+        "The ribosome",
+        "The Golgi apparatus",
+        "The lysosome"
+      ]
+    },
+    {
+      "question": "This geologist proposed that continents drift across Earth's surface after noticing how coastlines and fossil distributions seemed to fit together, decades before plate tectonics supplied the mechanism.",
+      "category": "Science & Nature",
+      "difficulty": 8,
+      "answer": "Alfred Wegener",
+      "acceptedAnswers": [
+        "Wegener"
+      ],
+      "multipleChoiceOptions": [
+        "Alfred Wegener",
+        "Charles Lyell",
+        "James Hutton",
+        "Harry Hess"
+      ]
+    },
+    {
+      "question": "This African mammal is the only living member of its family, has a giraffe-like tongue, zebra-striped legs, and was unknown to Western science until the early 20th century.",
+      "category": "Science & Nature",
+      "difficulty": 9,
+      "answer": "Okapi",
+      "acceptedAnswers": [
+        "The okapi"
+      ],
+      "multipleChoiceOptions": [
+        "Okapi",
+        "Bongo",
+        "Kudu",
+        "Gerenuk"
+      ]
+    },
+    {
+      "question": "This Kansas City tight end became a Super Bowl star and then an even bigger pop-culture figure through his relationship with Taylor Swift.",
+      "category": "Sports",
+      "difficulty": 2,
+      "answer": "Travis Kelce",
+      "acceptedAnswers": [
+        "Kelce"
+      ],
+      "multipleChoiceOptions": [
+        "Travis Kelce",
+        "George Kittle",
+        "Rob Gronkowski",
+        "Mark Andrews"
+      ]
+    },
+    {
+      "question": "This NBA star spent his career with the Lakers, wore both 8 and 24, and called himself the 'Black Mamba.'",
+      "category": "Sports",
+      "difficulty": 3,
+      "answer": "Kobe Bryant",
+      "acceptedAnswers": [
+        "Kobe"
+      ],
+      "multipleChoiceOptions": [
+        "Kobe Bryant",
+        "Allen Iverson",
+        "Dwyane Wade",
+        "Vince Carter"
+      ]
+    },
+    {
+      "question": "This Argentine soccer star won a long-awaited World Cup in 2022 after a career built around dazzling dribbles and a left foot that rarely seemed fair.",
+      "category": "Sports",
+      "difficulty": 3,
+      "answer": "Lionel Messi",
+      "acceptedAnswers": [
+        "Messi"
+      ],
+      "multipleChoiceOptions": [
+        "Lionel Messi",
+        "Cristiano Ronaldo",
+        "Neymar",
+        "Kylian Mbappé"
+      ]
+    },
+    {
+      "question": "This quarterback won multiple Super Bowls with New England before finishing his career in Tampa Bay.",
+      "category": "Sports",
+      "difficulty": 4,
+      "answer": "Tom Brady",
+      "acceptedAnswers": [
+        "Brady"
+      ],
+      "multipleChoiceOptions": [
+        "Tom Brady",
+        "Peyton Manning",
+        "Drew Brees",
+        "Aaron Rodgers"
+      ]
+    },
+    {
+      "question": "This golfer became a global superstar while still a teenager and won the Masters by a record margin in 1997.",
+      "category": "Sports",
+      "difficulty": 4,
+      "answer": "Tiger Woods",
+      "acceptedAnswers": [
+        "Tiger"
+      ],
+      "multipleChoiceOptions": [
+        "Tiger Woods",
+        "Phil Mickelson",
+        "Rory McIlroy",
+        "Jack Nicklaus"
+      ]
+    },
+    {
+      "question": "This baseball legend broke Major League Baseball's color barrier with the Brooklyn Dodgers in 1947.",
+      "category": "Sports",
+      "difficulty": 4,
+      "answer": "Jackie Robinson",
+      "acceptedAnswers": [
+        "Robinson"
+      ],
+      "multipleChoiceOptions": [
+        "Jackie Robinson",
+        "Satchel Paige",
+        "Willie Mays",
+        "Hank Aaron"
+      ]
+    },
+    {
+      "question": "This Serbian center has collected MVP awards with Denver while cultivating a famously low-key public persona and a much-publicized love of horses.",
+      "category": "Sports",
+      "difficulty": 5,
+      "answer": "Nikola Jokić",
+      "acceptedAnswers": [
+        "Nikola Jokic",
+        "Jokic",
+        "Jokić"
+      ],
+      "multipleChoiceOptions": [
+        "Nikola Jokić",
+        "Luka Dončić",
+        "Joel Embiid",
+        "Giannis Antetokounmpo"
+      ]
+    },
+    {
+      "question": "This Buffalo quarterback starred at Wyoming, became known for a cannon arm, and has made hurdling defenders look like a reasonable career choice.",
+      "category": "Sports",
+      "difficulty": 5,
+      "answer": "Josh Allen",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Josh Allen",
+        "Justin Herbert",
+        "Joe Burrow",
+        "Baker Mayfield"
+      ]
+    },
+    {
+      "question": "This tennis champion won 23 Grand Slam singles titles in the Open Era and built one of sports' most famous sibling rivalries with Venus.",
+      "category": "Sports",
+      "difficulty": 6,
+      "answer": "Serena Williams",
+      "acceptedAnswers": [
+        "Serena"
+      ],
+      "multipleChoiceOptions": [
+        "Serena Williams",
+        "Venus Williams",
+        "Steffi Graf",
+        "Naomi Osaka"
+      ]
+    },
+    {
+      "question": "This Formula 1 driver won seven world championships and spent his most dominant years with Mercedes.",
+      "category": "Sports",
+      "difficulty": 6,
+      "answer": "Lewis Hamilton",
+      "acceptedAnswers": [
+        "Hamilton"
+      ],
+      "multipleChoiceOptions": [
+        "Lewis Hamilton",
+        "Sebastian Vettel",
+        "Fernando Alonso",
+        "Max Verstappen"
+      ]
+    },
+    {
+      "question": "This NHL star spent most of his career in Pittsburgh, wore 66, and returned from cancer treatment to continue one of hockey's greatest careers.",
+      "category": "Sports",
+      "difficulty": 7,
+      "answer": "Mario Lemieux",
+      "acceptedAnswers": [
+        "Lemieux"
+      ],
+      "multipleChoiceOptions": [
+        "Mario Lemieux",
+        "Wayne Gretzky",
+        "Jaromír Jágr",
+        "Mark Messier"
+      ]
+    },
+    {
+      "question": "This sprinter won Olympic gold in both the 100 and 200 meters at three consecutive Games, usually with enough time to look relaxed doing it.",
+      "category": "Sports",
+      "difficulty": 7,
+      "answer": "Usain Bolt",
+      "acceptedAnswers": [
+        "Bolt"
+      ],
+      "multipleChoiceOptions": [
+        "Usain Bolt",
+        "Yohan Blake",
+        "Justin Gatlin",
+        "Carl Lewis"
+      ]
+    },
+    {
+      "question": "This shortstop was nicknamed 'The Wizard,' became synonymous with spectacular defense in St. Louis, and won his only World Series with a team built around speed and artificial turf.",
+      "category": "Sports",
+      "difficulty": 8,
+      "answer": "Ozzie Smith",
+      "acceptedAnswers": [
+        "Smith"
+      ],
+      "multipleChoiceOptions": [
+        "Ozzie Smith",
+        "Alan Trammell",
+        "Barry Larkin",
+        "Cal Ripken Jr."
+      ]
+    },
+    {
+      "question": "This running back retired from the NFL while still near his peak, spent his entire career in Detroit, and left highlight reels full of defenders grabbing at air.",
+      "category": "Sports",
+      "difficulty": 8,
+      "answer": "Barry Sanders",
+      "acceptedAnswers": [
+        "Sanders"
+      ],
+      "multipleChoiceOptions": [
+        "Barry Sanders",
+        "Emmitt Smith",
+        "Walter Payton",
+        "Thurman Thomas"
+      ]
+    },
+    {
+      "question": "This Croatian basketball star became one of the NBA's first major European standouts, starred for the Nets, and died in a car crash at 28.",
+      "category": "Sports",
+      "difficulty": 9,
+      "answer": "Dražen Petrović",
+      "acceptedAnswers": [
+        "Drazen Petrovic",
+        "Petrović",
+        "Petrovic"
+      ],
+      "multipleChoiceOptions": [
+        "Dražen Petrović",
+        "Toni Kukoč",
+        "Vlade Divac",
+        "Arvydas Sabonis"
+      ]
+    },
+    {
+      "question": "This pitcher threw a perfect game in the 1956 World Series, the only one in World Series history.",
+      "category": "Sports",
+      "difficulty": 8,
+      "answer": "Don Larsen",
+      "acceptedAnswers": [
+        "Larsen"
+      ],
+      "multipleChoiceOptions": [
+        "Don Larsen",
+        "Whitey Ford",
+        "Sandy Koufax",
+        "Bob Gibson"
+      ]
+    },
+    {
+      "question": "This American runner won the first Olympic marathon held in the United States, taking gold in St. Louis during one of the strangest races in Olympic history.",
+      "category": "Sports",
+      "difficulty": 9,
+      "answer": "Thomas Hicks",
+      "acceptedAnswers": [
+        "Hicks"
+      ],
+      "multipleChoiceOptions": [
+        "Thomas Hicks",
+        "Johnny Hayes",
+        "Frank Shorter",
+        "Spyridon Louis"
+      ]
+    },
+    {
+      "question": "This boxer handed Muhammad Ali his first professional loss, later lost the 'Thrilla in Manila,' and was known for a devastating left hook.",
+      "category": "Sports",
+      "difficulty": 8,
+      "answer": "Joe Frazier",
+      "acceptedAnswers": [
+        "Frazier"
+      ],
+      "multipleChoiceOptions": [
+        "Joe Frazier",
+        "George Foreman",
+        "Ken Norton",
+        "Sonny Liston"
+      ]
+    },
+    {
+      "question": "This actor played Iron Man across the Marvel Cinematic Universe before winning an Oscar for a very different role in Oppenheimer.",
+      "category": "Movies & TV",
+      "difficulty": 2,
+      "answer": "Robert Downey Jr.",
+      "acceptedAnswers": [
+        "Robert Downey Junior",
+        "RDJ"
+      ],
+      "multipleChoiceOptions": [
+        "Robert Downey Jr.",
+        "Chris Evans",
+        "Mark Ruffalo",
+        "Jeremy Renner"
+      ]
+    },
+    {
+      "question": "This actor played a web-slinging superhero and later became engaged to his longtime co-star Zendaya.",
+      "category": "Movies & TV",
+      "difficulty": 3,
+      "answer": "Tom Holland",
+      "acceptedAnswers": [
+        "Holland"
+      ],
+      "multipleChoiceOptions": [
+        "Tom Holland",
+        "Andrew Garfield",
+        "Timothée Chalamet",
+        "Jacob Elordi"
+      ]
+    },
+    {
+      "question": "This fantasy series follows houses Stark, Lannister, and Targaryen fighting over a very uncomfortable-looking throne.",
+      "category": "Movies & TV",
+      "difficulty": 3,
+      "answer": "Game of Thrones",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Game of Thrones",
+        "The Witcher",
+        "House of the Dragon",
+        "The Wheel of Time"
+      ]
+    },
+    {
+      "question": "This director made Jaws, E.T., Jurassic Park, and several Indiana Jones films, turning blockbuster filmmaking into something of a personal hobby.",
+      "category": "Movies & TV",
+      "difficulty": 4,
+      "answer": "Steven Spielberg",
+      "acceptedAnswers": [
+        "Spielberg"
+      ],
+      "multipleChoiceOptions": [
+        "Steven Spielberg",
+        "George Lucas",
+        "James Cameron",
+        "Ridley Scott"
+      ]
+    },
+    {
+      "question": "This sitcom followed six friends in New York, including Ross, Rachel, Monica, Chandler, Joey, and Phoebe.",
+      "category": "Movies & TV",
+      "difficulty": 4,
+      "answer": "Friends",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Friends",
+        "Seinfeld",
+        "How I Met Your Mother",
+        "New Girl"
+      ]
+    },
+    {
+      "question": "This actor became famous as Jack in Titanic and later finally won an acting Oscar for The Revenant.",
+      "category": "Movies & TV",
+      "difficulty": 4,
+      "answer": "Leonardo DiCaprio",
+      "acceptedAnswers": [
+        "DiCaprio",
+        "Leonardo Dicaprio"
+      ],
+      "multipleChoiceOptions": [
+        "Leonardo DiCaprio",
+        "Brad Pitt",
+        "Matt Damon",
+        "Christian Bale"
+      ]
+    },
+    {
+      "question": "This director began with low-budget crime films before making a mafia epic whose wedding, baptism, and horse-head scenes became cinematic shorthand.",
+      "category": "Movies & TV",
+      "difficulty": 5,
+      "answer": "Francis Ford Coppola",
+      "acceptedAnswers": [
+        "Coppola"
+      ],
+      "multipleChoiceOptions": [
+        "Francis Ford Coppola",
+        "Martin Scorsese",
+        "Brian De Palma",
+        "William Friedkin"
+      ]
+    },
+    {
+      "question": "This actress played Hermione Granger, later starred in Beauty and the Beast, and studied at Brown University between film projects.",
+      "category": "Movies & TV",
+      "difficulty": 5,
+      "answer": "Emma Watson",
+      "acceptedAnswers": [
+        "Watson"
+      ],
+      "multipleChoiceOptions": [
+        "Emma Watson",
+        "Emma Stone",
+        "Keira Knightley",
+        "Natalie Portman"
+      ]
+    },
+    {
+      "question": "This HBO series centered on a New Jersey mob boss whose therapy sessions were nearly as important as his criminal business.",
+      "category": "Movies & TV",
+      "difficulty": 6,
+      "answer": "The Sopranos",
+      "acceptedAnswers": [
+        "Sopranos"
+      ],
+      "multipleChoiceOptions": [
+        "The Sopranos",
+        "Boardwalk Empire",
+        "The Wire",
+        "Mad Men"
+      ]
+    },
+    {
+      "question": "This filmmaker followed Memento with Batman, dreams within dreams, interstellar travel, and a biographical epic about the atomic bomb.",
+      "category": "Movies & TV",
+      "difficulty": 6,
+      "answer": "Christopher Nolan",
+      "acceptedAnswers": [
+        "Nolan"
+      ],
+      "multipleChoiceOptions": [
+        "Christopher Nolan",
+        "Denis Villeneuve",
+        "David Fincher",
+        "Darren Aronofsky"
+      ]
+    },
+    {
+      "question": "This actress became a star as Rue in Euphoria after first building a younger fan base on the Disney Channel.",
+      "category": "Movies & TV",
+      "difficulty": 7,
+      "answer": "Zendaya",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Zendaya",
+        "Sydney Sweeney",
+        "Ayo Edebiri",
+        "Hailee Steinfeld"
+      ]
+    },
+    {
+      "question": "This 1970s film about a New York cab driver gave cinema the line 'You talkin' to me?' and one of Robert De Niro's defining performances.",
+      "category": "Movies & TV",
+      "difficulty": 7,
+      "answer": "Taxi Driver",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Taxi Driver",
+        "Serpico",
+        "Dog Day Afternoon",
+        "Mean Streets"
+      ]
+    },
+    {
+      "question": "This actor was working as a carpenter when he read lines during auditions for a space opera and accidentally made himself difficult to imagine replacing as its roguish smuggler.",
+      "category": "Movies & TV",
+      "difficulty": 8,
+      "answer": "Harrison Ford",
+      "acceptedAnswers": [
+        "Ford"
+      ],
+      "multipleChoiceOptions": [
+        "Harrison Ford",
+        "Kurt Russell",
+        "Richard Dreyfuss",
+        "Robert Redford"
+      ]
+    },
+    {
+      "question": "This director moved from low-budget exploitation films to The Terminator, Aliens, Titanic, and a blue-skinned alien franchise that turned box-office records into a recurring personal challenge.",
+      "category": "Movies & TV",
+      "difficulty": 8,
+      "answer": "James Cameron",
+      "acceptedAnswers": [
+        "Cameron"
+      ],
+      "multipleChoiceOptions": [
+        "James Cameron",
+        "Ridley Scott",
+        "Peter Jackson",
+        "Michael Bay"
+      ]
+    },
+    {
+      "question": "This Japanese director made Rashomon, Seven Samurai, and Ikiru, influencing generations of filmmakers from westerns to space operas.",
+      "category": "Movies & TV",
+      "difficulty": 9,
+      "answer": "Akira Kurosawa",
+      "acceptedAnswers": [
+        "Kurosawa"
+      ],
+      "multipleChoiceOptions": [
+        "Akira Kurosawa",
+        "Yasujirō Ozu",
+        "Kenji Mizoguchi",
+        "Hayao Miyazaki"
+      ]
+    },
+    {
+      "question": "This actor's breakout role as a boxer from Philadelphia led to a franchise, but he also created another long-running series centered on a traumatized Vietnam veteran.",
+      "category": "Movies & TV",
+      "difficulty": 8,
+      "answer": "Sylvester Stallone",
+      "acceptedAnswers": [
+        "Stallone"
+      ],
+      "multipleChoiceOptions": [
+        "Sylvester Stallone",
+        "Arnold Schwarzenegger",
+        "Bruce Willis",
+        "Chuck Norris"
+      ]
+    },
+    {
+      "question": "This television creator co-created Twin Peaks, directed Blue Velvet and Mulholland Drive, and made surreal dread feel strangely at home in small-town America.",
+      "category": "Movies & TV",
+      "difficulty": 9,
+      "answer": "David Lynch",
+      "acceptedAnswers": [
+        "Lynch"
+      ],
+      "multipleChoiceOptions": [
+        "David Lynch",
+        "David Cronenberg",
+        "Alan Ball",
+        "Noah Hawley"
+      ]
+    },
+    {
+      "question": "This actress won an Oscar for playing Queen Anne's close companion in The Favourite and later played Queen Elizabeth II on television.",
+      "category": "Movies & TV",
+      "difficulty": 8,
+      "answer": "Olivia Colman",
+      "acceptedAnswers": [
+        "Colman"
+      ],
+      "multipleChoiceOptions": [
+        "Olivia Colman",
+        "Claire Foy",
+        "Emma Thompson",
+        "Helena Bonham Carter"
+      ]
+    },
+    {
+      "question": "This singer's Eras Tour turned a career-spanning concert into a global phenomenon and made friendship bracelets part of the dress code.",
+      "category": "Music",
+      "difficulty": 2,
+      "answer": "Taylor Swift",
+      "acceptedAnswers": [
+        "Taylor"
+      ],
+      "multipleChoiceOptions": [
+        "Taylor Swift",
+        "Beyoncé",
+        "Adele",
+        "Olivia Rodrigo"
+      ]
+    },
+    {
+      "question": "This singer built a career on hits like 'Umbrella' before expanding into fashion and beauty with Fenty.",
+      "category": "Music",
+      "difficulty": 3,
+      "answer": "Rihanna",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Rihanna",
+        "Beyoncé",
+        "Alicia Keys",
+        "Ciara"
+      ]
+    },
+    {
+      "question": "This Liverpool band featured John, Paul, George, and Ringo and helped turn 'Beatlemania' into an actual word.",
+      "category": "Music",
+      "difficulty": 3,
+      "answer": "The Beatles",
+      "acceptedAnswers": [
+        "Beatles"
+      ],
+      "multipleChoiceOptions": [
+        "The Beatles",
+        "The Rolling Stones",
+        "The Kinks",
+        "The Who"
+      ]
+    },
+    {
+      "question": "This singer was known as the 'King of Pop' and released Thriller, one of the best-selling albums ever.",
+      "category": "Music",
+      "difficulty": 4,
+      "answer": "Michael Jackson",
+      "acceptedAnswers": [
+        "Michael Jackson"
+      ],
+      "multipleChoiceOptions": [
+        "Michael Jackson",
+        "Prince",
+        "Stevie Wonder",
+        "George Michael"
+      ]
+    },
+    {
+      "question": "This rapper's 2000s rise included The College Dropout, Late Registration, and Graduation.",
+      "category": "Music",
+      "difficulty": 4,
+      "answer": "Kanye West",
+      "acceptedAnswers": [
+        "Kanye",
+        "Ye"
+      ],
+      "multipleChoiceOptions": [
+        "Kanye West",
+        "Jay-Z",
+        "Drake",
+        "50 Cent"
+      ]
+    },
+    {
+      "question": "This British singer turned heartbreak into massive hits including 'Someone Like You' and 'Hello.'",
+      "category": "Music",
+      "difficulty": 4,
+      "answer": "Adele",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Adele",
+        "Dua Lipa",
+        "Amy Winehouse",
+        "Florence Welch"
+      ]
+    },
+    {
+      "question": "This band took its name from a Muddy Waters song and built its identity around the songwriting partnership of Mick Jagger and Keith Richards.",
+      "category": "Music",
+      "difficulty": 5,
+      "answer": "The Rolling Stones",
+      "acceptedAnswers": [
+        "Rolling Stones"
+      ],
+      "multipleChoiceOptions": [
+        "The Rolling Stones",
+        "The Who",
+        "The Kinks",
+        "The Yardbirds"
+      ]
+    },
+    {
+      "question": "This singer went from Disney Channel fame to a blockbuster debut single about a driver's license and a breakup.",
+      "category": "Music",
+      "difficulty": 5,
+      "answer": "Olivia Rodrigo",
+      "acceptedAnswers": [
+        "Rodrigo"
+      ],
+      "multipleChoiceOptions": [
+        "Olivia Rodrigo",
+        "Sabrina Carpenter",
+        "Gracie Abrams",
+        "Dua Lipa"
+      ]
+    },
+    {
+      "question": "This rapper from Compton released good kid, m.A.A.d city and later became the first non-classical, non-jazz musician to win the Pulitzer Prize for Music.",
+      "category": "Music",
+      "difficulty": 6,
+      "answer": "Kendrick Lamar",
+      "acceptedAnswers": [
+        "Kendrick"
+      ],
+      "multipleChoiceOptions": [
+        "Kendrick Lamar",
+        "J. Cole",
+        "Tyler, the Creator",
+        "Childish Gambino"
+      ]
+    },
+    {
+      "question": "This British band made an album called The Dark Side of the Moon and became famous for elaborate concept records and enormous live productions.",
+      "category": "Music",
+      "difficulty": 6,
+      "answer": "Pink Floyd",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Pink Floyd",
+        "Genesis",
+        "Yes",
+        "The Who"
+      ]
+    },
+    {
+      "question": "This singer fronted No Doubt before launching a solo career full of pop hooks, fashion, and enough spelling to make 'bananas' unforgettable.",
+      "category": "Music",
+      "difficulty": 7,
+      "answer": "Gwen Stefani",
+      "acceptedAnswers": [
+        "Stefani"
+      ],
+      "multipleChoiceOptions": [
+        "Gwen Stefani",
+        "Shirley Manson",
+        "Alanis Morissette",
+        "Fergie"
+      ]
+    },
+    {
+      "question": "This producer helped define the sound of the Beatles' studio years and is sometimes casually called the group's 'fifth Beatle.'",
+      "category": "Music",
+      "difficulty": 7,
+      "answer": "George Martin",
+      "acceptedAnswers": [
+        "Martin"
+      ],
+      "multipleChoiceOptions": [
+        "George Martin",
+        "Phil Spector",
+        "Brian Epstein",
+        "Quincy Jones"
+      ]
+    },
+    {
+      "question": "This jazz trumpeter helped shape bebop, cool jazz, and fusion across several decades, making reinvention nearly as central to his reputation as the horn itself.",
+      "category": "Music",
+      "difficulty": 8,
+      "answer": "Miles Davis",
+      "acceptedAnswers": [
+        "Miles"
+      ],
+      "multipleChoiceOptions": [
+        "Miles Davis",
+        "Dizzy Gillespie",
+        "Chet Baker",
+        "Thelonious Monk"
+      ]
+    },
+    {
+      "question": "This singer-songwriter wrote 'A Case of You,' painted many of her own album covers, and made the album Blue a touchstone for generations of confessional songwriting.",
+      "category": "Music",
+      "difficulty": 8,
+      "answer": "Joni Mitchell",
+      "acceptedAnswers": [
+        "Joni"
+      ],
+      "multipleChoiceOptions": [
+        "Joni Mitchell",
+        "Carole King",
+        "Joan Baez",
+        "Laura Nyro"
+      ]
+    },
+    {
+      "question": "This producer and musician helped pioneer ambient music, worked with Roxy Music, and later became a go-to studio collaborator for artists from David Bowie to U2.",
+      "category": "Music",
+      "difficulty": 9,
+      "answer": "Brian Eno",
+      "acceptedAnswers": [
+        "Eno"
+      ],
+      "multipleChoiceOptions": [
+        "Brian Eno",
+        "Tony Visconti",
+        "Daniel Lanois",
+        "Giorgio Moroder"
+      ]
+    },
+    {
+      "question": "This country singer wrote 'Jolene' and 'I Will Always Love You,' then used her success to build a theme park in Tennessee.",
+      "category": "Music",
+      "difficulty": 8,
+      "answer": "Dolly Parton",
+      "acceptedAnswers": [
+        "Dolly"
+      ],
+      "multipleChoiceOptions": [
+        "Dolly Parton",
+        "Loretta Lynn",
+        "Emmylou Harris",
+        "Tammy Wynette"
+      ]
+    },
+    {
+      "question": "This Nigerian musician fused jazz, funk, and West African styles into Afrobeat while using marathon performances to attack military rule and corruption.",
+      "category": "Music",
+      "difficulty": 9,
+      "answer": "Fela Kuti",
+      "acceptedAnswers": [
+        "Fela"
+      ],
+      "multipleChoiceOptions": [
+        "Fela Kuti",
+        "King Sunny Adé",
+        "Hugh Masekela",
+        "Manu Dibango"
+      ]
+    },
+    {
+      "question": "This singer became the frontman of Queen, was born Farrokh Bulsara, and turned Live Aid into one of rock's most famous performances.",
+      "category": "Music",
+      "difficulty": 8,
+      "answer": "Freddie Mercury",
+      "acceptedAnswers": [
+        "Freddie"
+      ],
+      "multipleChoiceOptions": [
+        "Freddie Mercury",
+        "David Bowie",
+        "Robert Plant",
+        "Mick Jagger"
+      ]
+    },
+    {
+      "question": "This wizard attends Hogwarts, plays Quidditch, and spends several books trying not to be killed by Lord Voldemort.",
+      "category": "Literature & Language",
+      "difficulty": 2,
+      "answer": "Harry Potter",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Harry Potter",
+        "Percy Jackson",
+        "Frodo Baggins",
+        "Artemis Fowl"
+      ]
+    },
+    {
+      "question": "This playwright created Hamlet, Macbeth, and Romeo and Juliet while contributing an impressive number of phrases to everyday English.",
+      "category": "Literature & Language",
+      "difficulty": 3,
+      "answer": "William Shakespeare",
+      "acceptedAnswers": [
+        "Shakespeare"
+      ],
+      "multipleChoiceOptions": [
+        "William Shakespeare",
+        "Christopher Marlowe",
+        "Ben Jonson",
+        "John Milton"
+      ]
+    },
+    {
+      "question": "This novel follows Scout Finch as her father Atticus defends a Black man accused of rape in the fictional town of Maycomb.",
+      "category": "Literature & Language",
+      "difficulty": 3,
+      "answer": "To Kill a Mockingbird",
+      "acceptedAnswers": [
+        "To Kill A Mockingbird"
+      ],
+      "multipleChoiceOptions": [
+        "To Kill a Mockingbird",
+        "The Catcher in the Rye",
+        "The Grapes of Wrath",
+        "A Separate Peace"
+      ]
+    },
+    {
+      "question": "This dystopian novel gave us Big Brother, the Thought Police, and a year that became shorthand for surveillance and authoritarianism.",
+      "category": "Literature & Language",
+      "difficulty": 4,
+      "answer": "1984",
+      "acceptedAnswers": [
+        "Nineteen Eighty-Four",
+        "Nineteen Eighty Four"
+      ],
+      "multipleChoiceOptions": [
+        "1984",
+        "Brave New World",
+        "Fahrenheit 451",
+        "We"
+      ]
+    },
+    {
+      "question": "This author created Sherlock Holmes, whose deductive powers became far more famous than the medical career of the man who invented him.",
+      "category": "Literature & Language",
+      "difficulty": 4,
+      "answer": "Arthur Conan Doyle",
+      "acceptedAnswers": [
+        "Conan Doyle",
+        "Arthur Doyle"
+      ],
+      "multipleChoiceOptions": [
+        "Arthur Conan Doyle",
+        "Agatha Christie",
+        "Wilkie Collins",
+        "G.K. Chesterton"
+      ]
+    },
+    {
+      "question": "This epic fantasy begins with a hobbit inheriting a dangerous ring and ends with a very long walk toward a volcano.",
+      "category": "Literature & Language",
+      "difficulty": 4,
+      "answer": "The Lord of the Rings",
+      "acceptedAnswers": [
+        "Lord of the Rings"
+      ],
+      "multipleChoiceOptions": [
+        "The Lord of the Rings",
+        "The Chronicles of Narnia",
+        "The Wheel of Time",
+        "The Silmarillion"
+      ]
+    },
+    {
+      "question": "This wealthy mystery man throws lavish Long Island parties while remaining fixated on Daisy Buchanan and a green light across the water.",
+      "category": "Literature & Language",
+      "difficulty": 5,
+      "answer": "The Great Gatsby",
+      "acceptedAnswers": [
+        "Great Gatsby"
+      ],
+      "multipleChoiceOptions": [
+        "The Great Gatsby",
+        "The Sun Also Rises",
+        "This Side of Paradise",
+        "The Age of Innocence"
+      ]
+    },
+    {
+      "question": "This novelist worked as an ambulance driver during World War I, lived among expatriates in Paris, and later wrote about an old Cuban fisherman.",
+      "category": "Literature & Language",
+      "difficulty": 5,
+      "answer": "Ernest Hemingway",
+      "acceptedAnswers": [
+        "Hemingway"
+      ],
+      "multipleChoiceOptions": [
+        "Ernest Hemingway",
+        "F. Scott Fitzgerald",
+        "John Steinbeck",
+        "William Faulkner"
+      ]
+    },
+    {
+      "question": "This English novelist gave us Elizabeth Bennet, Mr. Darcy, and a remarkably durable market for awkward proposals and social misunderstandings.",
+      "category": "Literature & Language",
+      "difficulty": 6,
+      "answer": "Jane Austen",
+      "acceptedAnswers": [
+        "Austen"
+      ],
+      "multipleChoiceOptions": [
+        "Jane Austen",
+        "George Eliot",
+        "Charlotte Brontë",
+        "Mary Shelley"
+      ]
+    },
+    {
+      "question": "This Russian novel opens with one of literature's most famous unhappy-family lines and follows a married aristocrat whose affair ends disastrously.",
+      "category": "Literature & Language",
+      "difficulty": 6,
+      "answer": "Anna Karenina",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Anna Karenina",
+        "War and Peace",
+        "Madame Bovary",
+        "The Brothers Karamazov"
+      ]
+    },
+    {
+      "question": "This American poet published only a handful of poems in her lifetime, lived much of her life in Amherst, and became famous posthumously for compact, slant-rhymed verse.",
+      "category": "Literature & Language",
+      "difficulty": 7,
+      "answer": "Emily Dickinson",
+      "acceptedAnswers": [
+        "Dickinson"
+      ],
+      "multipleChoiceOptions": [
+        "Emily Dickinson",
+        "Elizabeth Barrett Browning",
+        "Christina Rossetti",
+        "Edna St. Vincent Millay"
+      ]
+    },
+    {
+      "question": "This novel's narrator Nick Carraway watches wealth, longing, and self-invention collide on Long Island during the Jazz Age.",
+      "category": "Literature & Language",
+      "difficulty": 7,
+      "answer": "The Great Gatsby",
+      "acceptedAnswers": [
+        "Great Gatsby"
+      ],
+      "multipleChoiceOptions": [
+        "The Great Gatsby",
+        "The Beautiful and Damned",
+        "The Sun Also Rises",
+        "Manhattan Transfer"
+      ]
+    },
+    {
+      "question": "This Argentine writer filled short stories with labyrinths, mirrors, imaginary books, and philosophical puzzles, often making a few pages feel like an entire universe.",
+      "category": "Literature & Language",
+      "difficulty": 8,
+      "answer": "Jorge Luis Borges",
+      "acceptedAnswers": [
+        "Borges"
+      ],
+      "multipleChoiceOptions": [
+        "Jorge Luis Borges",
+        "Gabriel García Márquez",
+        "Julio Cortázar",
+        "Pablo Neruda"
+      ]
+    },
+    {
+      "question": "This novelist created the fictional Yoknapatawpha County and built dense, overlapping stories around the American South in books including The Sound and the Fury.",
+      "category": "Literature & Language",
+      "difficulty": 8,
+      "answer": "William Faulkner",
+      "acceptedAnswers": [
+        "Faulkner"
+      ],
+      "multipleChoiceOptions": [
+        "William Faulkner",
+        "John Steinbeck",
+        "Robert Penn Warren",
+        "Thomas Wolfe"
+      ]
+    },
+    {
+      "question": "This Irish writer's modernist novel Ulysses shadows Leopold Bloom through a single day in Dublin while turning ordinary errands into an epic-scale literary experiment.",
+      "category": "Literature & Language",
+      "difficulty": 9,
+      "answer": "James Joyce",
+      "acceptedAnswers": [
+        "Joyce"
+      ],
+      "multipleChoiceOptions": [
+        "James Joyce",
+        "Samuel Beckett",
+        "W.B. Yeats",
+        "Flann O'Brien"
+      ]
+    },
+    {
+      "question": "This author imagined a totalitarian future in which citizens consume a drug called soma and are engineered into castes rather than merely watched by Big Brother.",
+      "category": "Literature & Language",
+      "difficulty": 8,
+      "answer": "Aldous Huxley",
+      "acceptedAnswers": [
+        "Huxley"
+      ],
+      "multipleChoiceOptions": [
+        "Aldous Huxley",
+        "George Orwell",
+        "Yevgeny Zamyatin",
+        "H.G. Wells"
+      ]
+    },
+    {
+      "question": "This Japanese novelist wrote Snow Country and became the first Japanese recipient of the Nobel Prize in Literature.",
+      "category": "Literature & Language",
+      "difficulty": 9,
+      "answer": "Yasunari Kawabata",
+      "acceptedAnswers": [
+        "Kawabata"
+      ],
+      "multipleChoiceOptions": [
+        "Yasunari Kawabata",
+        "Kenzaburō Ōe",
+        "Jun'ichirō Tanizaki",
+        "Natsume Sōseki"
+      ]
+    },
+    {
+      "question": "This term for a word formed from initial letters includes examples like NASA and NATO, but not every abbreviation qualifies.",
+      "category": "Literature & Language",
+      "difficulty": 8,
+      "answer": "Acronym",
+      "acceptedAnswers": [
+        "An acronym"
+      ],
+      "multipleChoiceOptions": [
+        "Acronym",
+        "Homonym",
+        "Portmanteau",
+        "Initialism"
+      ]
+    },
+    {
+      "question": "This Renaissance artist painted the Mona Lisa and filled notebooks with studies of anatomy, machines, and ideas centuries ahead of practical engineering.",
+      "category": "Art & Culture",
+      "difficulty": 2,
+      "answer": "Leonardo da Vinci",
+      "acceptedAnswers": [
+        "Leonardo",
+        "Da Vinci"
+      ],
+      "multipleChoiceOptions": [
+        "Leonardo da Vinci",
+        "Michelangelo",
+        "Raphael",
+        "Donatello"
+      ]
+    },
+    {
+      "question": "This Dutch painter is famous for swirling night skies, sunflowers, and a career that became far more celebrated after his death.",
+      "category": "Art & Culture",
+      "difficulty": 3,
+      "answer": "Vincent van Gogh",
+      "acceptedAnswers": [
+        "Van Gogh",
+        "Vincent Van Gogh"
+      ],
+      "multipleChoiceOptions": [
+        "Vincent van Gogh",
+        "Claude Monet",
+        "Paul Gauguin",
+        "Edvard Munch"
+      ]
+    },
+    {
+      "question": "This museum in Paris is home to the Mona Lisa and occupies a former royal palace.",
+      "category": "Art & Culture",
+      "difficulty": 3,
+      "answer": "The Louvre",
+      "acceptedAnswers": [
+        "Louvre"
+      ],
+      "multipleChoiceOptions": [
+        "The Louvre",
+        "The Prado",
+        "The Uffizi",
+        "The Hermitage"
+      ]
+    },
+    {
+      "question": "This Spanish artist helped pioneer Cubism and painted Guernica in response to the bombing of a Basque town during the Spanish Civil War.",
+      "category": "Art & Culture",
+      "difficulty": 4,
+      "answer": "Pablo Picasso",
+      "acceptedAnswers": [
+        "Picasso"
+      ],
+      "multipleChoiceOptions": [
+        "Pablo Picasso",
+        "Salvador Dalí",
+        "Joan Miró",
+        "Henri Matisse"
+      ]
+    },
+    {
+      "question": "This ancient Greek architectural order is the simplest of the three classical column styles, with sturdy proportions and a plain capital.",
+      "category": "Art & Culture",
+      "difficulty": 4,
+      "answer": "Doric",
+      "acceptedAnswers": [
+        "Doric order"
+      ],
+      "multipleChoiceOptions": [
+        "Doric",
+        "Ionic",
+        "Corinthian",
+        "Tuscan"
+      ]
+    },
+    {
+      "question": "This Mexican painter turned self-portraits, physical pain, and indigenous imagery into one of the most recognizable bodies of 20th-century art.",
+      "category": "Art & Culture",
+      "difficulty": 4,
+      "answer": "Frida Kahlo",
+      "acceptedAnswers": [
+        "Kahlo"
+      ],
+      "multipleChoiceOptions": [
+        "Frida Kahlo",
+        "Remedios Varo",
+        "Georgia O'Keeffe",
+        "Tamara de Lempicka"
+      ]
+    },
+    {
+      "question": "This French painter spent years returning to water lilies, haystacks, and changing light, helping give Impressionism both its name and its visual vocabulary.",
+      "category": "Art & Culture",
+      "difficulty": 5,
+      "answer": "Claude Monet",
+      "acceptedAnswers": [
+        "Monet"
+      ],
+      "multipleChoiceOptions": [
+        "Claude Monet",
+        "Pierre-Auguste Renoir",
+        "Edgar Degas",
+        "Camille Pissarro"
+      ]
+    },
+    {
+      "question": "This surrealist cultivated a theatrical mustache, painted melting clocks, and treated self-promotion as almost another artistic medium.",
+      "category": "Art & Culture",
+      "difficulty": 5,
+      "answer": "Salvador Dalí",
+      "acceptedAnswers": [
+        "Salvador Dali",
+        "Dali",
+        "Dalí"
+      ],
+      "multipleChoiceOptions": [
+        "Salvador Dalí",
+        "René Magritte",
+        "Joan Miró",
+        "Max Ernst"
+      ]
+    },
+    {
+      "question": "This Norwegian artist's best-known painting shows an anguished figure beneath a swirling sky, turning existential dread into a museum-store staple.",
+      "category": "Art & Culture",
+      "difficulty": 6,
+      "answer": "Edvard Munch",
+      "acceptedAnswers": [
+        "Munch"
+      ],
+      "multipleChoiceOptions": [
+        "Edvard Munch",
+        "Egon Schiele",
+        "Gustav Klimt",
+        "Oskar Kokoschka"
+      ]
+    },
+    {
+      "question": "This architect designed Fallingwater and the Guggenheim Museum in New York while insisting that buildings should grow organically from their settings.",
+      "category": "Art & Culture",
+      "difficulty": 6,
+      "answer": "Frank Lloyd Wright",
+      "acceptedAnswers": [
+        "Wright"
+      ],
+      "multipleChoiceOptions": [
+        "Frank Lloyd Wright",
+        "Le Corbusier",
+        "Mies van der Rohe",
+        "Philip Johnson"
+      ]
+    },
+    {
+      "question": "This Viennese painter covered portraits in gold leaf and decorative patterns, most famously in The Kiss.",
+      "category": "Art & Culture",
+      "difficulty": 7,
+      "answer": "Gustav Klimt",
+      "acceptedAnswers": [
+        "Klimt"
+      ],
+      "multipleChoiceOptions": [
+        "Gustav Klimt",
+        "Egon Schiele",
+        "Alphonse Mucha",
+        "Oskar Kokoschka"
+      ]
+    },
+    {
+      "question": "This Japanese printmaker created The Great Wave off Kanagawa, one image from a series devoted to views of Mount Fuji.",
+      "category": "Art & Culture",
+      "difficulty": 7,
+      "answer": "Katsushika Hokusai",
+      "acceptedAnswers": [
+        "Hokusai"
+      ],
+      "multipleChoiceOptions": [
+        "Katsushika Hokusai",
+        "Utagawa Hiroshige",
+        "Kitagawa Utamaro",
+        "Sesshū Tōyō"
+      ]
+    },
+    {
+      "question": "This American artist turned soup cans, celebrity portraits, and repetition into a style that made commercial imagery itself the subject of fine art.",
+      "category": "Art & Culture",
+      "difficulty": 8,
+      "answer": "Andy Warhol",
+      "acceptedAnswers": [
+        "Warhol"
+      ],
+      "multipleChoiceOptions": [
+        "Andy Warhol",
+        "Roy Lichtenstein",
+        "Jasper Johns",
+        "Robert Rauschenberg"
+      ]
+    },
+    {
+      "question": "This Belgian surrealist painted men in bowler hats, impossible rooms, and a famous pipe accompanied by the warning that it was not actually a pipe.",
+      "category": "Art & Culture",
+      "difficulty": 8,
+      "answer": "René Magritte",
+      "acceptedAnswers": [
+        "Rene Magritte",
+        "Magritte"
+      ],
+      "multipleChoiceOptions": [
+        "René Magritte",
+        "Max Ernst",
+        "Salvador Dalí",
+        "Paul Delvaux"
+      ]
+    },
+    {
+      "question": "This American sculptor became famous for mobiles, turning balance, wire, and suspended shapes into artworks that move with the air around them.",
+      "category": "Art & Culture",
+      "difficulty": 9,
+      "answer": "Alexander Calder",
+      "acceptedAnswers": [
+        "Calder"
+      ],
+      "multipleChoiceOptions": [
+        "Alexander Calder",
+        "Henry Moore",
+        "David Smith",
+        "Louise Nevelson"
+      ]
+    },
+    {
+      "question": "This architect's unfinished basilica in Barcelona has been under construction since the 19th century and looks as if Gothic architecture discovered coral reefs.",
+      "category": "Art & Culture",
+      "difficulty": 8,
+      "answer": "Antoni Gaudí",
+      "acceptedAnswers": [
+        "Antoni Gaudi",
+        "Gaudí",
+        "Gaudi"
+      ],
+      "multipleChoiceOptions": [
+        "Antoni Gaudí",
+        "Santiago Calatrava",
+        "Lluís Domènech i Montaner",
+        "Rafael Moneo"
+      ]
+    },
+    {
+      "question": "This photographer's black-and-white landscapes of Yosemite helped make both American wilderness and the Zone System famous.",
+      "category": "Art & Culture",
+      "difficulty": 9,
+      "answer": "Ansel Adams",
+      "acceptedAnswers": [
+        "Adams"
+      ],
+      "multipleChoiceOptions": [
+        "Ansel Adams",
+        "Edward Weston",
+        "Walker Evans",
+        "Dorothea Lange"
+      ]
+    },
+    {
+      "question": "This Japanese aesthetic values imperfection, impermanence, and weathered simplicity rather than flawless polish.",
+      "category": "Art & Culture",
+      "difficulty": 8,
+      "answer": "Wabi-sabi",
+      "acceptedAnswers": [
+        "Wabi sabi"
+      ],
+      "multipleChoiceOptions": [
+        "Wabi-sabi",
+        "Kintsugi",
+        "Ikigai",
+        "Mono no aware"
+      ]
+    },
+    {
+      "question": "This company started as an online bookstore and later became a giant in cloud computing, streaming, and delivering almost anything to your door.",
+      "category": "Technology & Internet",
+      "difficulty": 2,
+      "answer": "Amazon",
+      "acceptedAnswers": [
+        "Amazon.com"
+      ],
+      "multipleChoiceOptions": [
+        "Amazon",
+        "eBay",
+        "Google",
+        "Walmart"
+      ]
+    },
+    {
+      "question": "This search engine company became so dominant that its name turned into a verb for looking something up online.",
+      "category": "Technology & Internet",
+      "difficulty": 3,
+      "answer": "Google",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Google",
+        "Yahoo",
+        "Bing",
+        "AltaVista"
+      ]
+    },
+    {
+      "question": "This social platform began as a college network, expanded worldwide, and later became the centerpiece of a company renamed Meta.",
+      "category": "Technology & Internet",
+      "difficulty": 3,
+      "answer": "Facebook",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Facebook",
+        "MySpace",
+        "LinkedIn",
+        "Reddit"
+      ]
+    },
+    {
+      "question": "This smartphone line debuted in 2007 and helped make touchscreens, app stores, and pocket computers feel normal almost overnight.",
+      "category": "Technology & Internet",
+      "difficulty": 4,
+      "answer": "iPhone",
+      "acceptedAnswers": [
+        "The iPhone",
+        "Apple iPhone"
+      ],
+      "multipleChoiceOptions": [
+        "iPhone",
+        "BlackBerry",
+        "Palm Treo",
+        "Galaxy"
+      ]
+    },
+    {
+      "question": "This video-sharing site was bought by Google in 2006 and grew into a platform for creators, music videos, tutorials, and almost every imaginable niche.",
+      "category": "Technology & Internet",
+      "difficulty": 4,
+      "answer": "YouTube",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "YouTube",
+        "Vimeo",
+        "Twitch",
+        "Dailymotion"
+      ]
+    },
+    {
+      "question": "This cryptocurrency was introduced under the name Satoshi Nakamoto and uses a public blockchain rather than a central bank.",
+      "category": "Technology & Internet",
+      "difficulty": 4,
+      "answer": "Bitcoin",
+      "acceptedAnswers": [
+        "BTC"
+      ],
+      "multipleChoiceOptions": [
+        "Bitcoin",
+        "Ethereum",
+        "Litecoin",
+        "Dogecoin"
+      ]
+    },
+    {
+      "question": "This programmer co-founded Microsoft with Paul Allen and helped turn PC software into one of the world's largest businesses.",
+      "category": "Technology & Internet",
+      "difficulty": 5,
+      "answer": "Bill Gates",
+      "acceptedAnswers": [
+        "Gates"
+      ],
+      "multipleChoiceOptions": [
+        "Bill Gates",
+        "Steve Jobs",
+        "Larry Ellison",
+        "Michael Dell"
+      ]
+    },
+    {
+      "question": "This social platform built around short videos, algorithmic discovery, and an endless vertical feed became one of Gen Z's defining apps.",
+      "category": "Technology & Internet",
+      "difficulty": 5,
+      "answer": "TikTok",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "TikTok",
+        "Snapchat",
+        "Vine",
+        "Instagram"
+      ]
+    },
+    {
+      "question": "This operating system began as Linus Torvalds' personal project and now quietly powers huge numbers of servers, supercomputers, and embedded devices.",
+      "category": "Technology & Internet",
+      "difficulty": 6,
+      "answer": "Linux",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Linux",
+        "Unix",
+        "FreeBSD",
+        "Solaris"
+      ]
+    },
+    {
+      "question": "This file-sharing service popularized syncing documents across devices by storing them in the cloud, making the USB drive feel suddenly less essential.",
+      "category": "Technology & Internet",
+      "difficulty": 6,
+      "answer": "Dropbox",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Dropbox",
+        "Box",
+        "Evernote",
+        "Basecamp"
+      ]
+    },
+    {
+      "question": "This programming language was created at Sun Microsystems, became central to enterprise software, and built its early reputation around 'write once, run anywhere.'",
+      "category": "Technology & Internet",
+      "difficulty": 7,
+      "answer": "Java",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Java",
+        "C++",
+        "Python",
+        "Ruby"
+      ]
+    },
+    {
+      "question": "This website's voting system of upvotes and downvotes organizes communities called subreddits around everything from finance to frogs.",
+      "category": "Technology & Internet",
+      "difficulty": 7,
+      "answer": "Reddit",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Reddit",
+        "Digg",
+        "Tumblr",
+        "Quora"
+      ]
+    },
+    {
+      "question": "This computer scientist helped create Unix and the C programming language, leaving fingerprints on much of modern computing without becoming a household celebrity.",
+      "category": "Technology & Internet",
+      "difficulty": 8,
+      "answer": "Dennis Ritchie",
+      "acceptedAnswers": [
+        "Ritchie"
+      ],
+      "multipleChoiceOptions": [
+        "Dennis Ritchie",
+        "Ken Thompson",
+        "Brian Kernighan",
+        "Bjarne Stroustrup"
+      ]
+    },
+    {
+      "question": "This company created the graphics processors that became unexpectedly central to modern AI computing after years of being best known to PC gamers.",
+      "category": "Technology & Internet",
+      "difficulty": 8,
+      "answer": "NVIDIA",
+      "acceptedAnswers": [
+        "Nvidia"
+      ],
+      "multipleChoiceOptions": [
+        "NVIDIA",
+        "AMD",
+        "Intel",
+        "Qualcomm"
+      ]
+    },
+    {
+      "question": "This protocol created by Vint Cerf and Bob Kahn underpins how data is addressed and moved across the internet.",
+      "category": "Technology & Internet",
+      "difficulty": 9,
+      "answer": "TCP/IP",
+      "acceptedAnswers": [
+        "TCP IP",
+        "Transmission Control Protocol/Internet Protocol"
+      ],
+      "multipleChoiceOptions": [
+        "TCP/IP",
+        "HTTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    {
+      "question": "This early web browser helped popularize the graphical internet in the 1990s before losing the browser wars to Internet Explorer.",
+      "category": "Technology & Internet",
+      "difficulty": 8,
+      "answer": "Netscape Navigator",
+      "acceptedAnswers": [
+        "Netscape"
+      ],
+      "multipleChoiceOptions": [
+        "Netscape Navigator",
+        "Mosaic",
+        "Opera",
+        "Lynx"
+      ]
+    },
+    {
+      "question": "This mathematician and computer scientist proposed a test for machine intelligence and helped crack German codes during World War II.",
+      "category": "Technology & Internet",
+      "difficulty": 9,
+      "answer": "Alan Turing",
+      "acceptedAnswers": [
+        "Turing"
+      ],
+      "multipleChoiceOptions": [
+        "Alan Turing",
+        "Claude Shannon",
+        "John von Neumann",
+        "Norbert Wiener"
+      ]
+    },
+    {
+      "question": "This open-source version-control system was created by Linus Torvalds to help manage development of the Linux kernel.",
+      "category": "Technology & Internet",
+      "difficulty": 8,
+      "answer": "Git",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Git",
+        "Subversion",
+        "Mercurial",
+        "CVS"
+      ]
+    },
+    {
+      "question": "This singer turned a career-spanning stadium tour into a global event and became one half of pop culture's most scrutinized football relationship.",
+      "category": "Modern Pop Culture",
+      "difficulty": 2,
+      "answer": "Taylor Swift",
+      "acceptedAnswers": [
+        "Taylor"
+      ],
+      "multipleChoiceOptions": [
+        "Taylor Swift",
+        "Ariana Grande",
+        "Dua Lipa",
+        "Billie Eilish"
+      ]
+    },
+    {
+      "question": "This Kansas City tight end became famous far beyond football after dating Taylor Swift.",
+      "category": "Modern Pop Culture",
+      "difficulty": 2,
+      "answer": "Travis Kelce",
+      "acceptedAnswers": [
+        "Kelce"
+      ],
+      "multipleChoiceOptions": [
+        "Travis Kelce",
+        "George Kittle",
+        "Mark Andrews",
+        "Rob Gronkowski"
+      ]
+    },
+    {
+      "question": "This actress-singer went from Disney Channel roles to chart-topping songs about heartbreak, jealousy, and one especially famous driver's license.",
+      "category": "Modern Pop Culture",
+      "difficulty": 3,
+      "answer": "Olivia Rodrigo",
+      "acceptedAnswers": [
+        "Rodrigo"
+      ],
+      "multipleChoiceOptions": [
+        "Olivia Rodrigo",
+        "Sabrina Carpenter",
+        "Tate McRae",
+        "Gracie Abrams"
+      ]
+    },
+    {
+      "question": "This actor became the MCU's Spider-Man and later formed one of Hollywood's most recognizable young couples with Zendaya.",
+      "category": "Modern Pop Culture",
+      "difficulty": 3,
+      "answer": "Tom Holland",
+      "acceptedAnswers": [
+        "Holland"
+      ],
+      "multipleChoiceOptions": [
+        "Tom Holland",
+        "Jacob Elordi",
+        "Timothée Chalamet",
+        "Austin Butler"
+      ]
+    },
+    {
+      "question": "This singer and beauty mogul built Fenty into a major brand while keeping fans waiting a very long time for another album.",
+      "category": "Modern Pop Culture",
+      "difficulty": 4,
+      "answer": "Rihanna",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Rihanna",
+        "Beyoncé",
+        "Nicki Minaj",
+        "SZA"
+      ]
+    },
+    {
+      "question": "This singer first broke through with 'Ocean Eyes' and built a moody pop career alongside her producer brother Finneas.",
+      "category": "Modern Pop Culture",
+      "difficulty": 4,
+      "answer": "Billie Eilish",
+      "acceptedAnswers": [
+        "Billie"
+      ],
+      "multipleChoiceOptions": [
+        "Billie Eilish",
+        "Lorde",
+        "Halsey",
+        "Clairo"
+      ]
+    },
+    {
+      "question": "This actor's career jumped from Disney Channel fame to Euphoria and a string of major films, while her fashion appearances became events of their own.",
+      "category": "Modern Pop Culture",
+      "difficulty": 5,
+      "answer": "Zendaya",
+      "acceptedAnswers": [],
+      "multipleChoiceOptions": [
+        "Zendaya",
+        "Sydney Sweeney",
+        "Florence Pugh",
+        "Jenna Ortega"
+      ]
+    },
+    {
+      "question": "This musician became one of the defining stars of Puerto Rican trap and reggaeton, turning Spanish-language albums into global pop events.",
+      "category": "Modern Pop Culture",
+      "difficulty": 5,
+      "answer": "Bad Bunny",
+      "acceptedAnswers": [
+        "Benito Antonio Martínez Ocasio",
+        "Benito"
+      ],
+      "multipleChoiceOptions": [
+        "Bad Bunny",
+        "J Balvin",
+        "Rauw Alejandro",
+        "Ozuna"
+      ]
+    },
+    {
+      "question": "This actress played Wednesday Addams for Netflix after earlier appearing in the Scream franchise, making deadpan delivery a career asset.",
+      "category": "Modern Pop Culture",
+      "difficulty": 6,
+      "answer": "Jenna Ortega",
+      "acceptedAnswers": [
+        "Ortega"
+      ],
+      "multipleChoiceOptions": [
+        "Jenna Ortega",
+        "Anya Taylor-Joy",
+        "Mikey Madison",
+        "Rachel Zegler"
+      ]
+    },
+    {
+      "question": "This singer's rise from Disney fame to hits like 'Espresso' made her one of pop's most recognizable new stars of the mid-2020s.",
+      "category": "Modern Pop Culture",
+      "difficulty": 6,
+      "answer": "Sabrina Carpenter",
+      "acceptedAnswers": [
+        "Sabrina"
+      ],
+      "multipleChoiceOptions": [
+        "Sabrina Carpenter",
+        "Tate McRae",
+        "Gracie Abrams",
+        "Madison Beer"
+      ]
+    },
+    {
+      "question": "This actor played Elvis Presley before taking on a very different kind of role as the villainous Feyd-Rautha in Dune: Part Two.",
+      "category": "Modern Pop Culture",
+      "difficulty": 7,
+      "answer": "Austin Butler",
+      "acceptedAnswers": [
+        "Butler"
+      ],
+      "multipleChoiceOptions": [
+        "Austin Butler",
+        "Jacob Elordi",
+        "Barry Keoghan",
+        "Paul Mescal"
+      ]
+    },
+    {
+      "question": "This comedian and actor co-created and starred in Abbott Elementary, turning a Philadelphia public school into one of network television's biggest recent comedy successes.",
+      "category": "Modern Pop Culture",
+      "difficulty": 7,
+      "answer": "Quinta Brunson",
+      "acceptedAnswers": [
+        "Brunson"
+      ],
+      "multipleChoiceOptions": [
+        "Quinta Brunson",
+        "Issa Rae",
+        "Ayo Edebiri",
+        "Maya Rudolph"
+      ]
+    },
+    {
+      "question": "This Irish actor moved from independent films and Normal People to major roles in Aftersun and Gladiator II, becoming a favorite of prestige-film casting directors.",
+      "category": "Modern Pop Culture",
+      "difficulty": 8,
+      "answer": "Paul Mescal",
+      "acceptedAnswers": [
+        "Mescal"
+      ],
+      "multipleChoiceOptions": [
+        "Paul Mescal",
+        "Barry Keoghan",
+        "Andrew Scott",
+        "Josh O'Connor"
+      ]
+    },
+    {
+      "question": "This chef-turned-actor became a breakout star as Richie on The Bear after years of supporting roles in shows like Girls.",
+      "category": "Modern Pop Culture",
+      "difficulty": 8,
+      "answer": "Ebon Moss-Bachrach",
+      "acceptedAnswers": [
+        "Ebon Moss Bachrach",
+        "Moss-Bachrach"
+      ],
+      "multipleChoiceOptions": [
+        "Ebon Moss-Bachrach",
+        "Jeremy Allen White",
+        "Lionel Boyce",
+        "Jon Bernthal"
+      ]
+    },
+    {
+      "question": "This British singer-songwriter's intimate indie-pop style helped turn albums like Punisher into critical favorites before a supergroup with Julien Baker and Lucy Dacus won a wider audience.",
+      "category": "Modern Pop Culture",
+      "difficulty": 9,
+      "answer": "Phoebe Bridgers",
+      "acceptedAnswers": [
+        "Phoebe"
+      ],
+      "multipleChoiceOptions": [
+        "Phoebe Bridgers",
+        "Mitski",
+        "Clairo",
+        "Japanese Breakfast"
+      ]
+    },
+    {
+      "question": "This actor's breakout in The Bear followed earlier comedy work in Bottoms and eventually led to an Emmy-winning run as Sydney Adamu.",
+      "category": "Modern Pop Culture",
+      "difficulty": 8,
+      "answer": "Ayo Edebiri",
+      "acceptedAnswers": [
+        "Ayo"
+      ],
+      "multipleChoiceOptions": [
+        "Ayo Edebiri",
+        "Quinta Brunson",
+        "Rachel Sennott",
+        "Zazie Beetz"
+      ]
+    },
+    {
+      "question": "This rapper from Houston built a cult following before UTOPIA became a major commercial success, with massive live shows remaining central to his brand.",
+      "category": "Modern Pop Culture",
+      "difficulty": 9,
+      "answer": "Travis Scott",
+      "acceptedAnswers": [
+        "Travis"
+      ],
+      "multipleChoiceOptions": [
+        "Travis Scott",
+        "Don Toliver",
+        "Playboi Carti",
+        "Lil Uzi Vert"
+      ]
+    },
+    {
+      "question": "This actress went from playing a troubled teen on Euphoria to leading romantic comedies and a horror franchise while becoming one of Hollywood's most visible young stars.",
+      "category": "Modern Pop Culture",
+      "difficulty": 8,
+      "answer": "Sydney Sweeney",
+      "acceptedAnswers": [
+        "Sweeney"
+      ],
+      "multipleChoiceOptions": [
+        "Sydney Sweeney",
+        "Margaret Qualley",
+        "Maya Hawke",
+        "Dakota Johnson"
+      ]
+    },
+    {
+      "question": "This rapper-singer's blend of hip-hop and pop turned songs like 'Circles' and 'Sunflower' into crossover hits, while face tattoos became part of an instantly recognizable image.",
+      "category": "Modern Pop Culture",
+      "difficulty": 5,
+      "answer": "Post Malone",
+      "acceptedAnswers": [
+        "Post"
+      ],
+      "multipleChoiceOptions": [
+        "Post Malone",
+        "Machine Gun Kelly",
+        "Jack Harlow",
+        "The Kid LAROI"
+      ]
+    },
+    {
+      "question": "This actress broke out in Stranger Things before producing and starring in Enola Holmes, all before reaching the age when most people finish college.",
+      "category": "Modern Pop Culture",
+      "difficulty": 7,
+      "answer": "Millie Bobby Brown",
+      "acceptedAnswers": [
+        "Millie Brown"
+      ],
+      "multipleChoiceOptions": [
+        "Millie Bobby Brown",
+        "Sadie Sink",
+        "Maisie Williams",
+        "Kiernan Shipka"
+      ]
+    }
+  ]
+}

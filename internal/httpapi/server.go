@@ -25,12 +25,13 @@ import (
 const playerCookie = "trivial_player"
 
 type Server struct {
-	Pool         *pgxpool.Pool
-	Clock        clock.Clock
-	Timezone     *time.Location
-	Logger       *slog.Logger
-	CookieSecure bool
-	Assets       fs.FS
+	Pool            *pgxpool.Pool
+	Clock           clock.Clock
+	Timezone        *time.Location
+	Logger          *slog.Logger
+	CookieSecure    bool
+	DevelopmentMode bool
+	Assets          fs.FS
 }
 
 type apiError struct {
@@ -53,6 +54,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/runs/{id}/questions/{qid}/answer", s.answer)
 	mux.HandleFunc("POST /api/runs/{id}/share", s.share)
 	mux.HandleFunc("GET /api/stats", s.stats)
+	mux.HandleFunc("POST /api/dev/reset", s.resetCurrentRun)
 	if s.Assets != nil {
 		assets, err := fs.Sub(s.Assets, "dist")
 		if err != nil {
@@ -61,6 +63,23 @@ func (s *Server) Handler() http.Handler {
 		mux.Handle("GET /", http.FileServer(http.FS(assets)))
 	}
 	return mux
+}
+
+func (s *Server) resetCurrentRun(w http.ResponseWriter, r *http.Request) {
+	if !s.DevelopmentMode {
+		s.fail(w, http.StatusNotFound, "not_found", "Not found.")
+		return
+	}
+	playerID := s.optionalPlayer(r)
+	if playerID == "" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if _, err := s.Pool.Exec(r.Context(), `DELETE FROM runs WHERE player_id=$1 AND puzzle_date=$2`, playerID, s.date(s.now())); err != nil {
+		s.internal(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) now() time.Time {

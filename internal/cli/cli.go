@@ -27,7 +27,7 @@ const usage = `trivial — daily trivia administration
 
 Usage:
   trivial migrate up|down
-  trivial seed apply [--file seed/questions.json]
+  trivial seed apply|replace [--file seed/questions.json]
   trivial puzzles generate [--from YYYY-MM-DD] [--days N]
   trivial puzzles show YYYY-MM-DD
   trivial help
@@ -83,15 +83,16 @@ func runMigrate(ctx context.Context, args []string, stdout io.Writer) error {
 }
 
 func runSeed(ctx context.Context, args []string, stdout io.Writer) error {
-	if len(args) == 0 || args[0] != "apply" {
-		return fmt.Errorf("usage: trivial seed apply [--file path]")
+	if len(args) == 0 || (args[0] != "apply" && args[0] != "replace") {
+		return fmt.Errorf("usage: trivial seed apply|replace [--file path]")
 	}
+	mode := args[0]
 
-	fs := flag.NewFlagSet("seed apply", flag.ContinueOnError)
+	fs := flag.NewFlagSet("seed "+mode, flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	path := fs.String("file", "seed/questions.json", "path to the seed file")
 	if err := fs.Parse(args[1:]); err != nil {
-		return fmt.Errorf("usage: trivial seed apply [--file path]: %w", err)
+		return fmt.Errorf("usage: trivial seed apply|replace [--file path]: %w", err)
 	}
 
 	data, err := os.ReadFile(*path)
@@ -115,12 +116,50 @@ func runSeed(ctx context.Context, args []string, stdout io.Writer) error {
 	// could leave an existing question with zero aliases — silently dropping
 	// it out of EligibleQuestions rather than raising anything. Running the
 	// whole seed inside one transaction makes the apply all-or-nothing.
-	stats, err := applySeedInTx(ctx, pool, seed)
+	var stats content.SeedStats
+	if mode == "replace" {
+		stats, err = replaceSeedInTx(ctx, pool, seed)
+	} else {
+		stats, err = applySeedInTx(ctx, pool, seed)
+	}
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(stdout, "seeded %d topics and %d questions from %s\n", stats.Topics, stats.Questions, *path)
+	verb := "seeded"
+	if mode == "replace" {
+		verb = "replaced library with"
+	}
+	fmt.Fprintf(stdout, "%s %d topics and %d questions from %s\n", verb, stats.Topics, stats.Questions, *path)
 	return nil
+}
+
+// replaceSeedInTx atomically removes gameplay rows that reference the old
+// library, clears the library itself, and imports its replacement. Players are
+// retained so existing browser identities remain valid after the reset.
+func replaceSeedInTx(ctx context.Context, pool *pgxpool.Pool, seed content.SeedFile) (content.SeedStats, error) {
+	tx, err := pool.Begin(ctx)
+	if err != nil {
+		return content.SeedStats{}, fmt.Errorf("begin seed replacement: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	for _, statement := range []string{
+		`DELETE FROM runs`,
+		`DELETE FROM daily_puzzles`,
+		`DELETE FROM questions`,
+		`DELETE FROM topics`,
+	} {
+		if _, err := tx.Exec(ctx, statement); err != nil {
+			return content.SeedStats{}, fmt.Errorf("clear old question library: %w", err)
+		}
+	}
+	stats, err := content.ApplySeed(ctx, tx, seed)
+	if err != nil {
+		return content.SeedStats{}, err
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return content.SeedStats{}, fmt.Errorf("commit seed replacement: %w", err)
+	}
+	return stats, nil
 }
 
 // applySeedInTx runs content.ApplySeed inside its own transaction, committing

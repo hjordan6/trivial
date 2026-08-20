@@ -79,7 +79,7 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 	}
 
 	rng := rand.New(rand.NewPCG(seedFor(date), 0x9E3779B97F4A7C15))
-	rng.Shuffle(len(topics), func(i, j int) { topics[i], topics[j] = topics[j], topics[i] })
+	topics = weightedTopicOrder(topics, rng)
 
 	var (
 		entries  []Entry
@@ -116,6 +116,32 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 		return nil, err
 	}
 	return p, nil
+}
+
+// weightedTopicOrder performs deterministic weighted sampling without
+// replacement. Each draw is proportional to the remaining topics' weights;
+// removing the winner ensures a topic can appear only once on a board.
+func weightedTopicOrder(topics []content.Topic, rng *rand.Rand) []content.Topic {
+	remaining := append([]content.Topic(nil), topics...)
+	ordered := make([]content.Topic, 0, len(topics))
+	for len(remaining) > 0 {
+		total := 0
+		for _, topic := range remaining {
+			total += topic.SelectionWeight
+		}
+		draw := rng.IntN(total)
+		chosen := 0
+		for i, topic := range remaining {
+			draw -= topic.SelectionWeight
+			if draw < 0 {
+				chosen = i
+				break
+			}
+		}
+		ordered = append(ordered, remaining[chosen])
+		remaining = append(remaining[:chosen], remaining[chosen+1:]...)
+	}
+	return ordered
 }
 
 // fillTopic picks one question at each difficulty for a topic. It returns a

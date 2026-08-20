@@ -132,6 +132,7 @@ func Load(ctx context.Context, q db.DBTX, id, playerID string, now time.Time) (*
 	if err != nil {
 		return nil, err
 	}
+	shuffleQuestions(r.Puzzle.Entries, r.OptionSeed)
 	rows, err := q.Query(ctx, `SELECT ra.question_id,ra.stage,ra.free_text_submission,ra.chosen_option,ra.outcome,
 		CASE WHEN r.completed_at IS NOT NULL OR ra.outcome IS NOT NULL THEN qu.canonical_answer ELSE '' END
 		FROM run_answers ra JOIN runs r ON r.id=ra.run_id JOIN questions qu ON qu.id=ra.question_id WHERE ra.run_id=$1 ORDER BY ra.question_id`, id)
@@ -259,7 +260,18 @@ func AnswerQuestion(ctx context.Context, q db.DBTX, runID, playerID string, qid 
 	var outcome *Outcome
 	var result *grading.Result
 	if stage == FreeText {
-		gr := grading.Grade(submission, d.Aliases)
+		gr := grading.Result{Distance: -1}
+		isListedDistractor := false
+		normalized := grading.Normalize(submission)
+		for _, distractor := range d.Distractors {
+			if normalized == grading.Normalize(distractor) {
+				isListedDistractor = true
+				break
+			}
+		}
+		if !isListedDistractor {
+			gr = grading.Grade(submission, d.Aliases)
+		}
 		result = &gr
 		if gr.Correct {
 			o := Star
@@ -311,4 +323,12 @@ func shuffle(values []string, seed int64, qid int64) {
 	binary.LittleEndian.PutUint64(b[8:], uint64(qid))
 	r := mathrand.New(mathrand.NewPCG(binary.LittleEndian.Uint64(b[:8]), binary.LittleEndian.Uint64(b[8:])))
 	r.Shuffle(len(values), func(i, j int) { values[i], values[j] = values[j], values[i] })
+}
+
+// shuffleQuestions gives each run a stable presentation order. It uses a
+// separate PCG stream from option shuffling so changing board presentation
+// cannot change any question's multiple-choice order.
+func shuffleQuestions(entries []puzzle.Entry, seed int64) {
+	r := mathrand.New(mathrand.NewPCG(uint64(seed), 0xD1B54A32D192ED03))
+	r.Shuffle(len(entries), func(i, j int) { entries[i], entries[j] = entries[j], entries[i] })
 }

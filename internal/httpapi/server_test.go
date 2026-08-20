@@ -1,6 +1,8 @@
 package httpapi
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/hjordan6/trivial/internal/clock"
@@ -14,6 +16,15 @@ func date(t *testing.T, value string) clock.Date {
 		t.Fatal(err)
 	}
 	return d
+}
+
+func TestDevelopmentResetIsUnavailableByDefault(t *testing.T) {
+	req := httptest.NewRequest(http.MethodPost, "/api/dev/reset", nil)
+	res := httptest.NewRecorder()
+	(&Server{}).Handler().ServeHTTP(res, req)
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", res.Code)
+	}
 }
 
 func TestStreaks(t *testing.T) {

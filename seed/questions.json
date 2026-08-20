@@ -3,6 +3,7 @@
     {
       "slug": "world-geography",
       "name": "World Geography",
+      "weight": 1,
       "questions": [
         {
           "external_id": "world-geography-easy-1",
@@ -81,6 +82,7 @@
     {
       "slug": "science-and-nature",
       "name": "Science & Nature",
+      "weight": 1,
       "questions": [
         {
           "external_id": "science-and-nature-easy-1",
@@ -159,6 +161,7 @@
     {
       "slug": "film-and-television",
       "name": "Film & Television",
+      "weight": 1,
       "questions": [
         {
           "external_id": "film-and-television-easy-1",
@@ -237,6 +240,7 @@
     {
       "slug": "history",
       "name": "History",
+      "weight": 1,
       "questions": [
         {
           "external_id": "history-easy-1",
@@ -315,6 +319,7 @@
     {
       "slug": "music",
       "name": "Music",
+      "weight": 1,
       "questions": [
         {
           "external_id": "music-easy-1",
@@ -393,6 +398,7 @@
     {
       "slug": "sport",
       "name": "Sport",
+      "weight": 1,
       "questions": [
         {
           "external_id": "sport-easy-1",

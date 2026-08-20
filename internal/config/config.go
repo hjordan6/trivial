@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL          string
 	HTTPAddress          string
 	CookieSecure         bool
+	DevelopmentMode      bool
 	PuzzleTimezone       *time.Location
 	QuestionCooldownDays int
 	TimeLimitSeconds     int
@@ -30,6 +31,9 @@ func Load() (Config, error) {
 	}
 	cfg.HTTPAddress = envOr("HTTP_ADDRESS", ":8080")
 	if cfg.CookieSecure, err = boolValue("COOKIE_SECURE", true); err != nil {
+		return Config{}, err
+	}
+	if cfg.DevelopmentMode, err = boolValue("DEVELOPMENT_MODE", false); err != nil {
 		return Config{}, err
 	}
 

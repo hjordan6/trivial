@@ -44,7 +44,7 @@ func serve(ctx context.Context) error {
 	if err := db.Migrate(ctx, pool, db.Up); err != nil {
 		return err
 	}
-	h := (&httpapi.Server{Pool: pool, Clock: clock.Real{}, Timezone: cfg.PuzzleTimezone, Logger: slog.Default(), CookieSecure: cfg.CookieSecure, Assets: webassets.Dist}).Handler()
+	h := (&httpapi.Server{Pool: pool, Clock: clock.Real{}, Timezone: cfg.PuzzleTimezone, Logger: slog.Default(), CookieSecure: cfg.CookieSecure, DevelopmentMode: cfg.DevelopmentMode, Assets: webassets.Dist}).Handler()
 	server := &http.Server{Addr: cfg.HTTPAddress, Handler: h, ReadHeaderTimeout: 5 * time.Second}
 	slog.Info("http server listening", "address", cfg.HTTPAddress)
 	return server.ListenAndServe()
