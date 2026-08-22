@@ -27,7 +27,7 @@ const legend=[
 <template>
   <main class="start">
     <p class="eyebrow">Daily trivia · {{puzzle.date}}</p>
-    <h1>Nine questions.<br><em>One honest clock.</em></h1>
+    <h1>Trivial</h1>
     <p class="lede">Three topics, each asked easy, medium and hard. Type the answer for the bonus, or reveal the choices and play it safe. You have {{puzzle.time_limit_seconds}} seconds once you begin.</p>
 
     <section class="howto">
