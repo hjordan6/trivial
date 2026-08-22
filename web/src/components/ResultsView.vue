@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRunStore } from '../stores/run'
+import { MAX_POINTS, useRunStore } from '../stores/run'
 
 const store=useRunStore()
 const copied=ref(false)
 const isLocal=['localhost','127.0.0.1','::1'].includes(location.hostname)
-const difficultyRank={easy:0,medium:1,hard:2}
 
+// Share the plain site link. Challenge links (/c/{token}) aren't served yet, so
+// pointing people at one would hand them a 404.
 async function share(){
-  const {url}=await store.share()
-  const full=new URL(url,location.origin).href
-  const text=store.shareText(full)
+  const text=store.shareText(location.origin)
   if(navigator.share) await navigator.share({text})
   else await navigator.clipboard.writeText(text)
   copied.value=true
@@ -23,10 +22,11 @@ async function reset(){
 <template>
   <main class="results">
     <p class="eyebrow">Today’s result</p>
-    <h1>{{store.score}} <span>/ 9</span></h1>
+    <h1>{{store.points}} <span>/ {{MAX_POINTS}} pts</span></h1>
+    <p class="subscore">{{store.score}} of 9 correct · {{store.stars}}⭐ typed</p>
     <div class="result-grid">
-      <template v-for="pos in [0,1,2]" :key="pos">
-        <div v-for="q in store.puzzle!.questions.filter(q=>q.topic_position===pos).sort((a,b)=>difficultyRank[a.difficulty]-difficultyRank[b.difficulty])" :key="q.question_id" class="result-cell">
+      <template v-for="(row,position) in store.orderedRows()" :key="position">
+        <div v-for="q in row" :key="q.question_id" class="result-cell">
           <b>{{store.symbol(store.answerMap.get(q.question_id)?.outcome)}}</b>
           <small>{{q.topic_name}} · {{q.difficulty}}</small>
           <span>{{store.answerMap.get(q.question_id)?.canonical_answer}}</span>
