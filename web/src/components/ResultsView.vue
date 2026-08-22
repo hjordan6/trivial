@@ -24,14 +24,19 @@ async function reset(){
     <p class="eyebrow">Today’s result</p>
     <h1>{{store.points}} <span>/ {{MAX_POINTS}} pts</span></h1>
     <p class="subscore">{{store.score}} of 9 correct · {{store.stars}}⭐ typed</p>
+    <!-- Each row is one topic asked easy/medium/hard, so the row wrapper carries
+         the topic name for narrow screens, where there is no room to repeat it in
+         all three cells. On wide screens the wrapper is `display: contents` and
+         the cells sit directly in the 3x3 grid, as before. -->
     <div class="result-grid">
-      <template v-for="(row,position) in store.orderedRows()" :key="position">
+      <div v-for="(row,position) in store.orderedRows()" :key="position" class="result-row">
+        <h2 v-if="row.length" class="result-row__topic">{{row[0].topic_name}}</h2>
         <div v-for="q in row" :key="q.question_id" class="result-cell">
           <b>{{store.symbol(store.answerMap.get(q.question_id)?.outcome)}}</b>
-          <small>{{q.topic_name}} · {{q.difficulty}}</small>
-          <span>{{store.answerMap.get(q.question_id)?.canonical_answer}}</span>
+          <small><span class="result-cell__topic">{{q.topic_name}}</span>{{q.difficulty}}</small>
+          <span class="result-cell__answer">{{store.answerMap.get(q.question_id)?.canonical_answer}}</span>
         </div>
-      </template>
+      </div>
     </div>
     <button class="primary" @click="share">{{copied?'Shared!':'Share result'}}</button>
     <button v-if="isLocal" class="dev-reset results-reset" @click="reset">↻ Play again locally</button>
