@@ -1,8 +1,10 @@
 DATABASE_URL ?= postgres://trivial:trivial@localhost:5432/trivial?sslmode=disable
 TEST_DATABASE_URL ?= postgres://trivial:trivial@localhost:5433/trivial_test?sslmode=disable
 DEV_QUESTION_COOLDOWN_DAYS ?= 7
+HTTP_ADDRESS ?= :8080
+BIN ?= trivial
 
-.PHONY: db-up db-down migrate seed replace-seed test lint fmt web-build serve
+.PHONY: db-up db-down migrate seed replace-seed test lint fmt web-build build serve stop restart
 
 db-up:
 	docker compose up -d db testdb
@@ -35,5 +37,23 @@ lint:
 web-build:
 	cd web && npm run build
 
+# Compile the Vue bundle and the Go binary without starting anything.
+build: web-build
+	go build -o $(BIN) ./cmd/trivial
+
 serve: web-build migrate
-	DATABASE_URL="$(DATABASE_URL)" COOKIE_SECURE=false DEVELOPMENT_MODE=true go run ./cmd/trivial serve
+	DATABASE_URL="$(DATABASE_URL)" HTTP_ADDRESS="$(HTTP_ADDRESS)" COOKIE_SECURE=false DEVELOPMENT_MODE=true go run ./cmd/trivial serve
+
+# `go run` leaves a compiled child process that outlives its parent and keeps
+# the port, so kill the wrapper and the binary. Match the binary on its `serve`
+# argument rather than its path: go runs it from the build cache
+# (~/Library/Caches/go-build/...) or a temp dir (.../b001/exe/) depending on
+# whether the build was already cached, so the path is not stable. Bracketed
+# patterns keep pkill from matching this recipe's own shell, and `|| true` keeps
+# "nothing was running" a success.
+stop:
+	@pkill -f '[g]o run ./cmd/trivial' || true
+	@pkill -f '[/]trivial serve' || true
+	@echo "trivial server stopped"
+
+restart: stop serve
