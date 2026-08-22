@@ -406,8 +406,8 @@ func TestEligibleQuestionsOrdersByIDRegardlessOfHeapOrder(t *testing.T) {
 	insertOrder := []int64{1000, 500, 1500}
 	for _, id := range insertOrder {
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO questions (id, topic_id, difficulty, prompt, canonical_answer, status, source, external_id)
-			VALUES ($1, $2, 'easy'::difficulty, $3, $4, 'active'::question_status, 'test', $5)`,
+			INSERT INTO questions (id, topic_id, difficulty, difficulty_rating, prompt, canonical_answer, status, source, external_id)
+			VALUES ($1, $2, 'easy'::difficulty, 2, $3, $4, 'active'::question_status, 'test', $5)`,
 			id, topicID, fmt.Sprintf("Prompt %d", id), fmt.Sprintf("Answer %d", id), fmt.Sprintf("order-%d", id)); err != nil {
 			t.Fatalf("insert question %d: %v", id, err)
 		}

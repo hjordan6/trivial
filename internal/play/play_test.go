@@ -31,10 +31,13 @@ func fixture(t *testing.T, tx pgx.Tx, limit int) (*puzzle.Puzzle, time.Time) {
 		if err := tx.QueryRow(ctx, `INSERT INTO topics(slug,name) VALUES($1,$2) RETURNING id`, fmt.Sprintf("play-%d", topic), fmt.Sprintf("Topic %d", topic)).Scan(&tid); err != nil {
 			t.Fatal(err)
 		}
+		// difficulty_rating is NOT NULL and constrained to its band: easy 1-4,
+		// medium 5-7, hard 8-10. These are the values migration 00004 backfilled.
+		ratings := []int{2, 6, 9}
 		for dIndex, d := range []string{"easy", "medium", "hard"} {
 			var qid int64
 			answer := fmt.Sprintf("answer-%d-%s", topic, d)
-			if err := tx.QueryRow(ctx, `INSERT INTO questions(topic_id,difficulty,prompt,canonical_answer,status) VALUES($1,$2,$3,$4,'active') RETURNING id`, tid, d, "Prompt?", answer).Scan(&qid); err != nil {
+			if err := tx.QueryRow(ctx, `INSERT INTO questions(topic_id,difficulty,difficulty_rating,prompt,canonical_answer,status) VALUES($1,$2,$3,$4,$5,'active') RETURNING id`, tid, d, ratings[dIndex], "Prompt?", answer).Scan(&qid); err != nil {
 				t.Fatal(err)
 			}
 			if _, err := tx.Exec(ctx, `INSERT INTO question_aliases(question_id,alias,normalized) VALUES($1,$2,$2)`, qid, answer); err != nil {
