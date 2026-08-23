@@ -69,7 +69,48 @@ to be selected as one weighted `1`. Selection is without replacement, so a
 topic still appears at most once per board. All starter topics default to `1`.
 
 After changing weights, run `make seed`. The new weights affect puzzles
-generated afterward; already-generated puzzles remain unchanged.
+generated afterward; already-generated puzzles remain unchanged. Weights are
+also editable in the admin panel, which writes them directly and needs no
+reseed.
+
+## Admin panel
+
+Set `ADMIN_PASSWORD` and the panel appears at `/admin`. Leave it unset and the
+page and every `/api/admin` route answer 404 -- there is no default password,
+because a default admin password is worse than none.
+
+```sh
+ADMIN_PASSWORD=letmein make serve
+```
+
+The panel does three things:
+
+**Pin a date's categories.** Each upcoming date has three slots, and each slot
+is either a topic you chose or `Automatic`. Pinning is per slot, so you can fix
+one category and let the other two be drawn as usual. Questions are always
+picked automatically -- the panel never chooses a question. "Reset to
+automatic" clears a date's pins and rebuilds it.
+
+Only future dates can change. Today and the past are refused, and so is any
+date someone has already played: that board is history.
+
+Two things are worth knowing. Saving a pin re-picks all nine questions for the
+date, including the slots you left automatic, because one date-seeded RNG feeds
+both the topic order and every question pick. And if a pinned topic has no
+eligible question at some difficulty, the save fails naming the topic and the
+difficulty rather than quietly substituting another topic -- which is what
+happens to an automatically chosen topic in the same position.
+
+**Generate the days that are missing**, equivalent to `trivial puzzles
+generate` but skipping dates that already exist and reporting per-date failures
+instead of stopping at the first one. Pins are honoured whenever a date is
+generated, including from the CLI, so pinning an ungenerated date and
+generating later works.
+
+**Edit topic weights and the active flag**, which previously required editing
+`seed/questions.json` and re-running `make seed`. At least three topics must
+stay active or no board can be generated, so the last three cannot be switched
+off.
 
 ## Importing questions
 
