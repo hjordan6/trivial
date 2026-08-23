@@ -88,6 +88,61 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .legend > li > b { flex: none; width: 28px; text-align: center; font-size: 22px; line-height: 1.2; }
 .legend span { font-size: 14px; line-height: 1.5; color: #45473f; }
 .legend strong { color: var(--ink); }
+/* --- admin panel ---------------------------------------------------------
+   The operator tool. Wider than the game's 760px because it is a table of
+   dates, and the only place in the app with real form controls: the game has
+   exactly one input, styled as `.card form input`. */
+.admin { max-width: 1040px; margin: auto; padding: 5vh 28px 12vh; }
+.admin__head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; border-bottom: 2px solid var(--ink); padding-bottom: 14px; }
+.admin__head .eyebrow { margin: 0; }
+.admin__head-actions { display: flex; align-items: baseline; gap: 18px; }
+.admin__head-actions a { color: #55564f; font: 500 12px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; }
+.admin-login form { max-width: 320px; margin: 28px auto 0; text-align: left; }
+.admin-login .primary { width: 100%; margin-top: 6px; }
+
+.admin-section { margin-top: 44px; }
+.admin-section__head { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.admin-section__head .eyebrow { margin: 0; }
+
+/* Form vocabulary. Labels sit above their control, monospace-uppercase like
+   every other small label in the app. */
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.field > span { font: 500 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; }
+.field input, .field select { font: inherit; font-size: 15px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 9px 10px; width: 100%; }
+.field input:focus, .field select:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.field--inline { flex-direction: row; align-items: center; gap: 9px; margin: 0; }
+.field--inline input { width: 78px; }
+.field--check { flex-direction: row; align-items: center; gap: 7px; margin: 0; }
+.field--check input { width: auto; }
+.field--check span { font: 500 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; }
+.field--slot { margin: 0; }
+/* A pinned slot is the exception, so it gets the accent rather than the
+   automatic ones getting de-emphasised. */
+.field select.is-pinned { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--acid); font-weight: 600; }
+
+.admin-error, .admin-notice { font-size: 14px; line-height: 1.5; padding: 11px 14px; margin: 20px 0 0; border-radius: 3px; }
+.admin-error { background: #fdeceb; border: 1px solid var(--orange); color: #8d2c19; }
+.admin-notice { background: var(--acid); border: 1px solid var(--ink); }
+
+.admin-days { margin-top: 18px; border-top: 1px solid var(--line); }
+.admin-day { display: grid; grid-template-columns: 132px 1fr auto; gap: 18px; align-items: start; padding: 15px 0; border-bottom: 1px solid var(--line); }
+.admin-day--locked { color: #85857f; }
+.admin-day__when { display: flex; flex-direction: column; gap: 3px; }
+.admin-day__when b { font-size: 15px; }
+.admin-day__when small { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #6a6b65; }
+.admin-day__slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.admin-day__locked { margin: 0; font-size: 15px; display: flex; flex-direction: column; gap: 3px; }
+.admin-day__locked small { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; }
+.admin-day__actions { display: flex; align-items: center; gap: 12px; }
+.admin-day__result { grid-column: 2 / -1; margin: 0; font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #85857f; }
+.admin-save { border: 1px solid var(--ink); background: var(--paper); padding: 9px 16px; border-radius: 3px; font-weight: 600; }
+.primary--small { padding: 10px 17px; font-size: 14px; box-shadow: 4px 4px 0 var(--acid); }
+
+.admin-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 10px; margin-top: 18px; }
+.admin-topic { background: var(--paper); border: 1px solid var(--line); padding: 14px; display: flex; flex-direction: column; gap: 11px; }
+.admin-topic b { font-size: 15px; }
+.admin-topic--off { opacity: .55; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -111,4 +166,11 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .result-cell__topic { display: none; }
   .result-cell__answer { font-size: 12px; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; }
   .stats { gap: 20px; }
+  .admin { padding: 4vh 16px 10vh; }
+  .admin__head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  /* Stack each date: label, then its three slots, then the buttons. */
+  .admin-day { grid-template-columns: 1fr; gap: 11px; }
+  .admin-day__slots { grid-template-columns: 1fr; }
+  .admin-day__result { grid-column: 1; }
+  .admin-topics { grid-template-columns: 1fr; }
 }

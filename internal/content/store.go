@@ -3,7 +3,10 @@ package content
 
 import (
 	"context"
+	"errors"
 	"fmt"
+
+	"github.com/jackc/pgx/v5"
 
 	"github.com/hjordan6/trivial/internal/clock"
 	"github.com/hjordan6/trivial/internal/db"
@@ -189,12 +192,35 @@ func ReplaceDistractors(ctx context.Context, q db.DBTX, questionID int64, option
 	return nil
 }
 
+// minActiveTopics is how many topics must stay selectable for a board to be
+// generatable at all. It mirrors the three-topic board that puzzle.topicsPerDay
+// and the topic_position CHECK both encode.
+const minActiveTopics = 3
+
+// ErrNoSuchTopic means no topic carries the given slug.
+var ErrNoSuchTopic = errors.New("no such topic")
+
+// ErrTooFewActiveTopics means the change would leave the library unable to
+// fill a board.
+var ErrTooFewActiveTopics = errors.New("too few active topics would remain")
+
 // ActiveTopics returns every selectable topic, ordered by id so deterministic
 // weighted selection starts from a stable input order.
 func ActiveTopics(ctx context.Context, q db.DBTX) ([]Topic, error) {
-	rows, err := q.Query(ctx, `SELECT id, slug, name, active, selection_weight FROM topics WHERE active ORDER BY id`)
+	return queryTopics(ctx, q, `SELECT id, slug, name, active, selection_weight FROM topics WHERE active ORDER BY id`)
+}
+
+// AllTopics returns every topic, selectable or not. An editor that can
+// re-activate a topic has to be able to see the inactive ones, which is what
+// ActiveTopics by definition cannot show.
+func AllTopics(ctx context.Context, q db.DBTX) ([]Topic, error) {
+	return queryTopics(ctx, q, `SELECT id, slug, name, active, selection_weight FROM topics ORDER BY id`)
+}
+
+func queryTopics(ctx context.Context, q db.DBTX, sql string) ([]Topic, error) {
+	rows, err := q.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("query active topics: %w", err)
+		return nil, fmt.Errorf("query topics: %w", err)
 	}
 	defer rows.Close()
 
@@ -207,9 +233,49 @@ func ActiveTopics(ctx context.Context, q db.DBTX) ([]Topic, error) {
 		topics = append(topics, t)
 	}
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("read active topics: %w", err)
+		return nil, fmt.Errorf("read topics: %w", err)
 	}
 	return topics, nil
+}
+
+// UpdateTopicSettings changes what steers automatic selection: a topic's
+// relative weight and whether it is selectable at all. A nil field is left
+// alone, so callers can change one without reading the other first.
+//
+// Deactivating below minActiveTopics is refused. Generation would become
+// impossible, and a single click in an admin panel should not be able to do
+// that.
+func UpdateTopicSettings(ctx context.Context, q db.DBTX, slug string, weight *int, active *bool) (Topic, error) {
+	if weight != nil && (*weight < 1 || *weight > 1000) {
+		return Topic{}, fmt.Errorf("topic %q selection weight must be between 1 and 1000, got %d", slug, *weight)
+	}
+	if active != nil && !*active {
+		var remaining int
+		if err := q.QueryRow(ctx,
+			`SELECT count(*) FROM topics WHERE active AND slug <> $1`, slug).Scan(&remaining); err != nil {
+			return Topic{}, fmt.Errorf("count active topics besides %q: %w", slug, err)
+		}
+		if remaining < minActiveTopics {
+			return Topic{}, fmt.Errorf("deactivating %q would leave %d active topics, need %d: %w",
+				slug, remaining, minActiveTopics, ErrTooFewActiveTopics)
+		}
+	}
+
+	var t Topic
+	err := q.QueryRow(ctx, `
+		UPDATE topics SET
+			selection_weight = COALESCE($2, selection_weight),
+			active           = COALESCE($3, active)
+		WHERE slug = $1
+		RETURNING id, slug, name, active, selection_weight`,
+		slug, weight, active).Scan(&t.ID, &t.Slug, &t.Name, &t.Active, &t.SelectionWeight)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Topic{}, fmt.Errorf("update topic %q: %w", slug, ErrNoSuchTopic)
+	}
+	if err != nil {
+		return Topic{}, fmt.Errorf("update topic %q: %w", slug, err)
+	}
+	return t, nil
 }
 
 // EligibleQuestions returns the questions that may be used for a topic and

@@ -17,6 +17,9 @@ type Config struct {
 	PuzzleTimezone       *time.Location
 	QuestionCooldownDays int
 	TimeLimitSeconds     int
+	// AdminPassword gates the admin panel. Empty is legal and means the panel
+	// and its API do not exist: every admin route answers 404.
+	AdminPassword string
 }
 
 // Load reads configuration from the environment, applying defaults and
@@ -50,6 +53,7 @@ func Load() (Config, error) {
 	if cfg.TimeLimitSeconds, err = positiveInt("TIME_LIMIT_SECONDS", 135); err != nil {
 		return Config{}, err
 	}
+	cfg.AdminPassword = os.Getenv("ADMIN_PASSWORD")
 	return cfg, nil
 }
 

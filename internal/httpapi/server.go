@@ -32,6 +32,13 @@ type Server struct {
 	CookieSecure    bool
 	DevelopmentMode bool
 	Assets          fs.FS
+	// AdminPassword gates every /api/admin route. Empty disables the admin
+	// surface entirely, which is what a zero-valued Server gets.
+	AdminPassword string
+	// CooldownDays and TimeLimitSeconds configure boards the admin panel
+	// generates or rebuilds. They mirror the CLI's generator settings.
+	CooldownDays     int
+	TimeLimitSeconds int
 }
 
 type apiError struct {
@@ -55,12 +62,23 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/runs/{id}/share", s.share)
 	mux.HandleFunc("GET /api/stats", s.stats)
 	mux.HandleFunc("POST /api/dev/reset", s.resetCurrentRun)
+
+	mux.HandleFunc("POST /api/admin/login", s.adminLogin)
+	mux.HandleFunc("POST /api/admin/logout", s.adminLogout)
+	mux.HandleFunc("GET /api/admin/session", s.adminSession)
+	mux.HandleFunc("GET /api/admin/puzzles", s.adminPuzzles)
+	mux.HandleFunc("PUT /api/admin/puzzles/{date}/topics", s.adminSetTopics)
+	mux.HandleFunc("DELETE /api/admin/puzzles/{date}/topics", s.adminClearTopics)
+	mux.HandleFunc("POST /api/admin/puzzles/generate", s.adminGenerate)
+	mux.HandleFunc("GET /api/admin/topics", s.adminTopics)
+	mux.HandleFunc("PATCH /api/admin/topics/{slug}", s.adminUpdateTopic)
+
 	if s.Assets != nil {
 		assets, err := fs.Sub(s.Assets, "dist")
 		if err != nil {
 			panic(err)
 		}
-		mux.Handle("GET /", http.FileServer(http.FS(assets)))
+		mux.Handle("GET /", spaHandler(assets))
 	}
 	return mux
 }
@@ -381,6 +399,42 @@ func (s *Server) playError(w http.ResponseWriter, err error) {
 		s.internal(w, err)
 	}
 }
+
+// spaHandler serves the built frontend, falling back to index.html for paths
+// that are not files on disk. Without the fallback a client-side route such as
+// /admin gets a plain-text 404 from http.FileServer, which only ever looks for
+// a file of that name.
+//
+// A miss under /assets/ stays a 404 on purpose: those URLs are content-hashed
+// and always real, so answering one with HTML would turn a broken deploy into a
+// confusing script parse error instead of an obvious missing file.
+func spaHandler(assets fs.FS) http.Handler {
+	files := http.FileServer(http.FS(assets))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimPrefix(r.URL.Path, "/")
+		if name == "" {
+			files.ServeHTTP(w, r)
+			return
+		}
+		if _, err := fs.Stat(assets, name); err == nil {
+			files.ServeHTTP(w, r)
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/assets/") {
+			http.NotFound(w, r)
+			return
+		}
+		shell, err := fs.ReadFile(assets, "index.html")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, _ = w.Write(shell)
+	})
+}
+
 func (s *Server) logger() *slog.Logger {
 	if s.Logger != nil {
 		return s.Logger

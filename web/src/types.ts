@@ -9,3 +9,8 @@ export interface Run { id:string; puzzle:Puzzle; started_at:string; expires_at:s
 export interface RunEnvelope { server_time:string; puzzle:Puzzle; run?:Run }
 export interface Stats { days_played:number; score_distribution:number[]; current_streak:number; longest_streak:number }
 export interface APIError { code:string; message:string }
+
+export interface AdminSlot { position:number; pinned:boolean; topic_slug:string|null; topic_name:string|null }
+export interface AdminDay { date:string; generated:boolean; has_runs:boolean; editable:boolean; slots:AdminSlot[] }
+export interface AdminTopic { slug:string; name:string; active:boolean; selection_weight:number }
+export interface AdminGenerateResult { generated:string[]; skipped:string[]; failed:{date:string; message:string}[] }
