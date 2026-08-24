@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api'
-import type { AdminDay, AdminGenerateResult, AdminTopic, APIError } from '../types'
+import type { AdminDay, AdminGenerateResult, AdminImportResult, AdminQuestion,
+  AdminQuestionPage, AdminTopic, APIError } from '../types'
 
 export const HORIZON_DAYS = 14
+export const QUESTION_PAGE = 50
 
 export const useAdminStore = defineStore('admin', () => {
   // authed starts null, meaning "not asked yet". The admin cookie is HttpOnly,
@@ -11,6 +13,11 @@ export const useAdminStore = defineStore('admin', () => {
   const authed = ref<boolean|null>(null)
   const days = ref<AdminDay[]>([])
   const topics = ref<AdminTopic[]>([])
+  const questions = ref<AdminQuestion[]>([])
+  const questionTotal = ref(0)
+  const questionOffset = ref(0)
+  const questionsLoading = ref(false)
+  const filters = ref({topic:'', difficulty:'', search:''})
   const loading = ref(false)
   const error = ref('')
   const notice = ref('')
@@ -50,6 +57,8 @@ export const useAdminStore = defineStore('admin', () => {
     authed.value = false
     days.value = []
     topics.value = []
+    questions.value = []
+    questionTotal.value = 0
   }
 
   async function refresh() {
@@ -151,6 +160,53 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
-  return {authed, days, topics, loading, error, notice,
-    probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic}
+  // loadQuestions keeps its own loading flag: the library list reloads on
+  // every keystroke of the search box, and borrowing the shared one would
+  // grey out the puzzle controls above it each time.
+  async function loadQuestions(offset = 0) {
+    error.value = ''
+    questionsLoading.value = true
+    try {
+      const params = new URLSearchParams({limit:String(QUESTION_PAGE), offset:String(offset)})
+      if (filters.value.topic) params.set('topic', filters.value.topic)
+      if (filters.value.difficulty) params.set('difficulty', filters.value.difficulty)
+      if (filters.value.search) params.set('search', filters.value.search)
+      const page = await api<AdminQuestionPage>(`/api/admin/questions?${params}`)
+      questions.value = page.questions
+      questionTotal.value = page.total
+      questionOffset.value = page.offset
+    } catch (e) {
+      fail(e)
+    } finally {
+      questionsLoading.value = false
+    }
+  }
+
+  // importQuestions posts the pasted text unchanged: the body is the seed file,
+  // so what works here is exactly what works in seed/questions.json.
+  async function importQuestions(text:string) {
+    error.value = ''
+    notice.value = ''
+    questionsLoading.value = true
+    try {
+      const result = await api<AdminImportResult>('/api/admin/questions/import',
+        {method:'POST', body:text})
+      notice.value = `Imported ${result.questions} question${result.questions===1?'':'s'} across ${result.topics} topic${result.topics===1?'':'s'}.`
+      // A paste can introduce a topic, so the topic list and the filters that
+      // depend on it have to catch up before the listing reloads.
+      await refresh()
+      await loadQuestions(0)
+      return true
+    } catch (e) {
+      fail(e)
+      return false
+    } finally {
+      questionsLoading.value = false
+    }
+  }
+
+  return {authed, days, topics, questions, questionTotal, questionOffset, questionsLoading,
+    filters, loading, error, notice,
+    probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic,
+    loadQuestions, importQuestions}
 })

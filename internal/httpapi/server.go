@@ -72,6 +72,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/admin/puzzles/generate", s.adminGenerate)
 	mux.HandleFunc("GET /api/admin/topics", s.adminTopics)
 	mux.HandleFunc("PATCH /api/admin/topics/{slug}", s.adminUpdateTopic)
+	mux.HandleFunc("GET /api/admin/questions", s.adminQuestions)
+	mux.HandleFunc("POST /api/admin/questions/import", s.adminImportQuestions)
 
 	if s.Assets != nil {
 		assets, err := fs.Sub(s.Assets, "dist")

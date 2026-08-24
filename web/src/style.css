@@ -143,6 +143,46 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .admin-topic b { font-size: 15px; }
 .admin-topic--off { opacity: .55; }
 
+/* --- admin: question library and import ---------------------------------- */
+.admin-count { font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #6a6b65; }
+.admin-filters { display: grid; grid-template-columns: minmax(0, 1fr) 170px minmax(0, 1fr); gap: 12px; margin-top: 16px; }
+.admin-filters .field { margin: 0; }
+
+.admin-questions { margin-top: 16px; border-top: 1px solid var(--line); }
+.admin-q { border-bottom: 1px solid var(--line); }
+.admin-q__row { display: grid; grid-template-columns: 148px minmax(0, 1fr) 104px 150px; gap: 14px; align-items: baseline; padding: 12px 0; cursor: pointer; }
+.admin-q__row:hover { background: var(--paper); }
+.admin-q__row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.admin-q--open { background: var(--paper); }
+.admin-q__topic { font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+/* Collapsed rows clip to one line so the table stays scannable; opening a row
+   is the only way to see a long prompt in full. */
+.admin-q__prompt { font-size: 15px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-q__prompt--full { white-space: normal; }
+.admin-q__difficulty { font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+.admin-q__answer { border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 5px 9px; font: 500 13px ui-monospace, monospace; text-align: left; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-q__answer.is-hidden { color: #9a9a93; letter-spacing: .16em; }
+.admin-q__answer:hover { border-color: var(--ink); }
+
+.admin-q__detail { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 26px; padding: 4px 0 18px 162px; }
+.admin-q__detail .eyebrow { margin: 0 0 7px; }
+.admin-q__options ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.admin-q__options li { border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 8px 11px; font-size: 14px; }
+.admin-q__options li.is-correct { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--acid); font-weight: 600; }
+.admin-q__meta p { margin: 0 0 14px; font-size: 14px; }
+.admin-q__meta .fine { margin-top: 0; }
+.admin-q__masked { color: #9a9a93; font: 12px ui-monospace, monospace; }
+.admin-empty { padding: 26px 0; text-align: center; color: #6a6b65; font: 13px ui-monospace, monospace; }
+.admin-pager { display: flex; justify-content: center; gap: 12px; margin-top: 18px; }
+
+.admin-import__help { background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px; margin-top: 14px; }
+.admin-import__help .fine { margin: 0 0 10px; }
+.admin-import__help code { background: #efece2; padding: 1px 4px; border-radius: 2px; }
+.admin-import__help pre { margin: 0; overflow-x: auto; font-size: 12px; line-height: 1.5; }
+.admin-import__box { width: 100%; margin-top: 14px; font: 13px/1.5 ui-monospace, monospace; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 11px 12px; resize: vertical; }
+.admin-import__box:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.admin-import__actions { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -173,4 +213,11 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .admin-day__slots { grid-template-columns: 1fr; }
   .admin-day__result { grid-column: 1; }
   .admin-topics { grid-template-columns: 1fr; }
+  .admin-filters { grid-template-columns: 1fr; }
+  .admin-q__row { grid-template-columns: 1fr auto; gap: 8px; }
+  .admin-q__topic { grid-column: 1; }
+  .admin-q__difficulty { grid-column: 2; text-align: right; }
+  .admin-q__prompt { grid-column: 1 / -1; white-space: normal; }
+  .admin-q__answer { grid-column: 1 / -1; }
+  .admin-q__detail { grid-template-columns: 1fr; gap: 16px; padding-left: 0; }
 }
