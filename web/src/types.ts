@@ -25,3 +25,7 @@ export interface AdminQuestionPage { questions:AdminQuestion[]; total:number; li
 export interface AdminImportResult { topics:number; questions:number }
 export interface AdminExportField { name:string; by_default:boolean; multi_value:boolean }
 export interface AdminExportFields { fields:AdminExportField[]; separator:string }
+export interface AdminQuestionInput {
+  topic_slug:string; prompt:string; answer:string; difficulty_rating:number
+  aliases:string[]; distractors:string[]; status:string
+}
