@@ -276,7 +276,7 @@ func seedTopicWithQuestionsPerDifficulty(t *testing.T, tx pgx.Tx, slug string, n
 		for i := 1; i <= n; i++ {
 			externalID := fmt.Sprintf("%s-%s-%d", slug, d, i)
 			qid, err := content.UpsertQuestion(ctx, tx, content.QuestionInput{
-				TopicID: id, Difficulty: d,
+				TopicID: id, Difficulty: d, DifficultyRating: hardRatingFor(d, i),
 				Prompt: "Prompt " + externalID, CanonicalAnswer: "Answer " + externalID,
 				Status: "active", Source: "test", ExternalID: externalID,
 			})
@@ -300,4 +300,169 @@ func questionIDs(p *puzzle.Puzzle) []int64 {
 		ids = append(ids, e.QuestionID)
 	}
 	return ids
+}
+
+// seedTopicWithHardRatings builds a topic whose hard band holds exactly the
+// given ratings, so a test can describe a library that does or does not contain
+// a floor-rated hard question.
+func seedTopicWithHardRatings(t *testing.T, tx pgx.Tx, slug string, hard []int) content.Topic {
+	t.Helper()
+	ctx := context.Background()
+
+	id, err := content.UpsertTopic(ctx, tx, slug, slug)
+	if err != nil {
+		t.Fatalf("UpsertTopic(%s): %v", slug, err)
+	}
+	write := func(d content.Difficulty, rating, n int) {
+		externalID := fmt.Sprintf("%s-%s-%d-%d", slug, d, rating, n)
+		qid, err := content.UpsertQuestion(ctx, tx, content.QuestionInput{
+			TopicID: id, Difficulty: d, DifficultyRating: rating,
+			Prompt: "Prompt " + externalID, CanonicalAnswer: "Answer " + externalID,
+			Status: "active", Source: "test", ExternalID: externalID,
+		})
+		if err != nil {
+			t.Fatalf("UpsertQuestion(%s): %v", externalID, err)
+		}
+		if err := content.ReplaceAliases(ctx, tx, qid, []string{"Answer " + externalID}); err != nil {
+			t.Fatalf("ReplaceAliases: %v", err)
+		}
+		if err := content.ReplaceDistractors(ctx, tx, qid, []string{"w1", "w2", "w3", "w4", "w5"}); err != nil {
+			t.Fatalf("ReplaceDistractors: %v", err)
+		}
+	}
+	for n := 1; n <= 3; n++ {
+		write(content.Easy, 2, n)
+		write(content.Medium, 6, n)
+	}
+	for n, rating := range hard {
+		write(content.Hard, rating, n+1)
+	}
+	return content.Topic{ID: id, Slug: slug, Name: slug, Active: true}
+}
+
+// hardRatingsOf reads back the rating of every hard question on a board.
+func hardRatingsOf(t *testing.T, tx pgx.Tx, p *puzzle.Puzzle) []int {
+	t.Helper()
+	ctx := context.Background()
+
+	ratings := make([]int, 0, 3)
+	for _, e := range p.Entries {
+		if e.Difficulty != content.Hard {
+			continue
+		}
+		var rating int
+		if err := tx.QueryRow(ctx,
+			`SELECT difficulty_rating FROM questions WHERE id = $1`, e.QuestionID).Scan(&rating); err != nil {
+			t.Fatalf("read rating for question %d: %v", e.QuestionID, err)
+		}
+		ratings = append(ratings, rating)
+	}
+	return ratings
+}
+
+func TestGenerateForAlwaysLandsOneHardQuestionOnTheFloor(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	// A library that is mostly 9s, so the natural picks frequently miss the
+	// floor and the rule has to do real work.
+	for _, slug := range []string{"alpha", "beta", "gamma", "delta", "epsilon"} {
+		seedTopicWithHardRatings(t, tx, slug, []int{9, 9, 9, 8})
+	}
+
+	g := puzzle.Generator{DB: tx, CooldownDays: 0, TimeLimitSeconds: 135}
+	for _, day := range []string{"2031-01-01", "2031-01-02", "2031-01-03", "2031-01-04", "2031-01-05"} {
+		got, err := g.GenerateFor(ctx, mustDate(t, day))
+		if err != nil {
+			t.Fatalf("GenerateFor(%s) error = %v", day, err)
+		}
+		ratings := hardRatingsOf(t, tx, got)
+		if len(ratings) != 3 {
+			t.Fatalf("%s: got %d hard questions, want 3", day, len(ratings))
+		}
+		floors := 0
+		for _, r := range ratings {
+			if r == 8 {
+				floors++
+			}
+			if r < 8 || r > 10 {
+				t.Errorf("%s: hard question rated %d, outside the band", day, r)
+			}
+		}
+		if floors < 1 {
+			t.Errorf("%s: hard ratings %v, want at least one 8", day, ratings)
+		}
+	}
+}
+
+// The rule constrains one slot, not all three: a board is free to carry 9s and
+// 10s alongside its floor-rated question.
+func TestGenerateForLeavesTheOtherHardSlotsAlone(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	// Only one topic can supply the floor, so the other two boards slots must
+	// keep whatever they drew from a pool with no 8s in it at all.
+	seedTopicWithHardRatings(t, tx, "gentle", []int{8})
+	seedTopicWithHardRatings(t, tx, "steep-one", []int{9, 10})
+	seedTopicWithHardRatings(t, tx, "steep-two", []int{9, 10})
+
+	g := puzzle.Generator{DB: tx, CooldownDays: 0, TimeLimitSeconds: 135}
+	got, err := g.GenerateFor(ctx, mustDate(t, "2031-02-01"))
+	if err != nil {
+		t.Fatalf("GenerateFor() error = %v", err)
+	}
+
+	ratings := hardRatingsOf(t, tx, got)
+	floors, above := 0, 0
+	for _, r := range ratings {
+		switch {
+		case r == 8:
+			floors++
+		case r > 8:
+			above++
+		}
+	}
+	if floors != 1 {
+		t.Errorf("hard ratings %v, want exactly one 8 from the only topic that has one", ratings)
+	}
+	if above != 2 {
+		t.Errorf("hard ratings %v, want the other two slots left above the floor", ratings)
+	}
+}
+
+// The floor is a real requirement, not a preference: a library that cannot meet
+// it leaves the day ungenerated rather than publishing a hard row with no way
+// in. This mirrors how the cooldown is treated.
+func TestGenerateForRefusesWhenNothingSitsOnTheFloor(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+	date := mustDate(t, "2031-03-01")
+
+	for _, slug := range []string{"steep-one", "steep-two", "steep-three"} {
+		seedTopicWithHardRatings(t, tx, slug, []int{9, 10})
+	}
+
+	g := puzzle.Generator{DB: tx, CooldownDays: 0, TimeLimitSeconds: 135}
+	_, err := g.GenerateFor(ctx, date)
+
+	var unavailable *puzzle.GentleHardQuestionUnavailableError
+	if !errors.As(err, &unavailable) {
+		t.Fatalf("error = %v, want GentleHardQuestionUnavailableError", err)
+	}
+	if unavailable.Rating != 8 {
+		t.Errorf("Rating = %d, want 8", unavailable.Rating)
+	}
+	if len(unavailable.Topics) != 3 {
+		t.Errorf("Topics = %v, want the three that were on the board", unavailable.Topics)
+	}
+
+	var rows int
+	if err := tx.QueryRow(ctx,
+		`SELECT count(*) FROM daily_puzzles WHERE puzzle_date = $1`, date).Scan(&rows); err != nil {
+		t.Fatalf("count puzzles: %v", err)
+	}
+	if rows != 0 {
+		t.Errorf("wrote %d puzzle rows on refusal, want 0", rows)
+	}
 }

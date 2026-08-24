@@ -22,6 +22,26 @@ func mustDate(t *testing.T, s string) clock.Date {
 	return d
 }
 
+// hardRatingFor spreads the hard band across fixtures instead of parking every
+// hard question at the representative 9. Real libraries hold a mix, and the
+// generator now requires one hard question at the floor rating, so a fixture
+// that only ever produced 9s would describe a library no board could be built
+// from. The first hard question of a topic is always the floor rating, so even
+// a one-question-per-difficulty fixture can fill a board.
+func hardRatingFor(d content.Difficulty, n int) int {
+	switch d {
+	case content.Easy:
+		return 2
+	case content.Medium:
+		return 6
+	default:
+		if n%2 == 1 {
+			return 8
+		}
+		return 9
+	}
+}
+
 // seedTopic creates a topic with three eligible questions per difficulty.
 func seedTopic(t *testing.T, tx pgx.Tx, slug string) content.Topic {
 	t.Helper()
@@ -35,7 +55,7 @@ func seedTopic(t *testing.T, tx pgx.Tx, slug string) content.Topic {
 		for n := 1; n <= 3; n++ {
 			externalID := fmt.Sprintf("%s-%s-%d", slug, d, n)
 			qid, err := content.UpsertQuestion(ctx, tx, content.QuestionInput{
-				TopicID: id, Difficulty: d,
+				TopicID: id, Difficulty: d, DifficultyRating: hardRatingFor(d, n),
 				Prompt: "Prompt " + externalID, CanonicalAnswer: "Answer " + externalID,
 				Status: "active", Source: "test", ExternalID: externalID,
 			})

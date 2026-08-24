@@ -260,6 +260,7 @@ func (s *Server) rebuildWithPins(w http.ResponseWriter, r *http.Request, date cl
 func (s *Server) rebuildError(w http.ResponseWriter, err error) {
 	var starved *puzzle.PinnedTopicStarvedError
 	var thin *puzzle.InsufficientContentError
+	var noFloor *puzzle.GentleHardQuestionUnavailableError
 	switch {
 	case errors.Is(err, puzzle.ErrNotFuture):
 		s.fail(w, http.StatusConflict, "date_not_future",
@@ -271,6 +272,8 @@ func (s *Server) rebuildError(w http.ResponseWriter, err error) {
 		s.fail(w, http.StatusConflict, "pinned_topic_starved", starved.Error())
 	case errors.As(err, &thin):
 		s.fail(w, http.StatusConflict, "insufficient_content", thin.Error())
+	case errors.As(err, &noFloor):
+		s.fail(w, http.StatusConflict, "no_floor_rated_hard", noFloor.Error())
 	default:
 		s.internal(w, err)
 	}
