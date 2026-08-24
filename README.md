@@ -192,10 +192,36 @@ cost is that a reverse proxy makes every request look like it came from the
 proxy: a deployment behind one has to allow the proxy and filter there, or keep
 the admin surface on a direct port.
 
-Two things this does not do. It does not replace the password -- it is a second
-gate, not the gate. And it cannot tell two clients apart when they share an
-address: reaching the server through an SSH port-forward makes every request
-arrive from loopback, whichever machine typed it.
+Two things an address list cannot do. It does not replace the password -- it is
+a second gate, not the gate. And it cannot tell two clients apart when they
+share an address: reaching the server through an SSH port-forward makes every
+request arrive from loopback, whichever machine typed it.
+
+### Restricting to your Tailscale devices
+
+An address list also cannot answer "is this one of my devices". Tailscale hands
+out addresses from `100.64.0.0/10`, and so does every other tailnet in the
+world, so matching that range proves nothing. `ADMIN_TAILNET_ACCESS=true` asks
+the local `tailscaled` who is actually behind a connection, and
+`ADMIN_TAILNET_USERS` names the accounts allowed through. Left empty, any peer
+the daemon recognises passes -- including nodes someone else has shared into
+your tailnet -- so name yourself to mean "my account only".
+
+A request is allowed if its address is in `ADMIN_ALLOWED_IPS` *or* the daemon
+identifies it as a permitted account, so loopback keeps working for the machine
+itself while Tailscale devices are identified properly. Every failure to
+identify is a refusal: a daemon that is down or slow denies access rather than
+falling back to trusting the address, and an answer carrying no login is not an
+identity. Addresses outside Tailscale's ranges never reach the daemon at all.
+
+For any of this to matter the server has to be reachable from the tailnet in
+the first place. `HTTP_ADDRESS` takes several comma-separated addresses and
+serves a listener on each, so loopback and the host's own Tailscale address can
+be served together without opening the port to every network the host sits on.
+
+This talks to `tailscaled` over its unix socket rather than importing
+Tailscale's client library, which would pull a very large module into a project
+whose only other dependencies are a database driver and a migration tool.
 
 ## Importing questions
 
