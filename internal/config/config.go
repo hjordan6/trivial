@@ -3,8 +3,10 @@ package config
 
 import (
 	"fmt"
+	"net/netip"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,18 @@ type Config struct {
 	// AdminPassword gates the admin panel. Empty is legal and means the panel
 	// and its API do not exist: every admin route answers 404.
 	AdminPassword string
+	// AdminAllowedNets is the set of client addresses allowed to reach the
+	// admin surface at all, checked before the password. It defaults to
+	// loopback, which is the machine the server runs on.
+	AdminAllowedNets []netip.Prefix
+}
+
+// defaultAdminNets is the allowlist when ADMIN_ALLOWED_IPS is unset: the
+// loopback ranges, meaning the admin panel is reachable only from the host
+// running the server.
+var defaultAdminNets = []netip.Prefix{
+	netip.MustParsePrefix("127.0.0.0/8"),
+	netip.MustParsePrefix("::1/128"),
 }
 
 // Load reads configuration from the environment, applying defaults and
@@ -54,7 +68,41 @@ func Load() (Config, error) {
 		return Config{}, err
 	}
 	cfg.AdminPassword = os.Getenv("ADMIN_PASSWORD")
+	if cfg.AdminAllowedNets, err = adminNets(os.Getenv("ADMIN_ALLOWED_IPS")); err != nil {
+		return Config{}, err
+	}
 	return cfg, nil
+}
+
+// adminNets parses the admin allowlist. Entries are addresses or CIDR blocks;
+// a bare address is treated as a single-host block. An empty value keeps the
+// loopback default rather than meaning "allow everything", because a typo that
+// silently opened the admin panel to the network would be the worst possible
+// way to get this wrong.
+func adminNets(raw string) ([]netip.Prefix, error) {
+	if strings.TrimSpace(raw) == "" {
+		return defaultAdminNets, nil
+	}
+	var nets []netip.Prefix
+	for _, entry := range strings.Split(raw, ",") {
+		entry = strings.TrimSpace(entry)
+		if entry == "" {
+			continue
+		}
+		if prefix, err := netip.ParsePrefix(entry); err == nil {
+			nets = append(nets, prefix.Masked())
+			continue
+		}
+		addr, err := netip.ParseAddr(entry)
+		if err != nil {
+			return nil, fmt.Errorf("ADMIN_ALLOWED_IPS %q is not an IP address or CIDR block", entry)
+		}
+		nets = append(nets, netip.PrefixFrom(addr.Unmap(), addr.Unmap().BitLen()))
+	}
+	if len(nets) == 0 {
+		return defaultAdminNets, nil
+	}
+	return nets, nil
 }
 
 func boolValue(key string, fallback bool) (bool, error) {

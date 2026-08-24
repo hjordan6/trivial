@@ -19,7 +19,7 @@ import (
 func editServer(t *testing.T) (*Server, http.Handler, *pgxpool.Pool) {
 	t.Helper()
 	pool := testsupport.MustPool(t)
-	s := &Server{Pool: pool, AdminPassword: "correct horse",
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets,
 		Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}, Timezone: time.UTC}
 	return s, s.Handler(), pool
 }

@@ -10,6 +10,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"net/netip"
 	"strconv"
 	"strings"
 	"time"
@@ -35,6 +36,10 @@ type Server struct {
 	// AdminPassword gates every /api/admin route. Empty disables the admin
 	// surface entirely, which is what a zero-valued Server gets.
 	AdminPassword string
+	// AdminAllowedNets restricts which client addresses may reach the admin
+	// surface, checked before the password. Empty allows nothing, so a
+	// zero-valued Server has no reachable admin panel.
+	AdminAllowedNets []netip.Prefix
 	// CooldownDays and TimeLimitSeconds configure boards the admin panel
 	// generates or rebuilds. They mirror the CLI's generator settings.
 	CooldownDays     int
@@ -85,7 +90,18 @@ func (s *Server) Handler() http.Handler {
 		if err != nil {
 			panic(err)
 		}
-		mux.Handle("GET /", spaHandler(assets))
+		shell := spaHandler(assets)
+		// /admin is the only client route that is not the game, so it is the
+		// only page that has to disappear for a caller outside the allowlist.
+		// Serving it would reveal that an admin panel exists here at all.
+		mux.Handle("GET /admin", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !s.adminReachable(r) {
+				http.NotFound(w, r)
+				return
+			}
+			shell.ServeHTTP(w, r)
+		}))
+		mux.Handle("GET /", shell)
 	}
 	return mux
 }

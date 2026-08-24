@@ -171,6 +171,32 @@ arrive `active` and are eligible for the next board generated. Re-pasting the
 same `external_id` updates that question rather than creating a duplicate,
 which makes fixing a typo a paste-again operation.
 
+## Who can reach the admin panel
+
+The admin surface is restricted by client address before the password is even
+considered. `ADMIN_ALLOWED_IPS` takes comma-separated IPs and CIDR blocks; a
+bare IP means that single host. Unset, it allows loopback only, so the panel
+answers nothing to anyone but the machine running the server. Setting it
+replaces that default rather than adding to it, and an unparseable entry is a
+startup error rather than a silently wider door.
+
+A caller outside the list gets 404 from every `/api/admin` route *and* from
+`/admin` itself -- the same 404 an unconfigured server gives, so nothing
+reveals that a panel exists here. An empty allowlist allows nothing, which is
+the safe direction for a misconfiguration to fail.
+
+The decision comes from the connection's own address. `X-Forwarded-For`,
+`X-Real-IP` and `Forwarded` are ignored, because a caller connecting directly
+can set them to anything and honouring them would hand over the allowlist. The
+cost is that a reverse proxy makes every request look like it came from the
+proxy: a deployment behind one has to allow the proxy and filter there, or keep
+the admin surface on a direct port.
+
+Two things this does not do. It does not replace the password -- it is a second
+gate, not the gate. And it cannot tell two clients apart when they share an
+address: reaching the server through an SSH port-forward makes every request
+arrive from loopback, whichever machine typed it.
+
 ## Importing questions
 
 The seed command also accepts a flat JSON array. Difficulty is stored on a

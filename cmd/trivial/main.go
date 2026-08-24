@@ -53,6 +53,7 @@ func serve(ctx context.Context) error {
 		DevelopmentMode:  cfg.DevelopmentMode,
 		Assets:           webassets.Dist,
 		AdminPassword:    cfg.AdminPassword,
+		AdminAllowedNets: cfg.AdminAllowedNets,
 		CooldownDays:     cfg.QuestionCooldownDays,
 		TimeLimitSeconds: cfg.TimeLimitSeconds,
 	}).Handler()
