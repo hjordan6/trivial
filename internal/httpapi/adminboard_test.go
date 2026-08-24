@@ -55,7 +55,7 @@ func getBoard(t *testing.T, s *Server, handler http.Handler, date string) boardR
 // operator type any date.
 func TestAdminBoardReportsAnEmptyDayWithoutFailing(t *testing.T) {
 	pool := testsupport.MustPool(t)
-	s := &Server{Pool: pool, AdminPassword: "correct horse",
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets,
 		Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}, Timezone: time.UTC}
 
 	got := getBoard(t, s, s.Handler(), "2031-12-25")
@@ -68,7 +68,7 @@ func TestAdminBoardReportsAnEmptyDayWithoutFailing(t *testing.T) {
 }
 
 func TestAdminBoardRejectsAnUnparseableDate(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	res := httptest.NewRecorder()
 	s.Handler().ServeHTTP(res, signedRequest(s, http.MethodGet, "/api/admin/puzzles/last-tuesday/questions", ""))
 	if res.Code != http.StatusBadRequest {
@@ -79,7 +79,7 @@ func TestAdminBoardRejectsAnUnparseableDate(t *testing.T) {
 func TestAdminBoardReturnsTheDayInBoardOrder(t *testing.T) {
 	pool := testsupport.MustPool(t)
 	ctx := context.Background()
-	s := &Server{Pool: pool, AdminPassword: "correct horse",
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets,
 		Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}, Timezone: time.UTC}
 	handler := s.Handler()
 
