@@ -183,6 +183,13 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .admin-import__box:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
 .admin-import__actions { display: flex; align-items: center; gap: 14px; margin-top: 12px; }
 
+.admin-export__picks { display: flex; gap: 14px; }
+.admin-export__fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 10px 16px; margin-top: 16px; padding: 14px 16px; background: var(--paper); border: 1px solid var(--line); border-radius: 3px; }
+.admin-export__actions { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.admin-export__actions .primary { display: inline-block; text-decoration: none; color: white; }
+.admin-export__actions .fine { margin: 0; }
+.admin-export__actions button.primary:disabled { box-shadow: none; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -214,6 +221,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .admin-day__result { grid-column: 1; }
   .admin-topics { grid-template-columns: 1fr; }
   .admin-filters { grid-template-columns: 1fr; }
+  .admin-export__fields { grid-template-columns: 1fr 1fr; }
   .admin-q__row { grid-template-columns: 1fr auto; gap: 8px; }
   .admin-q__topic { grid-column: 1; }
   .admin-q__difficulty { grid-column: 2; text-align: right; }

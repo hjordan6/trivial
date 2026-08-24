@@ -25,6 +25,8 @@ var adminRoutes = []struct {
 	{http.MethodPatch, "/api/admin/topics/history"},
 	{http.MethodGet, "/api/admin/questions"},
 	{http.MethodPost, "/api/admin/questions/import"},
+	{http.MethodGet, "/api/admin/questions/export-fields"},
+	{http.MethodGet, "/api/admin/questions/export.csv"},
 }
 
 func TestAdminRoutesAreInvisibleWithoutAPassword(t *testing.T) {

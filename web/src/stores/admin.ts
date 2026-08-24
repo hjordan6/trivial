@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api'
-import type { AdminDay, AdminGenerateResult, AdminImportResult, AdminQuestion,
-  AdminQuestionPage, AdminTopic, APIError } from '../types'
+import type { AdminDay, AdminExportField, AdminExportFields, AdminGenerateResult,
+  AdminImportResult, AdminQuestion, AdminQuestionPage, AdminTopic, APIError } from '../types'
 
 export const HORIZON_DAYS = 14
 export const QUESTION_PAGE = 50
@@ -18,6 +18,8 @@ export const useAdminStore = defineStore('admin', () => {
   const questionOffset = ref(0)
   const questionsLoading = ref(false)
   const filters = ref({topic:'', difficulty:'', search:''})
+  const exportFields = ref<AdminExportField[]>([])
+  const exportSeparator = ref(' | ')
   const loading = ref(false)
   const error = ref('')
   const notice = ref('')
@@ -205,8 +207,21 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  // The panel asks the server which columns exist rather than hard-coding a
+  // list, so the checkboxes cannot drift from what the export accepts.
+  async function loadExportFields() {
+    try {
+      const result = await api<AdminExportFields>('/api/admin/questions/export-fields')
+      exportFields.value = result.fields
+      exportSeparator.value = result.separator
+    } catch (e) {
+      fail(e)
+    }
+  }
+
   return {authed, days, topics, questions, questionTotal, questionOffset, questionsLoading,
+    exportFields, exportSeparator,
     filters, loading, error, notice,
     probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic,
-    loadQuestions, importQuestions}
+    loadQuestions, importQuestions, loadExportFields}
 })
