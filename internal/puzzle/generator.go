@@ -18,6 +18,12 @@ import (
 // topicsPerDay is how many topics appear on a board.
 const topicsPerDay = 3
 
+// hardFloorRating is the gentlest rating inside the hard band (8-10). Every
+// board is guaranteed one hard question at exactly this rating, so the hardest
+// row always has a way in. The other two hard slots are unconstrained: they may
+// be 8 as well, or 9, or 10.
+const hardFloorRating = 8
+
 // Generator builds the daily board.
 type Generator struct {
 	DB               pgx.Tx
@@ -73,6 +79,34 @@ func (e *PinnedTopicStarvedError) Error() string {
 		e.Slug, e.Difficulty, e.Date, e.CooldownDays)
 }
 
+// GentleHardQuestionUnavailableError means the board's three topics were all
+// filled, but none of them could supply a hard question at hardFloorRating.
+// Like the cooldown, the rule is not relaxed to get a board out: a day that
+// cannot satisfy it is left ungenerated rather than published with a hard row
+// that has no way in.
+type GentleHardQuestionUnavailableError struct {
+	Date         clock.Date
+	CooldownDays int
+	Topics       []string
+	Rating       int
+}
+
+func (e *GentleHardQuestionUnavailableError) Error() string {
+	return fmt.Sprintf(
+		"cannot generate puzzle for %s: no topic on the board (%s) has an eligible hard question rated %d under the %d-day cooldown",
+		e.Date, strings.Join(e.Topics, ", "), e.Rating, e.CooldownDays)
+}
+
+// topicFill is one topic's contribution to a board, carrying what the hard-slot
+// rule needs to repair the board later without re-querying: the rating that was
+// actually picked for the hard slot, and the eligible hard questions that sit
+// at the floor rating.
+type topicFill struct {
+	entries    []Entry
+	hardRating int
+	hardFloors []content.Question
+}
+
 // GenerateFor builds and stores the puzzle for a date.
 //
 // It is idempotent: if a puzzle already exists for the date it is returned
@@ -112,9 +146,9 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 	rng := rand.New(rand.NewPCG(seedFor(date), 0x9E3779B97F4A7C15))
 
 	var (
-		entries  []Entry
-		starved  []StarvedTopic
-		accepted int
+		fills   []topicFill
+		onBoard []string
+		starved []StarvedTopic
 	)
 
 	// Pinned positions first, in position order, so the RNG is consumed in an
@@ -134,8 +168,8 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 				CooldownDays: g.CooldownDays,
 			}
 		}
-		entries = append(entries, picked...)
-		accepted++
+		fills = append(fills, picked)
+		onBoard = append(onBoard, topic.Slug)
 	}
 
 	// Then the free positions, from whatever the operator did not pin.
@@ -158,18 +192,34 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 			starved = append(starved, StarvedTopic{Slug: topic.Slug, Difficulty: *missing})
 			continue
 		}
-		entries = append(entries, picked...)
+		fills = append(fills, picked)
+		onBoard = append(onBoard, topic.Slug)
 		free = free[1:]
-		accepted++
 	}
 
-	if accepted < topicsPerDay {
+	if len(fills) < topicsPerDay {
 		return nil, &InsufficientContentError{
 			Date:         date,
-			Accepted:     accepted,
+			Accepted:     len(fills),
 			CooldownDays: g.CooldownDays,
 			Starved:      starved,
 		}
+	}
+
+	// The hard-floor rule is applied once the board's three topics are known,
+	// because it is a property of the board rather than of any one topic.
+	if !ensureGentleHardQuestion(fills, rng) {
+		return nil, &GentleHardQuestionUnavailableError{
+			Date:         date,
+			CooldownDays: g.CooldownDays,
+			Topics:       onBoard,
+			Rating:       hardFloorRating,
+		}
+	}
+
+	entries := make([]Entry, 0, topicsPerDay*len(content.AllDifficulties))
+	for _, fill := range fills {
+		entries = append(entries, fill.entries...)
 	}
 
 	p := &Puzzle{Date: date, TimeLimitSeconds: g.TimeLimitSeconds, Entries: entries}
@@ -271,25 +321,37 @@ func weightedTopicOrder(topics []content.Topic, rng *rand.Rand) []content.Topic 
 // fillTopic picks one question at each difficulty for a topic. It returns a
 // non-nil difficulty when the topic has nothing eligible at that tier, which
 // tells the caller to skip the topic entirely.
+//
+// It also records what the hard-floor rule needs: the rating the hard slot
+// actually drew, and every eligible hard question at the floor rating. Both are
+// collected here so the repair never issues a second round of queries.
 func (g Generator) fillTopic(
 	ctx context.Context,
 	topic content.Topic,
 	date clock.Date,
 	position int,
 	rng *rand.Rand,
-) ([]Entry, *content.Difficulty, error) {
-	entries := make([]Entry, 0, len(content.AllDifficulties))
+) (topicFill, *content.Difficulty, error) {
+	fill := topicFill{entries: make([]Entry, 0, len(content.AllDifficulties))}
 	for _, difficulty := range content.AllDifficulties {
 		candidates, err := content.EligibleQuestions(ctx, g.DB, topic.ID, difficulty, date, g.CooldownDays)
 		if err != nil {
-			return nil, nil, err
+			return topicFill{}, nil, err
 		}
 		if len(candidates) == 0 {
 			missing := difficulty
-			return nil, &missing, nil
+			return topicFill{}, &missing, nil
 		}
 		chosen := candidates[rng.IntN(len(candidates))]
-		entries = append(entries, Entry{
+		if difficulty == content.Hard {
+			fill.hardRating = chosen.DifficultyRating
+			for _, candidate := range candidates {
+				if candidate.DifficultyRating == hardFloorRating {
+					fill.hardFloors = append(fill.hardFloors, candidate)
+				}
+			}
+		}
+		fill.entries = append(fill.entries, Entry{
 			TopicID:       topic.ID,
 			TopicSlug:     topic.Slug,
 			TopicName:     topic.Name,
@@ -299,7 +361,46 @@ func (g Generator) fillTopic(
 			Prompt:        chosen.Prompt,
 		})
 	}
-	return entries, nil, nil
+	return fill, nil, nil
+}
+
+// ensureGentleHardQuestion guarantees that at least one of the board's three
+// hard questions is rated at the floor of the hard band, reporting whether the
+// board can satisfy it at all.
+//
+// A board that already drew a floor-rated hard question is left exactly as it
+// was, so the rule costs nothing in the common case and does not perturb the
+// RNG stream. Otherwise one topic is chosen from those that can supply one and
+// its hard slot is swapped. The choice is drawn from the same seeded RNG, so a
+// date still regenerates to the same board.
+func ensureGentleHardQuestion(fills []topicFill, rng *rand.Rand) bool {
+	for _, fill := range fills {
+		if fill.hardRating == hardFloorRating {
+			return true
+		}
+	}
+
+	capable := make([]int, 0, len(fills))
+	for i, fill := range fills {
+		if len(fill.hardFloors) > 0 {
+			capable = append(capable, i)
+		}
+	}
+	if len(capable) == 0 {
+		return false
+	}
+
+	target := capable[rng.IntN(len(capable))]
+	replacement := fills[target].hardFloors[rng.IntN(len(fills[target].hardFloors))]
+	for i := range fills[target].entries {
+		if fills[target].entries[i].Difficulty == content.Hard {
+			fills[target].entries[i].QuestionID = replacement.ID
+			fills[target].entries[i].Prompt = replacement.Prompt
+			break
+		}
+	}
+	fills[target].hardRating = replacement.DifficultyRating
+	return true
 }
 
 // seedFor derives a stable RNG seed from a date, so regenerating a day

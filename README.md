@@ -61,6 +61,24 @@ refusing to re-serve a question that's still on cooldown, and the generator
 deliberately writes nothing for a day it can't fully fill rather than
 producing a partial one.
 
+## Hard-question floor
+
+Every board carries one hard question rated exactly 8, the gentlest rating in
+the hard band. The other two hard slots are unconstrained: they may be 8 as
+well, or 9, or 10. The point is that the hardest row always has a way in.
+
+The rule is applied to the board rather than to a topic, once all three topics
+are filled. A board that already drew a floor-rated hard question is left
+untouched, so in the common case the rule costs nothing and does not perturb
+the RNG; otherwise one topic that can supply a floor-rated question has its
+hard slot swapped, chosen from the same date-seeded RNG so a date still
+regenerates to the same board.
+
+Like the cooldown, the floor is not relaxed to get a board out. If none of the
+board's three topics has an eligible hard question rated 8, the day is left
+ungenerated and the error names the topics -- the fix is content, not a looser
+rule.
+
 ## Topic weights
 
 Each topic has a positive integer `weight` in `seed/questions.json`. Weights
