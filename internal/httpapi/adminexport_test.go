@@ -15,7 +15,7 @@ import (
 
 // These reject before any database work, so they need no pool.
 func TestAdminExportRejectsBadFieldSelections(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	cases := []struct {
@@ -50,7 +50,7 @@ func TestAdminExportRejectsBadFieldSelections(t *testing.T) {
 // The checkbox list is built from this, so every name it offers has to be one
 // the export itself accepts.
 func TestAdminExportFieldsMatchTheExport(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	res := httptest.NewRecorder()
@@ -71,7 +71,7 @@ func TestAdminExportFieldsMatchTheExport(t *testing.T) {
 func TestAdminExportWritesTheWholeLibrary(t *testing.T) {
 	pool := testsupport.MustPool(t)
 	ctx := context.Background()
-	s := &Server{Pool: pool, AdminPassword: "correct horse",
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets,
 		Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}, Timezone: time.UTC}
 	handler := s.Handler()
 
@@ -148,7 +148,7 @@ func TestAdminExportWritesTheWholeLibrary(t *testing.T) {
 func TestAdminExportIgnoresListingFilters(t *testing.T) {
 	pool := testsupport.MustPool(t)
 	ctx := context.Background()
-	s := &Server{Pool: pool, AdminPassword: "correct horse",
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets,
 		Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}, Timezone: time.UTC}
 	handler := s.Handler()
 

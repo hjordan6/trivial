@@ -67,7 +67,7 @@ func (s *Server) validAdminSession(value string, now time.Time) bool {
 // from absent to anyone without the password. This follows resetCurrentRun,
 // which hides itself the same way when DEVELOPMENT_MODE is off.
 func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request) bool {
-	if s.AdminPassword == "" {
+	if !s.adminReachable(r) || s.AdminPassword == "" {
 		s.fail(w, http.StatusNotFound, "not_found", "Not found.")
 		return false
 	}
@@ -80,7 +80,7 @@ func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request) bool {
 }
 
 func (s *Server) adminLogin(w http.ResponseWriter, r *http.Request) {
-	if s.AdminPassword == "" {
+	if !s.adminReachable(r) || s.AdminPassword == "" {
 		s.fail(w, http.StatusNotFound, "not_found", "Not found.")
 		return
 	}

@@ -171,6 +171,58 @@ arrive `active` and are eligible for the next board generated. Re-pasting the
 same `external_id` updates that question rather than creating a duplicate,
 which makes fixing a typo a paste-again operation.
 
+## Who can reach the admin panel
+
+The admin surface is restricted by client address before the password is even
+considered. `ADMIN_ALLOWED_IPS` takes comma-separated IPs and CIDR blocks; a
+bare IP means that single host. Unset, it allows loopback only, so the panel
+answers nothing to anyone but the machine running the server. Setting it
+replaces that default rather than adding to it, and an unparseable entry is a
+startup error rather than a silently wider door.
+
+A caller outside the list gets 404 from every `/api/admin` route *and* from
+`/admin` itself -- the same 404 an unconfigured server gives, so nothing
+reveals that a panel exists here. An empty allowlist allows nothing, which is
+the safe direction for a misconfiguration to fail.
+
+The decision comes from the connection's own address. `X-Forwarded-For`,
+`X-Real-IP` and `Forwarded` are ignored, because a caller connecting directly
+can set them to anything and honouring them would hand over the allowlist. The
+cost is that a reverse proxy makes every request look like it came from the
+proxy: a deployment behind one has to allow the proxy and filter there, or keep
+the admin surface on a direct port.
+
+Two things an address list cannot do. It does not replace the password -- it is
+a second gate, not the gate. And it cannot tell two clients apart when they
+share an address: reaching the server through an SSH port-forward makes every
+request arrive from loopback, whichever machine typed it.
+
+### Restricting to your Tailscale devices
+
+An address list also cannot answer "is this one of my devices". Tailscale hands
+out addresses from `100.64.0.0/10`, and so does every other tailnet in the
+world, so matching that range proves nothing. `ADMIN_TAILNET_ACCESS=true` asks
+the local `tailscaled` who is actually behind a connection, and
+`ADMIN_TAILNET_USERS` names the accounts allowed through. Left empty, any peer
+the daemon recognises passes -- including nodes someone else has shared into
+your tailnet -- so name yourself to mean "my account only".
+
+A request is allowed if its address is in `ADMIN_ALLOWED_IPS` *or* the daemon
+identifies it as a permitted account, so loopback keeps working for the machine
+itself while Tailscale devices are identified properly. Every failure to
+identify is a refusal: a daemon that is down or slow denies access rather than
+falling back to trusting the address, and an answer carrying no login is not an
+identity. Addresses outside Tailscale's ranges never reach the daemon at all.
+
+For any of this to matter the server has to be reachable from the tailnet in
+the first place. `HTTP_ADDRESS` takes several comma-separated addresses and
+serves a listener on each, so loopback and the host's own Tailscale address can
+be served together without opening the port to every network the host sits on.
+
+This talks to `tailscaled` over its unix socket rather than importing
+Tailscale's client library, which would pull a very large module into a project
+whose only other dependencies are a database driver and a migration tool.
+
 ## Importing questions
 
 The seed command also accepts a flat JSON array. Difficulty is stored on a

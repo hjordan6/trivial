@@ -20,9 +20,9 @@ import (
 func signedRequest(s *Server, method, path, body string) *http.Request {
 	var req *http.Request
 	if body == "" {
-		req = httptest.NewRequest(method, path, nil)
+		req = localRequest(method, path, nil)
 	} else {
-		req = httptest.NewRequest(method, path, strings.NewReader(body))
+		req = localRequest(method, path, strings.NewReader(body))
 	}
 	req.AddCookie(&http.Cookie{Name: adminCookie, Value: s.signAdminSession(s.now().Add(time.Hour))})
 	return req
@@ -48,7 +48,7 @@ func hideTopic(t *testing.T, pool *pgxpool.Pool, slug string) {
 
 // These reject before any database work, so they need no pool.
 func TestAdminQuestionsRejectsBadFilters(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	cases := []struct {
@@ -72,7 +72,7 @@ func TestAdminQuestionsRejectsBadFilters(t *testing.T) {
 }
 
 func TestAdminImportRejectsUnusablePayloads(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	cases := []struct {
@@ -118,7 +118,7 @@ func TestAdminImportRejectsUnusablePayloads(t *testing.T) {
 func TestAdminImportThenList(t *testing.T) {
 	pool := testsupport.MustPool(t)
 	ctx := context.Background()
-	s := &Server{Pool: pool, AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	const slug = "httpapi-import-fixture"
@@ -197,7 +197,7 @@ func TestAdminImportThenList(t *testing.T) {
 func TestAdminImportIsIdempotent(t *testing.T) {
 	pool := testsupport.MustPool(t)
 	ctx := context.Background()
-	s := &Server{Pool: pool, AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{Pool: pool, AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	const slug = "httpapi-idempotent-fixture"

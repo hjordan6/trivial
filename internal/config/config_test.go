@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/netip"
 	"strings"
 	"testing"
 )
@@ -72,4 +73,125 @@ func TestLoadErrors(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAdminAllowedIPs(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x/y")
+
+	t.Run("defaults to loopback", func(t *testing.T) {
+		t.Setenv("ADMIN_ALLOWED_IPS", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		if len(cfg.AdminAllowedNets) != 2 {
+			t.Fatalf("AdminAllowedNets = %v, want the two loopback ranges", cfg.AdminAllowedNets)
+		}
+		for _, remote := range []string{"127.0.0.1", "127.0.0.9", "::1"} {
+			if !contains(cfg.AdminAllowedNets, remote) {
+				t.Errorf("%s is not allowed by default", remote)
+			}
+		}
+		if contains(cfg.AdminAllowedNets, "10.0.0.4") {
+			t.Error("a private address is allowed by default")
+		}
+	})
+
+	t.Run("accepts addresses and CIDR blocks", func(t *testing.T) {
+		t.Setenv("ADMIN_ALLOWED_IPS", "100.80.189.68, 10.0.0.0/24")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		for _, remote := range []string{"100.80.189.68", "10.0.0.7"} {
+			if !contains(cfg.AdminAllowedNets, remote) {
+				t.Errorf("%s should be allowed", remote)
+			}
+		}
+		// A bare address is one host, not its whole block, and setting the
+		// list at all replaces the loopback default rather than adding to it.
+		for _, remote := range []string{"100.80.189.69", "10.0.1.7", "127.0.0.1"} {
+			if contains(cfg.AdminAllowedNets, remote) {
+				t.Errorf("%s should not be allowed", remote)
+			}
+		}
+	})
+
+	t.Run("rejects nonsense rather than silently allowing it", func(t *testing.T) {
+		t.Setenv("ADMIN_ALLOWED_IPS", "not-an-address")
+		if _, err := Load(); err == nil {
+			t.Fatal("Load() accepted an unparseable allowlist")
+		}
+	})
+}
+
+func contains(nets []netip.Prefix, remote string) bool {
+	addr, err := netip.ParseAddr(remote)
+	if err != nil {
+		return false
+	}
+	for _, n := range nets {
+		if n.Contains(addr.Unmap()) {
+			return true
+		}
+	}
+	return false
+}
+
+func TestAdminTailnetSettings(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x/y")
+
+	t.Run("off by default", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "")
+		t.Setenv("ADMIN_TAILNET_USERS", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		if cfg.AdminTailnetSocket != "" {
+			t.Errorf("AdminTailnetSocket = %q, want empty when the check is off", cfg.AdminTailnetSocket)
+		}
+	})
+
+	t.Run("enabling picks up the default socket", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "true")
+		t.Setenv("ADMIN_TAILSCALE_SOCKET", "")
+		t.Setenv("ADMIN_TAILNET_USERS", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		if cfg.AdminTailnetSocket == "" {
+			t.Error("AdminTailnetSocket is empty with the check enabled")
+		}
+	})
+
+	t.Run("users are trimmed and kept", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "true")
+		t.Setenv("ADMIN_TAILNET_USERS", " someone@example.com , other@example.com ")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		want := []string{"someone@example.com", "other@example.com"}
+		if len(cfg.AdminTailnetUsers) != len(want) {
+			t.Fatalf("AdminTailnetUsers = %v, want %v", cfg.AdminTailnetUsers, want)
+		}
+		for i := range want {
+			if cfg.AdminTailnetUsers[i] != want[i] {
+				t.Errorf("user %d = %q, want %q", i, cfg.AdminTailnetUsers[i], want[i])
+			}
+		}
+	})
+
+	// Naming users without enabling the check would read as a restriction
+	// while being ignored entirely, which is the dangerous way to misread a
+	// config file.
+	t.Run("users without the check enabled is an error", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "false")
+		t.Setenv("ADMIN_TAILNET_USERS", "someone@example.com")
+		if _, err := Load(); err == nil {
+			t.Fatal("Load() accepted users with the tailnet check disabled")
+		}
+	})
 }

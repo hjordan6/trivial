@@ -1,8 +1,10 @@
 package httpapi
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/netip"
 	"strings"
 	"testing"
 	"testing/fstest"
@@ -10,6 +12,21 @@ import (
 
 	"github.com/hjordan6/trivial/internal/clock"
 )
+
+// testAdminNets is the allowlist these tests run under: loopback, the same
+// default a deployment gets. Without it every admin route answers 404 for the
+// address rather than for the reason under test.
+var testAdminNets = []netip.Prefix{netip.MustParsePrefix("127.0.0.0/8")}
+
+// localRequest builds a request that appears to come from the host running the
+// server. httptest.NewRequest defaults RemoteAddr to 192.0.2.1, which is
+// outside the allowlist, so tests that are not about the allowlist have to say
+// where they are calling from.
+func localRequest(method, path string, body io.Reader) *http.Request {
+	req := httptest.NewRequest(method, path, body)
+	req.RemoteAddr = "127.0.0.1:41000"
+	return req
+}
 
 // adminRoutes is every gated route, as method/path pairs.
 var adminRoutes = []struct {
@@ -35,16 +52,16 @@ var adminRoutes = []struct {
 func TestAdminRoutesAreInvisibleWithoutAPassword(t *testing.T) {
 	// A zero-valued Server has no admin password, which is what a deployment
 	// that never set ADMIN_PASSWORD gets.
-	handler := (&Server{}).Handler()
+	handler := (&Server{AdminAllowedNets: testAdminNets}).Handler()
 	for _, route := range adminRoutes {
 		res := httptest.NewRecorder()
-		handler.ServeHTTP(res, httptest.NewRequest(route.method, route.path, nil))
+		handler.ServeHTTP(res, localRequest(route.method, route.path, nil))
 		if res.Code != http.StatusNotFound {
 			t.Errorf("%s %s = %d, want 404", route.method, route.path, res.Code)
 		}
 	}
 	res := httptest.NewRecorder()
-	handler.ServeHTTP(res, httptest.NewRequest(http.MethodPost, "/api/admin/login",
+	handler.ServeHTTP(res, localRequest(http.MethodPost, "/api/admin/login",
 		strings.NewReader(`{"password":"anything"}`)))
 	if res.Code != http.StatusNotFound {
 		t.Errorf("login = %d, want 404 when no password is configured", res.Code)
@@ -52,7 +69,7 @@ func TestAdminRoutesAreInvisibleWithoutAPassword(t *testing.T) {
 }
 
 func TestAdminRoutesRejectMissingAndForgedCookies(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	valid := s.signAdminSession(s.now().Add(time.Hour))
@@ -70,7 +87,7 @@ func TestAdminRoutesRejectMissingAndForgedCookies(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			req := httptest.NewRequest(http.MethodGet, "/api/admin/session", nil)
+			req := localRequest(http.MethodGet, "/api/admin/session", nil)
 			if tc.cookie != "" {
 				req.AddCookie(&http.Cookie{Name: adminCookie, Value: tc.cookie})
 			}
@@ -84,11 +101,11 @@ func TestAdminRoutesRejectMissingAndForgedCookies(t *testing.T) {
 }
 
 func TestAdminLoginIssuesAndRejects(t *testing.T) {
-	s := &Server{AdminPassword: "correct horse", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	s := &Server{AdminPassword: "correct horse", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	handler := s.Handler()
 
 	res := httptest.NewRecorder()
-	handler.ServeHTTP(res, httptest.NewRequest(http.MethodPost, "/api/admin/login",
+	handler.ServeHTTP(res, localRequest(http.MethodPost, "/api/admin/login",
 		strings.NewReader(`{"password":"wrong"}`)))
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("wrong password = %d, want 401", res.Code)
@@ -98,7 +115,7 @@ func TestAdminLoginIssuesAndRejects(t *testing.T) {
 	}
 
 	res = httptest.NewRecorder()
-	handler.ServeHTTP(res, httptest.NewRequest(http.MethodPost, "/api/admin/login",
+	handler.ServeHTTP(res, localRequest(http.MethodPost, "/api/admin/login",
 		strings.NewReader(`{"password":"correct horse"}`)))
 	if res.Code != http.StatusNoContent {
 		t.Fatalf("correct password = %d, want 204", res.Code)
@@ -126,10 +143,10 @@ func TestAdminLoginIssuesAndRejects(t *testing.T) {
 // A session must not survive a password change, since the signing key is
 // derived from the password itself.
 func TestAdminSessionDiesWithThePassword(t *testing.T) {
-	old := &Server{AdminPassword: "first", Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
+	old := &Server{AdminPassword: "first", AdminAllowedNets: testAdminNets, Clock: clock.Fake{T: time.Unix(1_800_000_000, 0)}}
 	value := old.signAdminSession(old.now().Add(time.Hour))
 
-	rotated := &Server{AdminPassword: "second", Clock: old.Clock}
+	rotated := &Server{AdminPassword: "second", AdminAllowedNets: testAdminNets, Clock: old.Clock}
 	if rotated.validAdminSession(value, rotated.now()) {
 		t.Fatal("a session signed with the old password still validates")
 	}
@@ -140,7 +157,7 @@ func TestSPAFallbackServesTheShellForClientRoutes(t *testing.T) {
 		"dist/index.html":          {Data: []byte("<!doctype html>shell")},
 		"dist/assets/index-abc.js": {Data: []byte("console.log(1)")},
 	}
-	handler := (&Server{Assets: assets}).Handler()
+	handler := (&Server{Assets: assets, AdminAllowedNets: testAdminNets}).Handler()
 
 	cases := []struct {
 		path     string
@@ -158,7 +175,7 @@ func TestSPAFallbackServesTheShellForClientRoutes(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.path, func(t *testing.T) {
 			res := httptest.NewRecorder()
-			handler.ServeHTTP(res, httptest.NewRequest(http.MethodGet, tc.path, nil))
+			handler.ServeHTTP(res, localRequest(http.MethodGet, tc.path, nil))
 			if res.Code != tc.want {
 				t.Fatalf("status = %d, want %d", res.Code, tc.want)
 			}
