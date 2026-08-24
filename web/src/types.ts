@@ -14,3 +14,12 @@ export interface AdminSlot { position:number; pinned:boolean; topic_slug:string|
 export interface AdminDay { date:string; generated:boolean; has_runs:boolean; editable:boolean; slots:AdminSlot[] }
 export interface AdminTopic { slug:string; name:string; active:boolean; selection_weight:number }
 export interface AdminGenerateResult { generated:string[]; skipped:string[]; failed:{date:string; message:string}[] }
+export interface AdminQuestion {
+  id:number; topic_slug:string; topic_name:string
+  difficulty:Difficulty; difficulty_rating:number
+  prompt:string; answer:string
+  aliases:string[]; distractors:string[]
+  status:string; used_count:number; last_used:string|null
+}
+export interface AdminQuestionPage { questions:AdminQuestion[]; total:number; limit:number; offset:number }
+export interface AdminImportResult { topics:number; questions:number }

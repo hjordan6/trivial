@@ -83,7 +83,7 @@ because a default admin password is worse than none.
 ADMIN_PASSWORD=letmein make serve
 ```
 
-The panel does three things:
+The panel does five things:
 
 **Pin a date's categories.** Each upcoming date has three slots, and each slot
 is either a topic you chose or `Automatic`. Pinning is per slot, so you can fix
@@ -111,6 +111,29 @@ generating later works.
 `seed/questions.json` and re-running `make seed`. At least three topics must
 stay active or no board can be generated, so the last three cannot be switched
 off.
+
+**Browse the question library.** The list pages through every question with its
+topic, difficulty band and 1-10 rating. Prompts are clipped to one line until
+you open a row, which reveals the full text and the answer choices. Answers and
+their accepted spellings stay redacted until clicked, so the library can be
+read over someone's shoulder without spoiling a board; while an answer is
+hidden it also sits in alphabetical order among the distractors, so its
+position gives nothing away. Filters cover topic, difficulty and a substring
+search over prompts and answers.
+
+Each row also reports how many times the question has been used and when it was
+last drawn. That is the answer to "why can nothing generate": a topic fails
+because its questions are inside the cooldown window, not because the topic is
+missing.
+
+**Add questions by pasting JSON**, in any shape the seed loader already accepts
+(see below). A paste is validated before anything is written and applied in one
+transaction, so it lands completely or not at all -- a file with a bad question
+at the end does not leave the good ones behind. The parser's own message comes
+back verbatim, naming the topic and the question index. Imported questions
+arrive `active` and are eligible for the next board generated. Re-pasting the
+same `external_id` updates that question rather than creating a duplicate,
+which makes fixing a typo a paste-again operation.
 
 ## Importing questions
 

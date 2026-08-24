@@ -4,6 +4,8 @@ import { useAdminStore } from '../stores/admin'
 import AdminLogin from '../components/AdminLogin.vue'
 import AdminUpcoming from '../components/AdminUpcoming.vue'
 import AdminTopics from '../components/AdminTopics.vue'
+import AdminQuestions from '../components/AdminQuestions.vue'
+import AdminImport from '../components/AdminImport.vue'
 
 const store=useAdminStore()
 
@@ -30,5 +32,7 @@ onBeforeMount(async () => {
 
     <AdminUpcoming />
     <AdminTopics />
+    <AdminQuestions />
+    <AdminImport />
   </main>
 </template>
