@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/hjordan6/trivial/internal/clock"
 	"github.com/hjordan6/trivial/internal/testsupport"
 )
@@ -24,6 +26,24 @@ func signedRequest(s *Server, method, path, body string) *http.Request {
 	}
 	req.AddCookie(&http.Cookie{Name: adminCookie, Value: s.signAdminSession(s.now().Add(time.Hour))})
 	return req
+}
+
+// hideTopic takes a fixture topic out of automatic selection.
+//
+// These tests write through the pool, so their rows are committed and visible
+// to every other package's tests running against the same database at the same
+// time. An active fixture topic therefore changes what content.ActiveTopics
+// returns inside internal/puzzle's transactions -- and because those run at
+// READ COMMITTED, it can change between two statements of one transaction,
+// which is enough to make the generator's determinism test see two different
+// boards for one date. Fixtures here are never meant to be selectable, so they
+// are hidden the moment they exist.
+func hideTopic(t *testing.T, pool *pgxpool.Pool, slug string) {
+	t.Helper()
+	if _, err := pool.Exec(context.Background(),
+		`UPDATE topics SET active = false WHERE slug = $1`, slug); err != nil {
+		t.Fatalf("hide topic %s: %v", slug, err)
+	}
 }
 
 // These reject before any database work, so they need no pool.
@@ -126,6 +146,7 @@ func TestAdminImportThenList(t *testing.T) {
 	if imported.Topics != 1 || imported.Questions != 1 {
 		t.Fatalf("imported %d topics / %d questions, want 1 / 1", imported.Topics, imported.Questions)
 	}
+	hideTopic(t, pool, slug)
 
 	res = httptest.NewRecorder()
 	handler.ServeHTTP(res, signedRequest(s, http.MethodGet, "/api/admin/questions?topic="+slug, ""))
@@ -197,6 +218,7 @@ func TestAdminImportIsIdempotent(t *testing.T) {
 			t.Fatalf("import %s = %d (%s)", answer, res.Code, res.Body.String())
 		}
 	}
+	hideTopic(t, pool, slug)
 
 	res := httptest.NewRecorder()
 	handler.ServeHTTP(res, signedRequest(s, http.MethodGet, "/api/admin/questions?topic="+slug, ""))

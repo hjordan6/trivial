@@ -83,7 +83,7 @@ because a default admin password is worse than none.
 ADMIN_PASSWORD=letmein make serve
 ```
 
-The panel does eight things:
+The panel does nine things:
 
 **Pin a date's categories.** Each upcoming date has three slots, and each slot
 is either a topic you chose or `Automatic`. Pinning is per slot, so you can fix
@@ -111,6 +111,12 @@ generating later works.
 `seed/questions.json` and re-running `make seed`. At least three topics must
 stay active or no board can be generated, so the last three cannot be switched
 off.
+
+**See one day's board.** Pick a date and the panel shows the nine questions
+scheduled for it, grouped by slot, with each question's difficulty band and
+rating. Answers stay redacted until clicked, and revealing one shows the
+options as the player sees them, with the correct one marked. A date nobody has
+generated says so rather than erroring: the date box takes any date.
 
 **Browse the question library.** The list pages through every question with its
 topic, difficulty band and 1-10 rating. Prompts are clipped to one line until

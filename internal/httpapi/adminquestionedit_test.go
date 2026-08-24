@@ -30,8 +30,10 @@ func makeTopic(t *testing.T, pool *pgxpool.Pool, slug string) int64 {
 	t.Helper()
 	ctx := context.Background()
 	var id int64
+	// Inactive from birth: see hideTopic for why a fixture topic must never be
+	// selectable while other packages' tests share this database.
 	if err := pool.QueryRow(ctx,
-		`INSERT INTO topics (slug, name, selection_weight) VALUES ($1, $2, 1) RETURNING id`,
+		`INSERT INTO topics (slug, name, selection_weight, active) VALUES ($1, $2, 1, false) RETURNING id`,
 		slug, slug).Scan(&id); err != nil {
 		t.Fatalf("create topic %s: %v", slug, err)
 	}

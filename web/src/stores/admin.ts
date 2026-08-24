@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api'
-import type { AdminDay, AdminExportField, AdminExportFields, AdminGenerateResult,
+import type { AdminBoard, AdminBoardEntry, AdminDay, AdminExportField, AdminExportFields, AdminGenerateResult,
   AdminImportResult, AdminQuestion, AdminQuestionInput, AdminQuestionPage,
   AdminTopic, APIError } from '../types'
 
@@ -19,6 +19,11 @@ export const useAdminStore = defineStore('admin', () => {
   const questionOffset = ref(0)
   const questionsLoading = ref(false)
   const filters = ref({topic:'', difficulty:'', search:''})
+  const board = ref<AdminBoardEntry[]>([])
+  const boardDate = ref('')
+  const boardGenerated = ref(false)
+  const boardHasRuns = ref(false)
+  const boardLoading = ref(false)
   const exportFields = ref<AdminExportField[]>([])
   const exportSeparator = ref(' | ')
   const loading = ref(false)
@@ -208,6 +213,27 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  // loadBoard reads one date's nine questions. A date with no board is a
+  // normal answer, so an empty result is state to render rather than an error.
+  async function loadBoard(date:string) {
+    if (!date) return
+    error.value = ''
+    boardLoading.value = true
+    try {
+      const result = await api<AdminBoard>(`/api/admin/puzzles/${date}/questions`)
+      board.value = result.entries
+      boardDate.value = result.date
+      boardGenerated.value = result.generated
+      boardHasRuns.value = result.has_runs
+    } catch (e) {
+      board.value = []
+      boardGenerated.value = false
+      fail(e)
+    } finally {
+      boardLoading.value = false
+    }
+  }
+
   async function createQuestion(input:AdminQuestionInput) {
     error.value = ''
     notice.value = ''
@@ -263,7 +289,8 @@ export const useAdminStore = defineStore('admin', () => {
 
   return {authed, days, topics, questions, questionTotal, questionOffset, questionsLoading,
     exportFields, exportSeparator,
+    board, boardDate, boardGenerated, boardHasRuns, boardLoading,
     filters, loading, error, notice,
     probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic,
-    loadQuestions, importQuestions, loadExportFields, createQuestion, updateQuestion}
+    loadQuestions, importQuestions, loadExportFields, createQuestion, updateQuestion, loadBoard}
 })
