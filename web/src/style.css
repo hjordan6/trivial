@@ -190,6 +190,22 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .admin-export__actions .fine { margin: 0; }
 .admin-export__actions button.primary:disabled { box-shadow: none; }
 
+.question-form { margin-top: 18px; }
+.question-form__row { display: grid; grid-template-columns: minmax(0, 1fr) 190px 150px; gap: 12px; }
+.question-form__row--pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.question-form .field textarea { font: inherit; font-size: 15px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 9px 10px; width: 100%; resize: vertical; }
+.question-form .field textarea:focus { outline: 2px solid var(--ink); outline-offset: -1px; }
+.question-form__actions { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.question-form__actions .fine { margin: 0; }
+.admin-q__editor { padding: 0 0 20px 162px; }
+.admin-q__editor > .fine { margin: 0; }
+.admin-q__meta .admin-save { margin-top: 4px; }
+
+.question-form__json { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.question-form__json-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.question-form__json-head .fine { margin: 0; }
+.question-form__json .admin-import__box { margin-top: 12px; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -228,4 +244,6 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .admin-q__prompt { grid-column: 1 / -1; white-space: normal; }
   .admin-q__answer { grid-column: 1 / -1; }
   .admin-q__detail { grid-template-columns: 1fr; gap: 16px; padding-left: 0; }
+  .admin-q__editor { padding-left: 0; }
+  .question-form__row, .question-form__row--pair { grid-template-columns: 1fr; }
 }

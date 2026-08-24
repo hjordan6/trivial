@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, watch } from 'vue'
 import { QUESTION_PAGE, useAdminStore } from '../stores/admin'
-import type { AdminQuestion } from '../types'
+import QuestionForm from './QuestionForm.vue'
+import type { AdminQuestion, AdminQuestionInput } from '../types'
 
 const store=useAdminStore()
 
@@ -11,9 +12,27 @@ const store=useAdminStore()
 const expanded=ref(new Set<number>())
 const revealed=ref(new Set<number>())
 
+// editing holds at most one id: two open editors would let the same question
+// be saved twice from two sets of fields.
+const editing=ref<number|null>(null)
+
 function toggle(q:AdminQuestion){
-  if (expanded.value.has(q.id)) expanded.value.delete(q.id)
-  else expanded.value.add(q.id)
+  if (expanded.value.has(q.id)) {
+    expanded.value.delete(q.id)
+    if (editing.value===q.id) editing.value=null
+  } else {
+    expanded.value.add(q.id)
+  }
+}
+
+function edit(q:AdminQuestion){
+  editing.value=q.id
+  // An answer has to be visible to be edited, so opening the editor reveals it.
+  revealed.value.add(q.id)
+}
+
+async function save(q:AdminQuestion, input:AdminQuestionInput){
+  if (await store.updateQuestion(q.id, input)) editing.value=null
 }
 function reveal(q:AdminQuestion){
   if (revealed.value.has(q.id)) revealed.value.delete(q.id)
@@ -100,7 +119,17 @@ onBeforeMount(()=>store.loadQuestions(0))
           </button>
         </div>
 
-        <div v-if="expanded.has(q.id)" class="admin-q__detail">
+        <div v-if="expanded.has(q.id) && editing===q.id" class="admin-q__editor">
+          <p v-if="q.used_count" class="fine">
+            Used on {{q.used_count}} board{{q.used_count===1?'':'s'}}, last {{q.last_used}}. Rewording is
+            always allowed; its topic and difficulty band are fixed while it is on a board.
+          </p>
+          <QuestionForm
+            :initial="q" submit-label="Save changes" show-cancel
+            @submit="input => save(q, input)" @cancel="editing=null" />
+        </div>
+
+        <div v-else-if="expanded.has(q.id)" class="admin-q__detail">
           <div class="admin-q__options">
             <p class="eyebrow">Answer choices</p>
             <ul>
@@ -118,6 +147,7 @@ onBeforeMount(()=>store.loadQuestions(0))
             <p class="eyebrow">Usage</p>
             <p>{{usage(q)}}</p>
             <p class="fine">{{q.status}} · id {{q.id}}</p>
+            <button class="admin-save" @click="edit(q)">Edit question</button>
           </div>
         </div>
       </div>

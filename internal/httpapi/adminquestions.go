@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/hjordan6/trivial/internal/clock"
 	"github.com/hjordan6/trivial/internal/content"
+	"github.com/hjordan6/trivial/internal/db"
 )
 
 // The library is meant to grow into the thousands -- a 180-day cooldown needs
@@ -37,6 +39,48 @@ type adminQuestion struct {
 	Status           string      `json:"status"`
 	UsedCount        int         `json:"used_count"`
 	LastUsed         *clock.Date `json:"last_used"`
+}
+
+// questionColumns is the one description of a question row the panel reads.
+// The listing and the single-question reload after an edit share it so an
+// edited row can never come back in a different shape from its neighbours.
+const questionColumns = `
+	q.id, t.slug, t.name, q.difficulty::text, q.difficulty_rating,
+	q.prompt, q.canonical_answer, q.status::text,
+	COALESCE((SELECT array_agg(a.alias ORDER BY a.id)
+	            FROM question_aliases a WHERE a.question_id = q.id), '{}'),
+	COALESCE((SELECT array_agg(d.option_text ORDER BY d.id)
+	            FROM question_distractors d WHERE d.question_id = q.id), '{}'),
+	(SELECT count(*) FROM daily_puzzle_questions dpq WHERE dpq.question_id = q.id),
+	(SELECT max(dpq.puzzle_date) FROM daily_puzzle_questions dpq WHERE dpq.question_id = q.id)`
+
+func questionScanArgs(q *adminQuestion, lastUsed **time.Time) []any {
+	return []any{&q.ID, &q.TopicSlug, &q.TopicName, &q.Difficulty, &q.DifficultyRating,
+		&q.Prompt, &q.Answer, &q.Status, &q.Aliases, &q.Distractors, &q.UsedCount, lastUsed}
+}
+
+// datePlayed converts the nullable last-used timestamp into the calendar date
+// the rest of the application speaks in.
+func datePlayed(q *adminQuestion, lastUsed *time.Time) {
+	if lastUsed != nil {
+		d := clock.PuzzleDateAt(*lastUsed, time.UTC)
+		q.LastUsed = &d
+	}
+}
+
+// loadAdminQuestion re-reads one question, which is how a create or an edit
+// answers with the same row shape the listing produces.
+func (s *Server) loadAdminQuestion(ctx context.Context, q db.DBTX, id int64) (adminQuestion, error) {
+	var out adminQuestion
+	var lastUsed *time.Time
+	err := q.QueryRow(ctx, `SELECT `+questionColumns+`
+		FROM questions q JOIN topics t ON t.id = q.topic_id
+		WHERE q.id = $1`, id).Scan(questionScanArgs(&out, &lastUsed)...)
+	if err != nil {
+		return adminQuestion{}, err
+	}
+	datePlayed(&out, lastUsed)
+	return out, nil
 }
 
 // questionFilter is shared by the count and the page query so the two can
@@ -95,16 +139,7 @@ func (s *Server) adminQuestions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := s.Pool.Query(ctx, `
-		SELECT q.id, t.slug, t.name, q.difficulty::text, q.difficulty_rating,
-		       q.prompt, q.canonical_answer, q.status::text,
-		       COALESCE((SELECT array_agg(a.alias ORDER BY a.id)
-		                   FROM question_aliases a WHERE a.question_id = q.id), '{}'),
-		       COALESCE((SELECT array_agg(d.option_text ORDER BY d.id)
-		                   FROM question_distractors d WHERE d.question_id = q.id), '{}'),
-		       (SELECT count(*) FROM daily_puzzle_questions dpq WHERE dpq.question_id = q.id),
-		       (SELECT max(dpq.puzzle_date) FROM daily_puzzle_questions dpq WHERE dpq.question_id = q.id)`+
-		questionFilter+`
+	rows, err := s.Pool.Query(ctx, `SELECT `+questionColumns+questionFilter+`
 		ORDER BY t.slug, q.difficulty_rating, q.id
 		LIMIT $4 OFFSET $5`,
 		topic, difficulty, search, limit, offset)
@@ -118,16 +153,11 @@ func (s *Server) adminQuestions(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var q adminQuestion
 		var lastUsed *time.Time
-		if err := rows.Scan(&q.ID, &q.TopicSlug, &q.TopicName, &q.Difficulty, &q.DifficultyRating,
-			&q.Prompt, &q.Answer, &q.Status, &q.Aliases, &q.Distractors,
-			&q.UsedCount, &lastUsed); err != nil {
+		if err := rows.Scan(questionScanArgs(&q, &lastUsed)...); err != nil {
 			s.internal(w, err)
 			return
 		}
-		if lastUsed != nil {
-			d := clock.PuzzleDateAt(*lastUsed, time.UTC)
-			q.LastUsed = &d
-		}
+		datePlayed(&q, lastUsed)
 		out = append(out, q)
 	}
 	if err := rows.Err(); err != nil {

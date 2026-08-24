@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '../api'
 import type { AdminDay, AdminExportField, AdminExportFields, AdminGenerateResult,
-  AdminImportResult, AdminQuestion, AdminQuestionPage, AdminTopic, APIError } from '../types'
+  AdminImportResult, AdminQuestion, AdminQuestionInput, AdminQuestionPage,
+  AdminTopic, APIError } from '../types'
 
 export const HORIZON_DAYS = 14
 export const QUESTION_PAGE = 50
@@ -207,6 +208,47 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  async function createQuestion(input:AdminQuestionInput) {
+    error.value = ''
+    notice.value = ''
+    questionsLoading.value = true
+    try {
+      const created = await api<AdminQuestion>('/api/admin/questions',
+        {method:'POST', body:JSON.stringify(input)})
+      notice.value = `Added to ${created.topic_name}.`
+      // Where a new question lands depends on the filters and the sort, so the
+      // page is reloaded rather than guessed at.
+      await loadQuestions(questionOffset.value)
+      return true
+    } catch (e) {
+      fail(e)
+      return false
+    } finally {
+      questionsLoading.value = false
+    }
+  }
+
+  async function updateQuestion(id:number, input:AdminQuestionInput) {
+    error.value = ''
+    notice.value = ''
+    questionsLoading.value = true
+    try {
+      const updated = await api<AdminQuestion>(`/api/admin/questions/${id}`,
+        {method:'PUT', body:JSON.stringify(input)})
+      // Swapping the row in place keeps the list from moving under the cursor
+      // of whoever just saved it.
+      const at = questions.value.findIndex(q => q.id === id)
+      if (at >= 0) questions.value[at] = updated
+      notice.value = 'Question saved.'
+      return true
+    } catch (e) {
+      fail(e)
+      return false
+    } finally {
+      questionsLoading.value = false
+    }
+  }
+
   // The panel asks the server which columns exist rather than hard-coding a
   // list, so the checkboxes cannot drift from what the export accepts.
   async function loadExportFields() {
@@ -223,5 +265,5 @@ export const useAdminStore = defineStore('admin', () => {
     exportFields, exportSeparator,
     filters, loading, error, notice,
     probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic,
-    loadQuestions, importQuestions, loadExportFields}
+    loadQuestions, importQuestions, loadExportFields, createQuestion, updateQuestion}
 })

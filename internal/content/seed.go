@@ -140,65 +140,78 @@ func ParseSeed(data []byte) (SeedFile, error) {
 			}
 			seenExternalIDs[q.ExternalID] = true
 
-			if _, err := BandForRating(int(q.Difficulty)); err != nil {
+			if err := ValidateQuestion(q); err != nil {
 				return SeedFile{}, fmt.Errorf("%s: %w", where, err)
-			}
-			if q.Prompt == "" {
-				return SeedFile{}, fmt.Errorf("%s: prompt is required", where)
-			}
-			if q.Answer == "" {
-				return SeedFile{}, fmt.Errorf("%s: answer is required", where)
-			}
-
-			// accepted collects the normalized form of every answer a grader
-			// would mark correct: the canonical answer plus every alias. A
-			// distractor is only a real wrong option if it normalizes to
-			// something outside this set — matching an alias would put two
-			// correct options on the board just as surely as matching the
-			// canonical answer would.
-			answerKey := grading.Normalize(q.Answer)
-			if answerKey == "" {
-				return SeedFile{}, fmt.Errorf("%s: answer %q normalizes to empty", where, q.Answer)
-			}
-			accepted := map[string]bool{answerKey: true}
-			hasAnswerAlias := false
-			for _, a := range q.Aliases {
-				ak := grading.Normalize(a)
-				if ak == "" {
-					return SeedFile{}, fmt.Errorf("%s: alias %q normalizes to empty", where, a)
-				}
-				accepted[ak] = true
-				if ak == answerKey {
-					hasAnswerAlias = true
-				}
-			}
-
-			// Distractors are counted by normalized form, not raw count: a
-			// duplicate distractor (same text, or merely the same after
-			// normalization) collapses to one row in ReplaceDistractors, so
-			// counting raw entries would let a file with fewer than three
-			// real wrong options pass validation and then silently fall short
-			// of EligibleQuestions' requirement with no error anywhere.
-			distractorKeys := map[string]bool{}
-			for _, d := range q.Distractors {
-				key := grading.Normalize(d)
-				if accepted[key] {
-					return SeedFile{}, fmt.Errorf("%s: distractor %q is an accepted answer", where, d)
-				}
-				distractorKeys[key] = true
-			}
-			if len(distractorKeys) < 3 {
-				return SeedFile{}, fmt.Errorf("%s: has %d distinct distractors, want at least 3 distractors", where, len(distractorKeys))
-			}
-
-			// The canonical answer is always accepted, whether or not it was
-			// listed among the aliases.
-			if !hasAnswerAlias {
-				q.Aliases = append([]string{q.Answer}, q.Aliases...)
 			}
 		}
 	}
 	return seed, nil
+}
+
+// ValidateQuestion checks that one question could actually reach a board, and
+// normalizes what it can. Errors are unprefixed so each caller can say where
+// the question came from: ParseSeed names the topic and index within a file,
+// while the admin panel is editing a single question and has nowhere to point.
+//
+// It also appends the canonical answer to Aliases when it is missing, so a
+// validated question always carries every spelling a grader accepts.
+func ValidateQuestion(q *SeedQuestion) error {
+	if _, err := BandForRating(int(q.Difficulty)); err != nil {
+		return err
+	}
+	if q.Prompt == "" {
+		return fmt.Errorf("prompt is required")
+	}
+	if q.Answer == "" {
+		return fmt.Errorf("answer is required")
+	}
+
+	// accepted collects the normalized form of every answer a grader would
+	// mark correct: the canonical answer plus every alias. A distractor is
+	// only a real wrong option if it normalizes to something outside this set
+	// — matching an alias would put two correct options on the board just as
+	// surely as matching the canonical answer would.
+	answerKey := grading.Normalize(q.Answer)
+	if answerKey == "" {
+		return fmt.Errorf("answer %q normalizes to empty", q.Answer)
+	}
+	accepted := map[string]bool{answerKey: true}
+	hasAnswerAlias := false
+	for _, a := range q.Aliases {
+		ak := grading.Normalize(a)
+		if ak == "" {
+			return fmt.Errorf("alias %q normalizes to empty", a)
+		}
+		accepted[ak] = true
+		if ak == answerKey {
+			hasAnswerAlias = true
+		}
+	}
+
+	// Distractors are counted by normalized form, not raw count: a duplicate
+	// distractor (same text, or merely the same after normalization) collapses
+	// to one row in ReplaceDistractors, so counting raw entries would let a
+	// question with fewer than three real wrong options pass validation and
+	// then silently fall short of EligibleQuestions' requirement with no error
+	// anywhere.
+	distractorKeys := map[string]bool{}
+	for _, d := range q.Distractors {
+		key := grading.Normalize(d)
+		if accepted[key] {
+			return fmt.Errorf("distractor %q is an accepted answer", d)
+		}
+		distractorKeys[key] = true
+	}
+	if len(distractorKeys) < 3 {
+		return fmt.Errorf("has %d distinct distractors, want at least 3 distractors", len(distractorKeys))
+	}
+
+	// The canonical answer is always accepted, whether or not it was listed
+	// among the aliases.
+	if !hasAnswerAlias {
+		q.Aliases = append([]string{q.Answer}, q.Aliases...)
+	}
+	return nil
 }
 
 func convertFlatQuestions(flat []flatQuestion) SeedFile {

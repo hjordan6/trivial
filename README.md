@@ -83,7 +83,7 @@ because a default admin password is worse than none.
 ADMIN_PASSWORD=letmein make serve
 ```
 
-The panel does six things:
+The panel does eight things:
 
 **Pin a date's categories.** Each upcoming date has three slots, and each slot
 is either a topic you chose or `Automatic`. Pinning is per slot, so you can fix
@@ -125,6 +125,27 @@ Each row also reports how many times the question has been used and when it was
 last drawn. That is the answer to "why can nothing generate": a topic fails
 because its questions are inside the cooldown window, not because the topic is
 missing.
+
+**Write a question by hand.** A form for one question: topic, difficulty on
+the 1-10 scale, prompt, answer, other accepted spellings, and the wrong
+options. It goes through exactly the same validation a pasted seed file does,
+so a question that would never reach a board -- fewer than three distinct
+distractors, or a distractor that also grades as correct -- is refused here
+too. Save it as a Draft to keep it out of selection until it is ready.
+
+**Edit a question from the list.** Opening a row and clicking "Edit question"
+turns the detail panel into the same form. Wording, answer, accepted
+spellings, wrong options and status can always change.
+
+Topic and difficulty band cannot change while the question is on a generated
+board. `daily_puzzle_questions` records the topic and difficulty alongside the
+question id, so moving a scheduled question would leave a board describing
+content its own question no longer has; the edit is refused naming the dates.
+Rewording is always allowed, and so is a rating that stays inside its band --
+2 to 4 is still easy. To move a scheduled question, rebuild those dates first.
+
+Retiring a question stops it being *selected* in future generation; it does
+not pull it off a board that already exists. Rebuild the date for that.
 
 **Export the library as CSV.** Tick the columns you want -- id, external_id,
 topic, difficulty band and rating, prompt, answer, aliases, distractors,
