@@ -83,7 +83,7 @@ because a default admin password is worse than none.
 ADMIN_PASSWORD=letmein make serve
 ```
 
-The panel does five things:
+The panel does six things:
 
 **Pin a date's categories.** Each upcoming date has three slots, and each slot
 is either a topic you chose or `Automatic`. Pinning is per slot, so you can fix
@@ -125,6 +125,15 @@ Each row also reports how many times the question has been used and when it was
 last drawn. That is the answer to "why can nothing generate": a topic fails
 because its questions are inside the cooldown window, not because the topic is
 missing.
+
+**Export the library as CSV.** Tick the columns you want -- id, external_id,
+topic, difficulty band and rating, prompt, answer, aliases, distractors,
+status, use count, last used -- and the link downloads the whole bank. The
+export deliberately ignores the listing's filters and paging: it is the "give
+me everything" button, and a partial file that looks complete is worse than no
+file. Aliases and distractors hold several values in one cell, joined with
+` | ` rather than a comma so they stay readable when the file is eyeballed
+instead of parsed.
 
 **Add questions by pasting JSON**, in any shape the seed loader already accepts
 (see below). A paste is validated before anything is written and applied in one
