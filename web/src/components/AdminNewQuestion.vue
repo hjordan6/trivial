@@ -22,6 +22,6 @@ async function submit(input:AdminQuestionInput){
       next board you generate; save it as a Draft to keep it out of selection
       until it is ready.
     </p>
-    <QuestionForm ref="form" submit-label="Add question" @submit="submit" />
+    <QuestionForm ref="form" submit-label="Add question" copyable @submit="submit" />
   </section>
 </template>

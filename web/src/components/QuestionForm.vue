@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useAdminStore } from '../stores/admin'
+import { seedJSON } from '../seedjson'
 import type { AdminQuestion, AdminQuestionInput } from '../types'
 
 const props=defineProps<{
   initial?:AdminQuestion|null
   submitLabel:string
   showCancel?:boolean
+  copyable?:boolean
 }>()
 const emit=defineEmits<{submit:[AdminQuestionInput]; cancel:[]}>()
 
@@ -57,16 +59,41 @@ const ready=computed(()=>
   !!topic.value && !!prompt.value.trim() && !!answer.value.trim() &&
   rating.value>=1 && rating.value<=10 && distinctDistractors.value>=3)
 
-function submit(){
-  emit('submit', {
-    topic_slug: topic.value,
-    prompt: prompt.value.trim(),
-    answer: answer.value.trim(),
-    difficulty_rating: Number(rating.value),
-    aliases: lines(aliasText.value),
-    distractors: lines(distractorText.value),
-    status: status.value,
-  })
+// payload is what both Submit and the JSON view read, so the copied text can
+// never describe a different question from the one the button would save.
+const payload=computed<AdminQuestionInput>(()=>({
+  topic_slug: topic.value,
+  prompt: prompt.value.trim(),
+  answer: answer.value.trim(),
+  difficulty_rating: Number(rating.value),
+  aliases: lines(aliasText.value),
+  distractors: lines(distractorText.value),
+  status: status.value,
+}))
+
+function submit(){ emit('submit', payload.value) }
+
+const json=computed(()=>seedJSON(payload.value, store.topics.find(t=>t.slug===topic.value)))
+const showJson=ref(false)
+const copied=ref(false)
+const copyNote=ref('')
+let copiedTimer:ReturnType<typeof setTimeout>|undefined
+
+async function copyJson(){
+  copyNote.value=''
+  try {
+    if (!navigator.clipboard) throw new Error('no clipboard')
+    await navigator.clipboard.writeText(json.value)
+    copied.value=true
+    clearTimeout(copiedTimer)
+    copiedTimer=setTimeout(()=>{copied.value=false}, 2000)
+  } catch {
+    // The clipboard API needs a secure context and permission, and over a
+    // forwarded port neither is guaranteed. Showing the JSON leaves a way to
+    // select it by hand rather than a button that silently does nothing.
+    showJson.value=true
+    copyNote.value='Clipboard unavailable — select the JSON below instead.'
+  }
 }
 
 defineExpose({reset})
@@ -125,6 +152,21 @@ defineExpose({reset})
         {{3-distinctDistractors}} more wrong option{{3-distinctDistractors===1?'':'s'}} needed
       </span>
       <span v-else-if="!ready" class="fine">topic, question and answer are all required</span>
+    </div>
+
+    <div v-if="props.copyable" class="question-form__json">
+      <div class="question-form__json-head">
+        <button class="admin-save" type="button" @click="copyJson">
+          {{copied ? 'Copied' : 'Copy as JSON'}}
+        </button>
+        <button class="give-up" type="button" @click="showJson=!showJson">
+          {{showJson ? 'Hide JSON' : 'Show JSON'}}
+        </button>
+        <span class="fine">Seed format — paste it into Add questions or a seed file.</span>
+      </div>
+      <p v-if="copyNote" class="fine">{{copyNote}}</p>
+      <textarea v-if="showJson" class="admin-import__box" rows="14" readonly :value="json"
+        spellcheck="false" @focus="($event.target as HTMLTextAreaElement).select()"></textarea>
     </div>
   </form>
 </template>

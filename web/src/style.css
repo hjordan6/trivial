@@ -201,6 +201,11 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .admin-q__editor > .fine { margin: 0; }
 .admin-q__meta .admin-save { margin-top: 4px; }
 
+.question-form__json { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.question-form__json-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.question-form__json-head .fine { margin: 0; }
+.question-form__json .admin-import__box { margin-top: 12px; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
