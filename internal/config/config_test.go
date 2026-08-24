@@ -137,3 +137,61 @@ func contains(nets []netip.Prefix, remote string) bool {
 	}
 	return false
 }
+
+func TestAdminTailnetSettings(t *testing.T) {
+	t.Setenv("DATABASE_URL", "postgres://x/y")
+
+	t.Run("off by default", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "")
+		t.Setenv("ADMIN_TAILNET_USERS", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		if cfg.AdminTailnetSocket != "" {
+			t.Errorf("AdminTailnetSocket = %q, want empty when the check is off", cfg.AdminTailnetSocket)
+		}
+	})
+
+	t.Run("enabling picks up the default socket", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "true")
+		t.Setenv("ADMIN_TAILSCALE_SOCKET", "")
+		t.Setenv("ADMIN_TAILNET_USERS", "")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		if cfg.AdminTailnetSocket == "" {
+			t.Error("AdminTailnetSocket is empty with the check enabled")
+		}
+	})
+
+	t.Run("users are trimmed and kept", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "true")
+		t.Setenv("ADMIN_TAILNET_USERS", " someone@example.com , other@example.com ")
+		cfg, err := Load()
+		if err != nil {
+			t.Fatalf("Load() error = %v", err)
+		}
+		want := []string{"someone@example.com", "other@example.com"}
+		if len(cfg.AdminTailnetUsers) != len(want) {
+			t.Fatalf("AdminTailnetUsers = %v, want %v", cfg.AdminTailnetUsers, want)
+		}
+		for i := range want {
+			if cfg.AdminTailnetUsers[i] != want[i] {
+				t.Errorf("user %d = %q, want %q", i, cfg.AdminTailnetUsers[i], want[i])
+			}
+		}
+	})
+
+	// Naming users without enabling the check would read as a restriction
+	// while being ignored entirely, which is the dangerous way to misread a
+	// config file.
+	t.Run("users without the check enabled is an error", func(t *testing.T) {
+		t.Setenv("ADMIN_TAILNET_ACCESS", "false")
+		t.Setenv("ADMIN_TAILNET_USERS", "someone@example.com")
+		if _, err := Load(); err == nil {
+			t.Fatal("Load() accepted users with the tailnet check disabled")
+		}
+	})
+}

@@ -1,15 +1,18 @@
 package httpapi
 
 import (
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/netip"
+	"path/filepath"
 	"strings"
 	"testing"
 	"testing/fstest"
 	"time"
 
 	"github.com/hjordan6/trivial/internal/clock"
+	"github.com/hjordan6/trivial/internal/tailnet"
 )
 
 func originServer(nets []netip.Prefix) (*Server, http.Handler) {
@@ -141,5 +144,159 @@ func TestGameStaysReachableFromAnywhere(t *testing.T) {
 	handler.ServeHTTP(res, req)
 	if res.Code != http.StatusOK {
 		t.Fatalf("game from a stranger = %d, want 200", res.Code)
+	}
+}
+
+// fakeTailscaled serves the whois endpoint the identity check calls, so these
+// tests exercise the real client against a controllable daemon.
+func fakeTailscaled(t *testing.T, peers map[string]string) *tailnet.Client {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "d.sock")
+	listener, err := net.Listen("unix", path)
+	if err != nil {
+		t.Fatalf("listen: %v", err)
+	}
+	server := &http.Server{Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		login, ok := peers[r.URL.Query().Get("addr")]
+		if !ok {
+			http.Error(w, "no match for IP:port", http.StatusNotFound)
+			return
+		}
+		_, _ = w.Write([]byte(`{"Node":{"Name":"device.tailnet.ts.net."},` +
+			`"UserProfile":{"LoginName":"` + login + `"}}`))
+	})}
+	go func() { _ = server.Serve(listener) }()
+	t.Cleanup(func() { _ = server.Close() })
+	return tailnet.New(path)
+}
+
+func tailnetServer(t *testing.T, users []string, peers map[string]string) (*Server, http.Handler) {
+	t.Helper()
+	s := &Server{
+		AdminPassword: "correct horse",
+		// No address is trusted on its own: identity is the only way in, which
+		// is what "only my Tailscale devices" means.
+		AdminAllowedNets:  nil,
+		AdminTailnet:      fakeTailscaled(t, peers),
+		AdminTailnetUsers: users,
+		Clock:             clock.Fake{T: time.Unix(1_800_000_000, 0)},
+		Assets:            fstest.MapFS{"dist/index.html": {Data: []byte("<!doctype html>shell")}},
+	}
+	return s, s.Handler()
+}
+
+func TestAdminAllowsAnIdentifiedTailnetDevice(t *testing.T) {
+	s, handler := tailnetServer(t, nil, map[string]string{
+		"100.80.189.68:5000": "owner@example.com",
+	})
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.80.189.68:5000"))
+	if res.Code != http.StatusNoContent {
+		t.Fatalf("session from a tailnet device = %d, want 204", res.Code)
+	}
+	res = httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/admin", "100.80.189.68:5000"))
+	if res.Code != http.StatusOK {
+		t.Fatalf("/admin from a tailnet device = %d, want 200", res.Code)
+	}
+}
+
+// An address inside Tailscale's range that the daemon does not recognise is
+// not a peer. The range is shared by every tailnet, so membership proves
+// nothing on its own -- this is the case that would be a hole if the check
+// were only an address check.
+func TestAdminRejectsAnUnrecognisedAddressInTailscaleRange(t *testing.T) {
+	s, handler := tailnetServer(t, nil, map[string]string{
+		"100.80.189.68:5000": "owner@example.com",
+	})
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.99.99.99:5000"))
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("session from an unknown 100.x address = %d, want 404", res.Code)
+	}
+}
+
+// A device the daemon knows, owned by somebody else, is refused when the
+// allowed accounts are named. Tailscale node sharing makes this reachable.
+func TestAdminRejectsATailnetDeviceOwnedByAnotherAccount(t *testing.T) {
+	s, handler := tailnetServer(t, []string{"owner@example.com"}, map[string]string{
+		"100.80.189.68:5000": "owner@example.com",
+		"100.80.189.99:5000": "someone-else@example.com",
+	})
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.80.189.99:5000"))
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("session from another account = %d, want 404", res.Code)
+	}
+	res = httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.80.189.68:5000"))
+	if res.Code != http.StatusNoContent {
+		t.Fatalf("session from the owner = %d, want 204", res.Code)
+	}
+}
+
+// Logins are compared case-insensitively, since an account name is not
+// case-sensitive and a capitalised copy in .env should not lock the operator
+// out of their own panel.
+func TestAdminMatchesTailnetLoginsCaseInsensitively(t *testing.T) {
+	s, handler := tailnetServer(t, []string{"Owner@Example.COM"}, map[string]string{
+		"100.80.189.68:5000": "owner@example.com",
+	})
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.80.189.68:5000"))
+	if res.Code != http.StatusNoContent {
+		t.Fatalf("status = %d, want 204", res.Code)
+	}
+}
+
+// Addresses outside Tailscale's ranges never reach the daemon at all.
+func TestAdminRejectsNonTailscaleAddressesWithoutAskingTheDaemon(t *testing.T) {
+	s, handler := tailnetServer(t, nil, map[string]string{
+		"203.0.113.7:5000": "owner@example.com", // would pass if it were asked
+	})
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "203.0.113.7:5000"))
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("session from a public address = %d, want 404", res.Code)
+	}
+}
+
+// A daemon that cannot answer denies access rather than falling back to
+// trusting the address.
+func TestAdminClosesWhenTheDaemonIsUnreachable(t *testing.T) {
+	s := &Server{
+		AdminPassword: "correct horse",
+		AdminTailnet:  tailnet.New(filepath.Join(t.TempDir(), "absent.sock")),
+		Clock:         clock.Fake{T: time.Unix(1_800_000_000, 0)},
+	}
+	handler := s.Handler()
+
+	res := httptest.NewRecorder()
+	handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", "100.80.189.68:5000"))
+	if res.Code != http.StatusNotFound {
+		t.Fatalf("session with no daemon = %d, want 404", res.Code)
+	}
+}
+
+// The address allowlist and the identity check are alternatives, so loopback
+// keeps working for the machine itself while tailnet devices are identified.
+func TestAdminAcceptsLoopbackAlongsideTailnetIdentity(t *testing.T) {
+	s, handler := tailnetServer(t, []string{"owner@example.com"}, map[string]string{
+		"100.80.189.68:5000": "owner@example.com",
+	})
+	s.AdminAllowedNets = []netip.Prefix{netip.MustParsePrefix("127.0.0.0/8")}
+	handler = s.Handler()
+
+	for _, remote := range []string{"127.0.0.1:41000", "100.80.189.68:5000"} {
+		res := httptest.NewRecorder()
+		handler.ServeHTTP(res, fromAddr(s, http.MethodGet, "/api/admin/session", remote))
+		if res.Code != http.StatusNoContent {
+			t.Errorf("session from %s = %d, want 204", remote, res.Code)
+		}
 	}
 }

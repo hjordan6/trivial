@@ -21,6 +21,7 @@ import (
 	"github.com/hjordan6/trivial/internal/clock"
 	"github.com/hjordan6/trivial/internal/play"
 	"github.com/hjordan6/trivial/internal/puzzle"
+	"github.com/hjordan6/trivial/internal/tailnet"
 )
 
 const playerCookie = "trivial_player"
@@ -40,6 +41,12 @@ type Server struct {
 	// surface, checked before the password. Empty allows nothing, so a
 	// zero-valued Server has no reachable admin panel.
 	AdminAllowedNets []netip.Prefix
+	// AdminTailnet identifies callers by their Tailscale account. Nil disables
+	// the check, leaving AdminAllowedNets as the only way in.
+	AdminTailnet *tailnet.Client
+	// AdminTailnetUsers restricts which Tailscale logins may reach the admin
+	// surface. Empty means any peer the daemon recognises.
+	AdminTailnetUsers []string
 	// CooldownDays and TimeLimitSeconds configure boards the admin panel
 	// generates or rebuilds. They mirror the CLI's generator settings.
 	CooldownDays     int

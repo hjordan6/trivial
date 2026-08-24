@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hjordan6/trivial/internal/tailnet"
 )
 
 // Config holds every environment-driven setting the application needs.
@@ -26,6 +28,15 @@ type Config struct {
 	// admin surface at all, checked before the password. It defaults to
 	// loopback, which is the machine the server runs on.
 	AdminAllowedNets []netip.Prefix
+	// AdminTailnetSocket is the tailscaled socket used to identify callers by
+	// their Tailscale account. Empty disables identity checking, leaving
+	// AdminAllowedNets as the only way in.
+	AdminTailnetSocket string
+	// AdminTailnetUsers restricts which Tailscale logins may reach the admin
+	// surface. Empty means any peer the local tailscaled recognises, which
+	// includes nodes other people have shared into this tailnet -- naming the
+	// owner is what makes it "my account only".
+	AdminTailnetUsers []string
 }
 
 // defaultAdminNets is the allowlist when ADMIN_ALLOWED_IPS is unset: the
@@ -70,6 +81,24 @@ func Load() (Config, error) {
 	cfg.AdminPassword = os.Getenv("ADMIN_PASSWORD")
 	if cfg.AdminAllowedNets, err = adminNets(os.Getenv("ADMIN_ALLOWED_IPS")); err != nil {
 		return Config{}, err
+	}
+
+	tailnetAccess, err := boolValue("ADMIN_TAILNET_ACCESS", false)
+	if err != nil {
+		return Config{}, err
+	}
+	if tailnetAccess {
+		cfg.AdminTailnetSocket = envOr("ADMIN_TAILSCALE_SOCKET", tailnet.DefaultSocket)
+	}
+	for _, login := range strings.Split(os.Getenv("ADMIN_TAILNET_USERS"), ",") {
+		if login = strings.TrimSpace(login); login != "" {
+			cfg.AdminTailnetUsers = append(cfg.AdminTailnetUsers, login)
+		}
+	}
+	// Naming users without turning the check on would read as a restriction
+	// while actually being ignored, so it is an error rather than a no-op.
+	if len(cfg.AdminTailnetUsers) > 0 && cfg.AdminTailnetSocket == "" {
+		return Config{}, fmt.Errorf("ADMIN_TAILNET_USERS is set but ADMIN_TAILNET_ACCESS is not enabled")
 	}
 	return cfg, nil
 }
