@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { Puzzle } from '../types'
 import { DIFFICULTY_POINTS, FREE_TEXT_BONUS, MAX_POINTS, useRunStore } from '../stores/run'
+import SignIn from './SignIn.vue'
 
 const props=defineProps<{puzzle:Puzzle}>()
 defineEmits<{start:[]}>()
@@ -74,5 +75,9 @@ const legend=[
     <div class="topics"><span v-for="topic in topics" :key="topic.topic_slug">{{topic.topic_name}}</span></div>
     <button class="primary" @click="$emit('start')">Start today’s game</button>
     <p class="fine">The timer keeps running if you close this tab.</p>
+    <!-- Deliberately reachable before playing: someone whose browser lost its
+         cookie needs to sign in first, or today attaches to a new browser and
+         breaks the streak they came back for. -->
+    <SignIn compact />
   </main>
 </template>

@@ -17,12 +17,19 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/hjordan6/trivial/internal/accounts"
 	"github.com/hjordan6/trivial/internal/clock"
+	"github.com/hjordan6/trivial/internal/mail"
 	"github.com/hjordan6/trivial/internal/play"
 	"github.com/hjordan6/trivial/internal/puzzle"
 )
 
 const playerCookie = "trivial_player"
+
+// playerCookieMaxAge is 400 days, the longest lifetime Chrome will honour for a
+// cookie. A browser identity should outlive every gap in play it plausibly can,
+// because losing it is what makes a history unreachable.
+const playerCookieMaxAge = 400 * 24 * 60 * 60
 
 type Server struct {
 	Pool            *pgxpool.Pool
@@ -35,6 +42,19 @@ type Server struct {
 	// AdminPassword gates every /api/admin route. Empty disables the admin
 	// surface entirely, which is what a zero-valued Server gets.
 	AdminPassword string
+	// AppSecret keys the player and session cookies. The admin cookie is keyed
+	// on the admin password instead, so rotating that password signs operators
+	// out without disturbing players.
+	AppSecret string
+	// Mailer delivers sign-in codes. Nil means accounts do not exist on this
+	// server, which is what a zero-valued Server gets.
+	Mailer mail.Sender
+	// Accounts tunes the sign-in code lifetime and rate limits. Its signing key
+	// is filled from AppSecret, so a caller cannot set the two inconsistently.
+	Accounts accounts.Config
+	// TrustProxyIP allows X-Forwarded-For to name the client for rate limiting.
+	// Required behind a reverse proxy, unsafe without one.
+	TrustProxyIP bool
 	// CooldownDays and TimeLimitSeconds configure boards the admin panel
 	// generates or rebuilds. They mirror the CLI's generator settings.
 	CooldownDays     int
@@ -62,6 +82,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/runs/{id}/share", s.share)
 	mux.HandleFunc("GET /api/stats", s.stats)
 	mux.HandleFunc("POST /api/dev/reset", s.resetCurrentRun)
+
+	mux.HandleFunc("POST /api/auth/code", s.requestLoginCode)
+	mux.HandleFunc("POST /api/auth/session", s.createSession)
+	mux.HandleFunc("GET /api/auth/session", s.currentSession)
+	mux.HandleFunc("DELETE /api/auth/session", s.destroySession)
 
 	mux.HandleFunc("POST /api/admin/login", s.adminLogin)
 	mux.HandleFunc("POST /api/admin/logout", s.adminLogout)
@@ -99,8 +124,37 @@ func (s *Server) resetCurrentRun(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	if _, err := s.Pool.Exec(r.Context(), `DELETE FROM runs WHERE player_id=$1 AND puzzle_date=$2`, playerID, s.date(s.now())); err != nil {
+	userID, err := s.viewerUserID(r, playerID)
+	if err != nil {
 		s.internal(w, err)
+		return
+	}
+	// Delete today across every browser of a signed-in user, not just this one.
+	// Otherwise stats keep reporting the day and the streak after a "reset",
+	// which is exactly the confusion this button exists to avoid.
+	if _, err := s.Pool.Exec(r.Context(),
+		`DELETE FROM runs
+		  WHERE puzzle_date = $3
+		    AND player_id IN (SELECT id FROM players
+		                       WHERE id = $1 OR ($2::bigint IS NOT NULL AND user_id = $2))`,
+		playerID, userID, s.date(s.now())); err != nil {
+		s.internal(w, err)
+		return
+	}
+	// ?accounts=1 additionally throws the account away, so the sign-in flow can
+	// be replayed locally from scratch with the same address. ON DELETE SET NULL
+	// on players.user_id is what makes this safe: it detaches the browsers and
+	// destroys no runs.
+	if r.URL.Query().Get("accounts") == "1" && userID != nil {
+		if _, err := s.Pool.Exec(r.Context(), `DELETE FROM login_tokens WHERE email=(SELECT email FROM users WHERE id=$1)`, *userID); err != nil {
+			s.internal(w, err)
+			return
+		}
+		if _, err := s.Pool.Exec(r.Context(), `DELETE FROM users WHERE id=$1`, *userID); err != nil {
+			s.internal(w, err)
+			return
+		}
+		s.destroySession(w, r)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -120,12 +174,54 @@ func (s *Server) date(now time.Time) clock.Date {
 	return clock.PuzzleDateAt(now, loc)
 }
 
+func (s *Server) appKey() []byte { return signingKey(s.AppSecret) }
+
+// optionalPlayer reads the player id out of its cookie, or "" when there is no
+// usable one.
+//
+// The bare-UUID branch accepts cookies issued before the cookie was signed. It
+// is not a weakening: a player id is a UUIDv4, so it was never guessable, and
+// signing is here to reject junk before it reaches a uuid column -- a garbage
+// cookie used to crash the stats query with a 500 -- not to make the id
+// unforgeable. Whether the id names a real player is settled by requirePlayer,
+// which re-issues it signed.
 func (s *Server) optionalPlayer(r *http.Request) string {
 	c, err := r.Cookie(playerCookie)
 	if err != nil {
 		return ""
 	}
-	return c.Value
+	if id, ok := unsign(s.appKey(), playerCookie, c.Value); ok {
+		return id
+	}
+	if looksLikeUUID(c.Value) {
+		return c.Value
+	}
+	return ""
+}
+
+// playerCookieIsSigned reports whether the incoming cookie was already signed,
+// so requirePlayer knows whether to re-issue it. A legacy cookie that verifies
+// through the database is upgraded in place rather than replaced, which is what
+// keeps an existing player's history and in-flight run intact.
+func (s *Server) playerCookieIsSigned(r *http.Request) bool {
+	c, err := r.Cookie(playerCookie)
+	if err != nil {
+		return false
+	}
+	_, ok := unsign(s.appKey(), playerCookie, c.Value)
+	return ok
+}
+
+func (s *Server) setPlayerCookie(w http.ResponseWriter, id string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     playerCookie,
+		Value:    sign(s.appKey(), playerCookie, id),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   s.CookieSecure,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   playerCookieMaxAge,
+	})
 }
 
 func (s *Server) requirePlayer(w http.ResponseWriter, r *http.Request) (string, bool) {
@@ -133,6 +229,9 @@ func (s *Server) requirePlayer(w http.ResponseWriter, r *http.Request) (string, 
 	id := s.optionalPlayer(r)
 	if id != "" {
 		if err := play.TouchPlayer(r.Context(), s.Pool, id, now); err == nil {
+			if !s.playerCookieIsSigned(r) {
+				s.setPlayerCookie(w, id)
+			}
 			return id, true
 		}
 	}
@@ -141,7 +240,7 @@ func (s *Server) requirePlayer(w http.ResponseWriter, r *http.Request) (string, 
 		s.internal(w, err)
 		return "", false
 	}
-	http.SetCookie(w, &http.Cookie{Name: playerCookie, Value: id, Path: "/", HttpOnly: true, Secure: s.CookieSecure, SameSite: http.SameSiteLaxMode, MaxAge: 365 * 24 * 60 * 60})
+	s.setPlayerCookie(w, id)
 	return id, true
 }
 
@@ -336,13 +435,47 @@ type Stats struct {
 	LongestStreak     int     `json:"longest_streak"`
 }
 
+// statsQuery scores every day the viewer has played, one row per date, in date
+// order -- exactly the contract streaks() already expects, which is why widening
+// the scope needs no change in Go.
+//
+// mine is this browser plus, when signed in, every other browser the same person
+// has signed in on. A NULL $2 matches no row, so the anonymous case falls out of
+// the same query rather than needing a second one.
+//
+// Where two of a user's browsers both completed a date, the run they actually
+// played first wins. DISTINCT ON with this ORDER BY is precisely that rule; the
+// trailing r.id only breaks exact started_at ties, so the choice is stable
+// across queries rather than depending on scan order.
+const statsQuery = `
+WITH mine AS (
+    SELECT id FROM players WHERE id = $1
+    UNION
+    SELECT id FROM players WHERE user_id = $2
+), chosen AS (
+    SELECT DISTINCT ON (r.puzzle_date) r.id, r.puzzle_date
+      FROM runs r JOIN mine m ON m.id = r.player_id
+     WHERE r.completed_at IS NOT NULL
+     ORDER BY r.puzzle_date, r.started_at, r.id
+)
+SELECT c.puzzle_date,
+       count(ra.outcome) FILTER (WHERE ra.outcome IN ('star','circle'))
+  FROM chosen c LEFT JOIN run_answers ra ON ra.run_id = c.id
+ GROUP BY c.puzzle_date
+ ORDER BY c.puzzle_date`
+
 func (s *Server) stats(w http.ResponseWriter, r *http.Request) {
 	id := s.optionalPlayer(r)
 	if id == "" {
 		s.write(w, 200, Stats{})
 		return
 	}
-	rows, err := s.Pool.Query(r.Context(), `SELECT r.puzzle_date,count(ra.outcome) FILTER(WHERE ra.outcome IN('star','circle')) FROM runs r LEFT JOIN run_answers ra ON ra.run_id=r.id WHERE r.player_id=$1 AND r.completed_at IS NOT NULL GROUP BY r.puzzle_date ORDER BY r.puzzle_date`, id)
+	userID, err := s.viewerUserID(r, id)
+	if err != nil {
+		s.internal(w, err)
+		return
+	}
+	rows, err := s.Pool.Query(r.Context(), statsQuery, id, userID)
 	if err != nil {
 		s.internal(w, err)
 		return

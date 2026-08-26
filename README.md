@@ -3,9 +3,9 @@
 A daily trivia game in the Wordle mold: three topics a day, easy/medium/hard
 per topic, free-text answers that fall back to multiple choice. This repo
 currently holds the headless core — schema, question library, deterministic
-puzzle generator, grader, and an admin CLI — with no HTTP server or UI yet.
-See `docs/superpowers/specs/2026-08-18-daily-trivia-design.md` for the full
-design.
+puzzle generator, grader, an admin CLI, and an HTTP server with an embedded Vue
+front end. See `docs/superpowers/specs/2026-08-18-daily-trivia-design.md` for the
+full design.
 
 ## Prerequisites
 
@@ -164,6 +164,67 @@ back verbatim, naming the topic and the question index. Imported questions
 arrive `active` and are eligible for the next board generated. Re-pasting the
 same `external_id` updates that question rather than creating a duplicate,
 which makes fixing a typo a paste-again operation.
+
+## Accounts
+
+Play is anonymous by default: a player is a browser, identified by a signed
+cookie. Adding an email is optional and never required to play. It exists so a
+person's history survives two things a cookie does not — a second device, and a
+browser that clears its cookies.
+
+**Signing in attaches; it never migrates.** The current browser's `players` row
+is pointed at a `users` row. Nothing is merged, moved, or deleted, so a user
+accumulates one player row per browser and signing in on the second device is
+the same operation as the first. Stats then span every browser that user has
+signed in on. Where two of them completed the same date, the run started first
+is the one that counts.
+
+Signing out clears the session cookie only. The attachment stays, deliberately:
+clearing it would stop that browser's past runs counting toward the account, and
+would let the next person to sign in on a shared computer inherit them. For the
+same reason, signing in on a browser already claimed by a different account is
+refused rather than silently re-pointed.
+
+**A six-digit code, not a magic link.** A link tapped in a mail app opens in that
+app's in-process browser, so the session lands somewhere the player is not. A
+code typed into the tab they are already sitting in cannot do that, and
+`autocomplete="one-time-code"` lets the phone offer it straight from the
+notification. Codes are single-use, short-lived, stored as a keyed HMAC rather
+than a bare digest, and superseded by the next request for the same address.
+
+Six digits is only about 20 bits, so the defence is the attempt budget, not the
+code: five guesses per code, one live code per address at a time, and a ceiling
+on failures per address per hour so the budget cannot be refreshed by simply
+asking for another code. The lever for more margin is code length, not more
+limits.
+
+### Configuration
+
+`APP_SECRET` is required to serve. It keys every signed cookie, has no default,
+and changing it signs everyone out:
+
+```sh
+openssl rand -base64 48
+```
+
+`RESEND_API_KEY` switches on real email. Without it, `DEVELOPMENT_MODE=true`
+writes the code to the server log instead, so the whole flow is exercisable
+locally with no provider and no outbound mail:
+
+```sh
+make serve   # then read the code out of the log and type it in
+```
+
+Leaving `RESEND_API_KEY` unset in production makes sign-in report itself
+unavailable and hides the prompt, rather than half-working. `MAIL_FROM` is
+required whenever the key is set, and its domain must be verified in Resend --
+`onboarding@resend.dev` works only for mail to your own account address. Behind
+a reverse proxy, set `TRUST_PROXY_IP=true`, or every request shares one rate
+limit bucket.
+
+An address that is typed by mistake never becomes an account: a `users` row is
+only created once someone proves they can read the address, so a typo lives in
+`login_tokens` until the retention sweep and then disappears.
 
 ## Importing questions
 

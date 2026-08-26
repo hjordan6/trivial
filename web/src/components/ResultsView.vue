@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { MAX_POINTS, useRunStore } from '../stores/run'
+import SignIn from './SignIn.vue'
 
 const store=useRunStore()
 const copied=ref(false)
@@ -45,5 +46,8 @@ async function reset(){
       <div><b>{{store.stats.current_streak}}</b><span>current streak</span></div>
       <div><b>{{store.stats.longest_streak}}</b><span>best streak</span></div>
     </section>
+    <!-- Directly under the three numbers, because they are the argument for
+         signing in: these, on every device you play on. -->
+    <SignIn />
   </main>
 </template>

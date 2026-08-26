@@ -1,5 +1,8 @@
 DATABASE_URL ?= postgres://trivial:trivial@localhost:5432/trivial?sslmode=disable
 TEST_DATABASE_URL ?= postgres://trivial:trivial@localhost:5433/trivial_test?sslmode=disable
+# A fixed development signing key, so restarting the server does not sign
+# everyone out. Production must supply its own; see .env.example.
+APP_SECRET ?= dev-secret-not-for-production-0123456789
 DEV_QUESTION_COOLDOWN_DAYS ?= 7
 HTTP_ADDRESS ?= :8080
 BIN ?= trivial
@@ -42,7 +45,7 @@ build: web-build
 	go build -o $(BIN) ./cmd/trivial
 
 serve: web-build migrate
-	DATABASE_URL="$(DATABASE_URL)" HTTP_ADDRESS="$(HTTP_ADDRESS)" COOKIE_SECURE=false DEVELOPMENT_MODE=true go run ./cmd/trivial serve
+	DATABASE_URL="$(DATABASE_URL)" HTTP_ADDRESS="$(HTTP_ADDRESS)" APP_SECRET="$(APP_SECRET)" COOKIE_SECURE=false DEVELOPMENT_MODE=true go run ./cmd/trivial serve
 
 # `go run` leaves a compiled child process that outlives its parent and keeps
 # the port, so kill the wrapper and the binary. Match the binary on its `serve`
