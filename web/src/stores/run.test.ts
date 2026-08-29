@@ -67,8 +67,29 @@ describe('run store',()=>{
     expect(store.shareText('https://example.test').split('\n').slice(1,4)).toEqual(['🌍 ⭐🟢⏰','🎬 🟢🔴⏰','🍽️ ⭐⭐🔴'])
   })
 
-  it('falls back to a generic marker for a topic it cannot place',()=>{
-    expect(topicEmoji('sport','Sport')).toBe('⚽')
+  // Every topic that ships in the question dump, so a new board never shares a
+  // row of question marks. Distinct emoji throughout except where the topics
+  // really are the same subject split two ways.
+  it('gives every seeded topic its own emoji',()=>{
+    const seeded:[string,string,string][]=[
+      ['geography','Geography','🌍'],
+      ['science-nature','Science & Nature','🔬'],
+      ['movies-tv','Movies & TV','🎬'],
+      ['music','Music','🎵'],
+      ['sports','Sports','⚽'],
+      ['u-s-history','U.S. History','🗽'],
+      ['world-history','World History','🏛️'],
+      ['art-culture','Art & Culture','🎨'],
+      ['literature-language','Literature & Language','📚'],
+      ['technology-internet','Technology & Internet','💻'],
+      ['modern-pop-culture','Modern Pop Culture','✨'],
+    ]
+    for(const [slug,name,emoji] of seeded) expect([slug,topicEmoji(slug,name)]).toEqual([slug,emoji])
+  })
+
+  it('places an unseen topic by name, and marks the ones it cannot',()=>{
+    expect(topicEmoji('food-and-drink','Food & Drink')).toBe('🍽️')
+    expect(topicEmoji('ancient-mythology','Ancient Mythology')).toBe('🏛️')
     expect(topicEmoji('mystery-box','Mystery Box')).toBe('❓')
   })
 })
