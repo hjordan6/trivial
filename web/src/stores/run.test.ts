@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { MAX_POINTS, useRunStore } from './run'
+import { MAX_POINTS, topicEmoji, useRunStore } from './run'
 import type { Outcome, Question } from '../types'
 
 beforeEach(()=>{setActivePinia(createPinia());vi.stubGlobal('window',{setInterval:vi.fn()})})
@@ -56,6 +56,19 @@ describe('run store',()=>{
 
   it('builds share text with the grid, both scores, and the bare link it was given',()=>{
     const store=runWith(MIXED)
-    expect(store.shareText('https://example.test')).toBe('Trivial 2026-08-19\n⭐🟢⏰\n🟢🔴⏰\n⭐⭐🔴\n5/9 · 23 pts in 2:15\nhttps://example.test')
+    expect(store.shareText('https://example.test')).toBe('Trivial 2026-08-19\n❓ ⭐🟢⏰\n❓ 🟢🔴⏰\n❓ ⭐⭐🔴\n5/9 · 23 pts in 2:15\nhttps://example.test')
+  })
+
+  it('labels each share row with its topic emoji',()=>{
+    const topical=board.map((q,i)=>({...q,
+      topic_slug:['world-geography','film-and-television','pub-quiz-cuisine'][Math.floor(i/3)],
+      topic_name:['World Geography','Film & Television','Pub Quiz Cuisine'][Math.floor(i/3)]}))
+    const store=runWith(MIXED,topical)
+    expect(store.shareText('https://example.test').split('\n').slice(1,4)).toEqual(['🌍 ⭐🟢⏰','🎬 🟢🔴⏰','🍽️ ⭐⭐🔴'])
+  })
+
+  it('falls back to a generic marker for a topic it cannot place',()=>{
+    expect(topicEmoji('sport','Sport')).toBe('⚽')
+    expect(topicEmoji('mystery-box','Mystery Box')).toBe('❓')
   })
 })
