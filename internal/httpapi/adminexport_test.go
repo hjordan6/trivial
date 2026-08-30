@@ -89,6 +89,7 @@ func TestAdminExportWritesTheWholeLibrary(t *testing.T) {
 	if res.Code != http.StatusOK {
 		t.Fatalf("seed the fixture: %d (%s)", res.Code, res.Body.String())
 	}
+	hideTopic(t, pool, slug)
 
 	res = httptest.NewRecorder()
 	handler.ServeHTTP(res, signedRequest(s, http.MethodGet,
@@ -165,6 +166,7 @@ func TestAdminExportIgnoresListingFilters(t *testing.T) {
 	if res.Code != http.StatusOK {
 		t.Fatalf("seed the fixture: %d (%s)", res.Code, res.Body.String())
 	}
+	hideTopic(t, pool, slug)
 
 	res = httptest.NewRecorder()
 	handler.ServeHTTP(res, signedRequest(s, http.MethodGet,

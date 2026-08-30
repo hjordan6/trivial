@@ -29,3 +29,5 @@ export interface AdminQuestionInput {
   topic_slug:string; prompt:string; answer:string; difficulty_rating:number
   aliases:string[]; distractors:string[]; status:string
 }
+export interface AdminBoardEntry extends AdminQuestion { topic_position:number; slot:Difficulty }
+export interface AdminBoard { date:string; generated:boolean; has_runs:boolean; entries:AdminBoardEntry[] }

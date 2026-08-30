@@ -18,6 +18,7 @@ var adminRoutes = []struct {
 }{
 	{http.MethodGet, "/api/admin/session"},
 	{http.MethodGet, "/api/admin/puzzles"},
+	{http.MethodGet, "/api/admin/puzzles/2026-09-01/questions"},
 	{http.MethodPut, "/api/admin/puzzles/2026-09-01/topics"},
 	{http.MethodDelete, "/api/admin/puzzles/2026-09-01/topics"},
 	{http.MethodPost, "/api/admin/puzzles/generate"},

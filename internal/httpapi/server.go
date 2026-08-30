@@ -67,6 +67,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/admin/logout", s.adminLogout)
 	mux.HandleFunc("GET /api/admin/session", s.adminSession)
 	mux.HandleFunc("GET /api/admin/puzzles", s.adminPuzzles)
+	mux.HandleFunc("GET /api/admin/puzzles/{date}/questions", s.adminBoard)
 	mux.HandleFunc("PUT /api/admin/puzzles/{date}/topics", s.adminSetTopics)
 	mux.HandleFunc("DELETE /api/admin/puzzles/{date}/topics", s.adminClearTopics)
 	mux.HandleFunc("POST /api/admin/puzzles/generate", s.adminGenerate)

@@ -206,6 +206,19 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .question-form__json-head .fine { margin: 0; }
 .question-form__json .admin-import__box { margin-top: 12px; }
 
+.admin-board__pick { display: flex; align-items: flex-end; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+.admin-board__pick .field--inline input { width: auto; }
+.admin-board__when { margin: 14px 0 0; font-size: 15px; font-weight: 600; }
+.admin-board { margin-top: 8px; }
+.admin-board__topic { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+.admin-board__topic .eyebrow { margin: 0 0 10px; }
+.admin-board__q { display: grid; grid-template-columns: 104px minmax(0, 1fr) 170px; gap: 14px; align-items: start; padding: 9px 0; }
+.admin-board__slot { font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; padding-top: 3px; }
+.admin-board__prompt { margin: 0; font-size: 15px; line-height: 1.45; }
+.admin-board__choices { list-style: none; margin: 9px 0 0; padding: 0; display: grid; gap: 5px; }
+.admin-board__choices li { border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 6px 10px; font-size: 14px; }
+.admin-board__choices li.is-correct { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--acid); font-weight: 600; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -237,6 +250,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .admin-day__result { grid-column: 1; }
   .admin-topics { grid-template-columns: 1fr; }
   .admin-filters { grid-template-columns: 1fr; }
+  .admin-board__q { grid-template-columns: 1fr; gap: 7px; }
   .admin-export__fields { grid-template-columns: 1fr 1fr; }
   .admin-q__row { grid-template-columns: 1fr auto; gap: 8px; }
   .admin-q__topic { grid-column: 1; }
