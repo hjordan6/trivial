@@ -86,6 +86,9 @@ const seedSource = "seed"
 // discover later when a puzzle fails to generate.
 func ParseSeed(data []byte) (SeedFile, error) {
 	var seed SeedFile
+	// Pasted content comes from a chat window as often as from a file, so a
+	// payload that is not already JSON gets one repair pass first.
+	data = repairPaste(data)
 	trimmed := strings.TrimSpace(string(data))
 	if strings.HasPrefix(trimmed, "[") {
 		var flat []flatQuestion
