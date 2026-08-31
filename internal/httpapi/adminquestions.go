@@ -222,6 +222,21 @@ func (s *Server) adminImportQuestions(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
+	// A same-answer clash is checked before anything is written, and refuses
+	// the whole paste the way a malformed question does. Importing the rest and
+	// reporting the skips would be friendlier in the moment and worse later: a
+	// partial import that reads as a success is how a library quietly fills up
+	// with the duplicates this check exists to keep out.
+	duplicates, err := content.FindDuplicateAnswers(ctx, tx, seed)
+	if err != nil {
+		s.internal(w, err)
+		return
+	}
+	if len(duplicates) > 0 {
+		s.fail(w, http.StatusConflict, "duplicate_answer", content.DuplicateAnswerMessage(duplicates))
+		return
+	}
+
 	// ApplySeed is explicitly not atomic on its own, so it runs inside this
 	// transaction: a paste lands completely or not at all, and a failure
 	// halfway through does not leave a partial topic behind.

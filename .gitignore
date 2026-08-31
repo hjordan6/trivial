@@ -6,3 +6,12 @@
 .env
 .DS_Store
 /.playwright-mcp
+# Host-specific port remapping and other local compose tweaks.
+docker-compose.override.yml
+# `make build` writes to /trivial; these are hand-built binaries and their
+# rollback copies.
+/bin/
+# Server output and hand-kept library snapshots: useful on this machine, not
+# something the repo should carry.
+/server.log
+/backups/
