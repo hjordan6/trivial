@@ -31,6 +31,7 @@ go run ./cmd/trivial seed apply [--file seed/questions.json]
 go run ./cmd/trivial seed replace --file question_dump.json
 go run ./cmd/trivial puzzles generate [--from YYYY-MM-DD] [--days N]
 go run ./cmd/trivial puzzles show YYYY-MM-DD
+go run ./cmd/trivial mail test <address>
 go run ./cmd/trivial serve
 ```
 
@@ -254,6 +255,19 @@ required whenever the key is set, and its domain must be verified in Resend --
 `onboarding@resend.dev` works only for mail to your own account address. Behind
 a reverse proxy, set `TRUST_PROXY_IP=true`, or every request shares one rate
 limit bucket.
+
+Every way this can be misconfigured fails the same way from the sign-in form:
+the player is told a code is on its way, and nothing arrives. So check it
+directly instead, which sends one real message and prints whatever the provider
+says back:
+
+```sh
+trivial mail test you@example.com
+```
+
+It opens no database connection and refuses to run without `RESEND_API_KEY`
+rather than falling back to the log sender, because "it worked" is exactly what
+a broken mail setup already tells you.
 
 An address that is typed by mistake never becomes an account: a `users` row is
 only created once someone proves they can read the address, so a typo lives in

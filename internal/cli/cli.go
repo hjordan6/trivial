@@ -3,6 +3,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -14,6 +15,7 @@ import (
 	"github.com/hjordan6/trivial/internal/config"
 	"github.com/hjordan6/trivial/internal/content"
 	"github.com/hjordan6/trivial/internal/db"
+	"github.com/hjordan6/trivial/internal/mail"
 	"github.com/hjordan6/trivial/internal/puzzle"
 )
 
@@ -30,6 +32,7 @@ Usage:
   trivial seed apply|replace [--file seed/questions.json]
   trivial puzzles generate [--from YYYY-MM-DD] [--days N]
   trivial puzzles show YYYY-MM-DD
+  trivial mail test <address>
   trivial help
 `
 
@@ -50,6 +53,8 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
 		return runSeed(ctx, args[1:], stdout)
 	case "puzzles":
 		return runPuzzles(ctx, args[1:], stdout)
+	case "mail":
+		return runMail(ctx, args[1:], stdout)
 	default:
 		return fmt.Errorf("unknown command %q\n\n%s", args[0], usage)
 	}
@@ -334,4 +339,61 @@ func connect(ctx context.Context) (config.Config, *pgxpool.Pool, error) {
 		return config.Config{}, nil, err
 	}
 	return cfg, pool, nil
+}
+
+// runMail dispatches the mail subcommands.
+func runMail(ctx context.Context, args []string, stdout io.Writer) error {
+	if len(args) == 0 || args[0] != "test" {
+		return fmt.Errorf("usage: trivial mail test <address>")
+	}
+	if len(args) != 2 {
+		return fmt.Errorf("usage: trivial mail test <address>")
+	}
+	return runMailTest(ctx, args[1], stdout)
+}
+
+// runMailTest sends one real message through the configured provider.
+//
+// It exists because every way a mail setup fails -- an unverified domain, a
+// revoked key, a MAIL_FROM on the wrong domain -- fails identically from the
+// sign-in form: the player is told a code is on its way and nothing arrives.
+// This turns that into a provider error message on a terminal.
+//
+// No database is opened. The whole point is to test the provider in isolation,
+// including from a machine that cannot reach Postgres.
+func runMailTest(ctx context.Context, address string, stdout io.Writer) error {
+	cfg, err := config.Load()
+	if err != nil {
+		return err
+	}
+	// The log sender is deliberately not offered here. It always succeeds
+	// without sending anything, which is the one answer this command must never
+	// give: "it worked" is exactly what a broken mail setup already says.
+	if cfg.ResendAPIKey == "" {
+		return fmt.Errorf("RESEND_API_KEY is not set, so there is no provider to test")
+	}
+
+	sender := mail.Resend{APIKey: cfg.ResendAPIKey, From: cfg.MailFrom}
+	fmt.Fprintf(stdout, "sending from %s to %s...\n", cfg.MailFrom, address)
+
+	err = sender.Send(ctx, mail.Message{
+		To:      address,
+		Subject: "Trivial mail test",
+		Text: "This is a test message from `trivial mail test`.\n\n" +
+			"If you are reading it, the API key and the sender domain are both good " +
+			"and sign-in codes will reach this address.",
+	})
+	switch {
+	case errors.Is(err, mail.ErrRejected):
+		// A 4xx is a configuration answer, not an outage, and the provider's own
+		// text names which part is wrong far better than a guess would.
+		return fmt.Errorf("the provider refused the message, which usually means MAIL_FROM is on a "+
+			"domain that is not verified in Resend, or the API key is wrong: %w", err)
+	case err != nil:
+		return fmt.Errorf("could not reach the provider; the configuration may still be fine: %w", err)
+	}
+
+	fmt.Fprintf(stdout, "accepted by the provider. If it does not arrive, check the spam folder "+
+		"and the Resend dashboard's delivery log.\n")
+	return nil
 }
