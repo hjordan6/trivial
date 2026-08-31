@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { MAX_POINTS, useRunStore } from '../stores/run'
+import { useAccountStore } from '../stores/account'
 import SignIn from './SignIn.vue'
 
 const store=useRunStore()
+const account=useAccountStore()
 const copied=ref(false)
 const isLocal=['localhost','127.0.0.1','::1'].includes(location.hostname)
 
@@ -25,6 +27,12 @@ async function reset(){
     <p class="eyebrow">Today’s result</p>
     <h1>{{store.points}} <span>/ {{MAX_POINTS}} pts</span></h1>
     <p class="subscore">{{store.score}} of 9 correct · {{store.stars}}⭐ typed</p>
+    <!-- Above the grid while there is no account, because that is the only
+         place a phone will show it: the grid, the share button and the three
+         stat numbers run past the fold, and an offer nobody scrolls to may as
+         well not be on the page. Once signed in it drops back below the stats,
+         where it is a status line rather than something being offered. -->
+    <SignIn v-if="!account.signedIn" class="account--promoted" />
     <!-- Each row is one topic asked easy/medium/hard, so the row wrapper carries
          the topic name for narrow screens, where there is no room to repeat it in
          all three cells. On wide screens the wrapper is `display: contents` and
@@ -48,6 +56,6 @@ async function reset(){
     </section>
     <!-- Directly under the three numbers, because they are the argument for
          signing in: these, on every device you play on. -->
-    <SignIn />
+    <SignIn v-if="account.signedIn" />
   </main>
 </template>
