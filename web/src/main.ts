@@ -5,10 +5,12 @@ import './style.css'
 import App from './App.vue'
 import GameView from './views/GameView.vue'
 import AdminView from './views/AdminView.vue'
+import AuditView from './views/AuditView.vue'
 
 const router=createRouter({history:createWebHistory(),routes:[
   {path:'/',component:GameView},
   {path:'/admin',component:AdminView},
+  {path:'/audit',component:AuditView},
   // Anything else is the game, which is what the server's SPA fallback serves.
   {path:'/:rest(.*)',component:GameView},
 ]})

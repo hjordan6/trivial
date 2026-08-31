@@ -206,6 +206,42 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .question-form__json-head .fine { margin: 0; }
 .question-form__json .admin-import__box { margin-top: 12px; }
 
+/* --- audit: one question at a time --------------------------------------- */
+/* The audit page is the library with the list taken away: a single card, its
+   difficulty on the 1-10 scale, and a delete. Narrower than the panel because
+   nothing here is compared side by side. */
+.audit { max-width: 760px; }
+.audit-filters { grid-template-columns: minmax(0, 1fr) 170px auto; align-items: end; }
+.audit-count { margin: 0 0 9px; font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #6a6b65; text-align: right; }
+
+.audit-card { background: var(--paper); border: 1px solid var(--line); border-radius: 3px; padding: 24px 26px 20px; margin-top: 20px; }
+.audit-card .eyebrow { margin: 24px 0 7px; }
+.audit-card__topic { margin: 0; font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+/* Retired is the one status worth spotting from across the card: it is why
+   this question is not on any future board. */
+.audit-card__retired { color: #8d2c19; font-weight: 700; }
+.audit-card__prompt { font-size: clamp(21px, 3vw, 27px); line-height: 1.25; letter-spacing: -.02em; margin: 10px 0 0; }
+.audit-card__answer { margin: 0; font-size: 17px; font-weight: 600; box-shadow: inset 3px 0 0 var(--acid); padding-left: 11px; }
+.audit-card__options { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+.audit-card__options li { border: 1px solid var(--line); border-radius: 3px; padding: 7px 10px; font-size: 14px; }
+
+/* Ten buttons in three labelled groups: the rating is what is stored, the band
+   is what a player sees, and picking one saves it. */
+.audit-ratings { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
+.audit-ratings__band { font: 500 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; margin-left: 12px; }
+.audit-ratings__band:first-child { margin-left: 0; }
+.audit-rating { border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 8px 0; width: 38px; font: 500 14px ui-monospace, monospace; }
+.audit-rating:hover:not(:disabled) { border-color: var(--ink); }
+.audit-rating.is-current { border-color: var(--ink); background: var(--acid); font-weight: 700; }
+
+.audit-actions { display: flex; align-items: center; gap: 12px; margin-top: 22px; border-top: 1px solid var(--line); padding-top: 18px; }
+.audit-actions__spacer { flex: 1; }
+/* Delete is armed by its first click, which is when it starts looking like a
+   button that destroys something. */
+.audit-delete { border: 1px solid var(--line); background: var(--paper); color: #8d2c19; padding: 9px 16px; border-radius: 3px; font-weight: 600; }
+.audit-delete:hover:not(:disabled) { border-color: var(--orange); }
+.audit-delete.is-armed { background: var(--orange); border-color: var(--orange); color: white; }
+
 @media (max-width: 620px) {
   .game { padding: 22px 16px 40px; }
   .play-header { align-items: flex-start; gap: 15px; }
@@ -237,6 +273,10 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .admin-day__result { grid-column: 1; }
   .admin-topics { grid-template-columns: 1fr; }
   .admin-filters { grid-template-columns: 1fr; }
+  .audit-count { text-align: left; margin-bottom: 0; }
+  .audit-card { padding: 18px 16px; }
+  .audit-actions { flex-wrap: wrap; }
+  .audit-actions__spacer { display: none; }
   .admin-export__fields { grid-template-columns: 1fr 1fr; }
   .admin-q__row { grid-template-columns: 1fr auto; gap: 8px; }
   .admin-q__topic { grid-column: 1; }

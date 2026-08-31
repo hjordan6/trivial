@@ -165,7 +165,62 @@ arrive `active` and are eligible for the next board generated. Re-pasting the
 same `external_id` updates that question rather than creating a duplicate,
 which makes fixing a typo a paste-again operation.
 
+## Audit page
+
+`/audit` is the question library with the list taken away. It sits behind the
+same password as `/admin` and shows one question at a time -- prompt, answer,
+accepted spellings and wrong options, nothing redacted -- with the same topic
+and difficulty filters. It exists for the pass where you are judging questions
+rather than looking one up, so the only things on the page are the ones that
+pass needs: change the difficulty, retire the question, or delete it. Arrow
+keys step through the queue.
+
+Difficulty is picked on the 1-10 scale and saves on click, no separate save
+button. The same rule as the panel applies: a question already on a generated
+board can be re-rated inside its band, but moving it to another band is refused
+naming the dates, because the board records the band alongside the question.
+
+Deleting takes two clicks and is permanent -- the question and its aliases and
+distractors go. **A question that has ever been on a board cannot be deleted**,
+and the refusal names the dates. `daily_puzzle_questions` and `run_answers`
+reference it `ON DELETE RESTRICT` on purpose: a played board is history, and a
+run whose question no longer exists is a result nobody can ever explain again.
+
+**Retire** is what those questions get instead, and it is the button next to
+the delete. A retired question is never picked for a future board, and every
+board it is already on is left exactly as it was. It goes through on one click
+because it is reversible: the same button reads "Make active" afterwards. That
+is deliberately not an undo -- a question that started as a draft comes back
+active, and the label says so rather than depending on history nobody can see.
+Retiring is always allowed, including for a question scheduled on a board that
+has not been played yet.
+
+To actually delete a used question, rebuild the dates it appears on first, then
+delete it.
+
 ## Importing questions
+
+`docs/question-prompt.md` holds a ready-made prompt to hand a chat assistant.
+It lists the eleven category names verbatim, the JSON shape, and the rules the
+importer enforces, so what comes back pastes straight into the admin panel.
+
+A paste does not have to be clean JSON. Curly quotes -- the ones assistants
+produce when they format an answer as prose -- and a Markdown code fence around
+the payload are both repaired before parsing. The repair runs only when the
+bytes are not already valid JSON, so a real seed file is never touched, and it
+only straightens a curly quote that is acting as a delimiter: a quotation
+inside a question, like `described as "daft punky thrash," and later`, survives
+intact.
+
+A paste is also refused when a question's answer is already used in the same
+topic and difficulty band, either by a question in the library or by another
+question in the same paste. Those two can never share a board, but they are the
+same question to a player who meets the answer twice in a week. The message
+names the answer and the id already holding it. A retired question does not
+count -- retiring one is how you make room for its replacement -- and a
+question matching an existing `external_id` is its own update, so re-pasting to
+fix a typo still works.
+
 
 The seed command also accepts a flat JSON array. Difficulty is stored on a
 1–10 scale but players see only the derived band: 1–4 easy, 5–7 medium, and

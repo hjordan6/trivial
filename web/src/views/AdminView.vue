@@ -24,6 +24,7 @@ onBeforeMount(async () => {
     <header class="admin__head">
       <p class="eyebrow">Trivial · admin</p>
       <div class="admin__head-actions">
+        <a href="/audit">Audit questions →</a>
         <a href="/">← Back to the game</a>
         <button class="give-up" @click="store.logout">Sign out</button>
       </div>
