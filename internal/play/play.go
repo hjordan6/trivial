@@ -260,18 +260,15 @@ func AnswerQuestion(ctx context.Context, q db.DBTX, runID, playerID string, qid 
 	var outcome *Outcome
 	var result *grading.Result
 	if stage == FreeText {
-		gr := grading.Result{Distance: -1}
-		isListedDistractor := false
-		normalized := grading.Normalize(submission)
-		for _, distractor := range d.Distractors {
-			if normalized == grading.Normalize(distractor) {
-				isListedDistractor = true
-				break
-			}
+		// Distractors are stored raw and normalized here; aliases are already
+		// normalized in the database. Grade rejects a submission that lands on
+		// a distractor -- exactly, or closer than to any alias -- so the check
+		// no longer needs to happen out here.
+		normalizedDistractors := make([]string, len(d.Distractors))
+		for i, distractor := range d.Distractors {
+			normalizedDistractors[i] = grading.Normalize(distractor)
 		}
-		if !isListedDistractor {
-			gr = grading.Grade(submission, d.Aliases)
-		}
+		gr := grading.Grade(submission, d.Aliases, normalizedDistractors)
 		result = &gr
 		if gr.Correct {
 			o := Star
