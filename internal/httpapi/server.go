@@ -245,6 +245,31 @@ func (s *Server) requirePlayer(w http.ResponseWriter, r *http.Request) (string, 
 	return id, true
 }
 
+// viewer resolves who is asking: this browser plus the account it is signed in
+// to. Every run lookup needs both halves -- see play.Viewer for why.
+func (s *Server) viewer(r *http.Request, playerID string) (play.Viewer, error) {
+	userID, err := s.viewerUserID(r, playerID)
+	if err != nil {
+		return play.Viewer{}, err
+	}
+	return play.Viewer{PlayerID: playerID, UserID: userID}, nil
+}
+
+// requireViewer is requirePlayer plus the account, for the handlers that need a
+// player to exist before they can do anything.
+func (s *Server) requireViewer(w http.ResponseWriter, r *http.Request) (play.Viewer, bool) {
+	id, ok := s.requirePlayer(w, r)
+	if !ok {
+		return play.Viewer{}, false
+	}
+	v, err := s.viewer(r, id)
+	if err != nil {
+		s.internal(w, err)
+		return play.Viewer{}, false
+	}
+	return v, true
+}
+
 func (s *Server) current(w http.ResponseWriter, r *http.Request) {
 	now := s.now()
 	p, err := puzzle.Get(r.Context(), s.Pool, s.date(now))
@@ -261,7 +286,12 @@ func (s *Server) current(w http.ResponseWriter, r *http.Request) {
 		s.write(w, http.StatusOK, envelope{ServerTime: now, Puzzle: startPuzzle(p)})
 		return
 	}
-	run, err := play.Current(r.Context(), s.Pool, id, p.Date, now)
+	v, err := s.viewer(r, id)
+	if err != nil {
+		s.internal(w, err)
+		return
+	}
+	run, err := play.Current(r.Context(), s.Pool, v, p.Date, now)
 	if errors.Is(err, pgx.ErrNoRows) {
 		run = nil
 	}
@@ -290,7 +320,7 @@ func startPuzzle(p *puzzle.Puzzle) *puzzle.Puzzle {
 }
 
 func (s *Server) start(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.requirePlayer(w, r)
+	v, ok := s.requireViewer(w, r)
 	if !ok {
 		return
 	}
@@ -311,7 +341,7 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, "invalid_request", err.Error())
 		return
 	}
-	run, err := play.Start(r.Context(), s.Pool, id, p, now, body.ReferredByRunID)
+	run, err := play.Start(r.Context(), s.Pool, v, p, now, body.ReferredByRunID)
 	if err != nil {
 		s.internal(w, err)
 		return
@@ -320,16 +350,16 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) finish(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.requirePlayer(w, r)
+	v, ok := s.requireViewer(w, r)
 	if !ok {
 		return
 	}
 	now := s.now()
-	if err := play.Finish(r.Context(), s.Pool, r.PathValue("id"), id, now); err != nil {
+	if err := play.Finish(r.Context(), s.Pool, r.PathValue("id"), v, now); err != nil {
 		s.playError(w, err)
 		return
 	}
-	run, err := play.Load(r.Context(), s.Pool, r.PathValue("id"), id, now)
+	run, err := play.Load(r.Context(), s.Pool, r.PathValue("id"), v, now)
 	if err != nil {
 		s.playError(w, err)
 		return
@@ -347,7 +377,7 @@ func questionID(w http.ResponseWriter, r *http.Request) (int64, bool) {
 }
 
 func (s *Server) reveal(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.requirePlayer(w, r)
+	v, ok := s.requireViewer(w, r)
 	if !ok {
 		return
 	}
@@ -355,7 +385,7 @@ func (s *Server) reveal(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	options, err := play.Reveal(r.Context(), s.Pool, r.PathValue("id"), id, qid, s.now())
+	options, err := play.Reveal(r.Context(), s.Pool, r.PathValue("id"), v, qid, s.now())
 	if err != nil {
 		s.playError(w, err)
 		return
@@ -364,7 +394,7 @@ func (s *Server) reveal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) answer(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.requirePlayer(w, r)
+	v, ok := s.requireViewer(w, r)
 	if !ok {
 		return
 	}
@@ -380,7 +410,7 @@ func (s *Server) answer(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, "invalid_request", "Invalid JSON body.")
 		return
 	}
-	a, result, err := play.AnswerQuestion(r.Context(), s.Pool, r.PathValue("id"), id, qid, body.Stage, strings.TrimSpace(body.Answer), s.now())
+	a, result, err := play.AnswerQuestion(r.Context(), s.Pool, r.PathValue("id"), v, qid, body.Stage, strings.TrimSpace(body.Answer), s.now())
 	if err != nil {
 		s.playError(w, err)
 		return
@@ -392,7 +422,7 @@ func (s *Server) answer(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) share(w http.ResponseWriter, r *http.Request) {
-	id, ok := s.requirePlayer(w, r)
+	v, ok := s.requireViewer(w, r)
 	if !ok {
 		return
 	}
@@ -403,8 +433,17 @@ func (s *Server) share(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, "invalid_request", err.Error())
 		return
 	}
+	// Scoped like every other run lookup: a run the account holds is shareable
+	// from any browser it is signed in on, not only the one that played it.
 	var completed *time.Time
-	if err := s.Pool.QueryRow(r.Context(), `SELECT completed_at FROM runs WHERE id=$1 AND player_id=$2`, r.PathValue("id"), id).Scan(&completed); errors.Is(err, pgx.ErrNoRows) {
+	if err := s.Pool.QueryRow(r.Context(), `
+		WITH mine AS (
+		    SELECT id FROM players WHERE id = $1
+		    UNION
+		    SELECT id FROM players WHERE user_id = $2
+		)
+		SELECT r.completed_at FROM runs r JOIN mine m ON m.id = r.player_id
+		 WHERE r.id = $3`, v.PlayerID, v.UserID, r.PathValue("id")).Scan(&completed); errors.Is(err, pgx.ErrNoRows) {
 		s.playError(w, play.ErrNotYourRun)
 		return
 	} else if err != nil {

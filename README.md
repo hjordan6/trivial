@@ -206,6 +206,15 @@ cookie. Adding an email is optional and never required to play. It exists so a
 person's history survives two things a cookie does not — a second device, and a
 browser that clears its cookies.
 
+**A day belongs to the account, not the browser.** Once signed in, the run for a
+date is the account's: a second browser joins the run the first one started
+rather than getting a board of its own, and a day already finished reads as
+finished everywhere. Where two browsers somehow hold a run for the same date,
+the one started first is the one that counts -- the same rule the stats query
+uses, so the board and the streak can never disagree about whether a day was
+played. Signed out, a browser is on its own again; the attachment in the
+database does not keep it bound to the account's run.
+
 **Signing in attaches; it never migrates.** The current browser's `players` row
 is pointed at a `users` row. Nothing is merged, moved, or deleted, so a user
 accumulates one player row per browser and signing in on the second device is
