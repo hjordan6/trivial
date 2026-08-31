@@ -64,20 +64,36 @@ export const useAdminStore = defineStore('admin', () => {
     questionTotal.value = 0
   }
 
+  async function fetchTopics() {
+    const topicList = await api<{topics:AdminTopic[]}>('/api/admin/topics')
+    topics.value = topicList.topics
+  }
+
   async function refresh() {
     error.value = ''
     loading.value = true
     try {
-      const [puzzles, topicList] = await Promise.all([
+      const [puzzles] = await Promise.all([
         api<{days:AdminDay[]}>(`/api/admin/puzzles?days=${HORIZON_DAYS}`),
-        api<{topics:AdminTopic[]}>('/api/admin/topics'),
+        fetchTopics(),
       ])
       days.value = puzzles.days
-      topics.value = topicList.topics
     } catch (e) {
       fail(e)
     } finally {
       loading.value = false
+    }
+  }
+
+  // loadTopics is refresh's topic half on its own. The audit page needs the
+  // topic filter but never shows the puzzle calendar, so fetching it would be
+  // a request whose answer nothing reads.
+  async function loadTopics() {
+    error.value = ''
+    try {
+      await fetchTopics()
+    } catch (e) {
+      fail(e)
     }
   }
 
@@ -264,6 +280,6 @@ export const useAdminStore = defineStore('admin', () => {
   return {authed, days, topics, questions, questionTotal, questionOffset, questionsLoading,
     exportFields, exportSeparator,
     filters, loading, error, notice,
-    probe, login, logout, refresh, saveSlots, clearSlots, generate, updateTopic,
+    probe, login, logout, refresh, loadTopics, saveSlots, clearSlots, generate, updateTopic,
     loadQuestions, importQuestions, loadExportFields, createQuestion, updateQuestion}
 })
