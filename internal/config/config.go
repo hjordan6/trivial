@@ -74,7 +74,7 @@ func Load() (Config, error) {
 	if cfg.QuestionCooldownDays, err = positiveInt("QUESTION_COOLDOWN_DAYS", 180); err != nil {
 		return Config{}, err
 	}
-	if cfg.TimeLimitSeconds, err = positiveInt("TIME_LIMIT_SECONDS", 135); err != nil {
+	if cfg.TimeLimitSeconds, err = positiveInt("TIME_LIMIT_SECONDS", 240); err != nil {
 		return Config{}, err
 	}
 	cfg.AdminPassword = os.Getenv("ADMIN_PASSWORD")

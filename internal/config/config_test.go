@@ -45,8 +45,8 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.QuestionCooldownDays != 180 {
 		t.Errorf("QuestionCooldownDays = %d, want 180", cfg.QuestionCooldownDays)
 	}
-	if cfg.TimeLimitSeconds != 135 {
-		t.Errorf("TimeLimitSeconds = %d, want 135", cfg.TimeLimitSeconds)
+	if cfg.TimeLimitSeconds != 240 {
+		t.Errorf("TimeLimitSeconds = %d, want 240", cfg.TimeLimitSeconds)
 	}
 	if cfg.LoginCodeTTL != 15*time.Minute {
 		t.Errorf("LoginCodeTTL = %v, want 15m", cfg.LoginCodeTTL)

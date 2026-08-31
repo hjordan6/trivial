@@ -13,6 +13,54 @@ export const DIFFICULTY_POINTS: Record<Difficulty, number> = { easy: 3, medium: 
 export const FREE_TEXT_BONUS = 2
 export const MAX_POINTS = 3 * (DIFFICULTY_POINTS.easy + DIFFICULTY_POINTS.medium + DIFFICULTY_POINTS.hard) + 9 * FREE_TEXT_BONUS
 
+// Every share row is labelled with its topic, so a grid alone says what the
+// board was about. Both the slugs the seed file builds and the ones in the
+// question dump are spelled out here; anything imported later falls back to a
+// keyword match on its name, then to a generic marker.
+export const TOPIC_EMOJI: Record<string, string> = {
+  'geography': '🌍',
+  'world-geography': '🌍',
+  'science-nature': '🔬',
+  'science-and-nature': '🔬',
+  'movies-tv': '🎬',
+  'film-and-television': '🎬',
+  'music': '🎵',
+  'sports': '⚽',
+  'sport': '⚽',
+  'u-s-history': '🗽',
+  'world-history': '🏛️',
+  'history': '🏛️',
+  'art-culture': '🎨',
+  'literature-language': '📚',
+  'technology-internet': '💻',
+  'modern-pop-culture': '✨',
+}
+
+const TOPIC_KEYWORD_EMOJI: [RegExp, string][] = [
+  [/geograph|\bworld\b|map|travel|countr|capital/i, '🌍'],
+  [/scien|nature|biolog|chemi|physic|space|astronom/i, '🔬'],
+  [/film|movie|televis|\btv\b|cinema/i, '🎬'],
+  [/\bu\.?s\.?\b|america/i, '🗽'],
+  [/histor|ancient|war/i, '🏛️'],
+  [/music|song|band|album/i, '🎵'],
+  [/sport|football|soccer|olymp/i, '⚽'],
+  [/pop culture|celebrit|trend|viral|meme/i, '✨'],
+  [/tech|comput|internet|softwar|game|gaming/i, '💻'],
+  [/literat|languag|book|author|poet|word/i, '📚'],
+  [/\bart\b|culture|paint|sculpt|museum/i, '🎨'],
+  [/food|drink|cook|cuisine/i, '🍽️'],
+  [/politic|govern|law|electio/i, '🗳️'],
+  [/animal|wildlife|nature/i, '🐾'],
+  [/myth|religio|folklore/i, '🔮'],
+  [/business|econom|money|financ/i, '💰'],
+]
+
+export function topicEmoji(slug:string, name = ''):string {
+  if (TOPIC_EMOJI[slug]) return TOPIC_EMOJI[slug]
+  const haystack = `${slug.replace(/-/g, ' ')} ${name}`
+  return TOPIC_KEYWORD_EMOJI.find(([pattern]) => pattern.test(haystack))?.[1] ?? '❓'
+}
+
 export const useRunStore = defineStore('run', () => {
   const puzzle = ref<Puzzle>()
   const run = ref<Run>()
@@ -88,10 +136,10 @@ export const useRunStore = defineStore('run', () => {
   async function resync(){if(run.value&&!complete.value)await load()}
   function symbol(outcome?:Outcome){return ({star:'⭐',circle:'🟢',miss:'🔴',expired:'⏰'} as const)[outcome!] ?? '⬜'}
   function shareText(url:string){
-    const rows=orderedRows().map(row=>row.map(q=>symbol(answerMap.value.get(q.question_id)?.outcome)).join(''))
+    const rows=orderedRows().filter(row=>row.length).map(row=>`${topicEmoji(row[0].topic_slug,row[0].topic_name)} ${row.map(q=>symbol(answerMap.value.get(q.question_id)?.outcome)).join('')}`)
     const elapsed=run.value?.completed_at?Math.max(0,Math.round((Date.parse(run.value.completed_at)-Date.parse(run.value.started_at))/1000)):0
     return `Trivial ${puzzle.value!.date}\n${rows.join('\n')}\n${score.value}/9 · ${points.value} pts in ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}\n${url}`
   }
 
-  return {puzzle,run,loading,error,stats,answerMap,remainingMs,complete,score,stars,points,orderedRows,load,start,reveal,answer,finish,share,loadStats,resetForDevelopment,resync,symbol,shareText}
+  return {puzzle,run,loading,error,stats,answerMap,remainingMs,complete,score,stars,points,orderedRows,load,start,reveal,answer,finish,share,loadStats,resetForDevelopment,resync,symbol,shareText,topicEmoji}
 })

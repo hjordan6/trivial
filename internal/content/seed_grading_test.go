@@ -31,8 +31,12 @@ func TestSeedDistractorsAreNeverGradedCorrect(t *testing.T) {
 			for i, a := range q.Aliases {
 				normalizedAliases[i] = grading.Normalize(a)
 			}
+			normalizedDistractors := make([]string, len(q.Distractors))
+			for i, d := range q.Distractors {
+				normalizedDistractors[i] = grading.Normalize(d)
+			}
 			for _, d := range q.Distractors {
-				result := grading.Grade(d, normalizedAliases)
+				result := grading.Grade(d, normalizedAliases, normalizedDistractors)
 				if result.Correct {
 					t.Errorf("%s: distractor %q is graded correct against aliases %v (matched %q at distance %d)",
 						q.ExternalID, d, q.Aliases, result.Matched, result.Distance)
