@@ -4,6 +4,11 @@
 /web/dist/*
 !/web/dist/embed-placeholder.txt
 .env
+# Timestamped copies made before editing .env. They hold the same secrets the
+# real file does, and .env's own rule does not match them.
+.env.bak.*
+.DS_Store
+/.playwright-mcp
 # Host-specific port remapping and other local compose tweaks.
 docker-compose.override.yml
 # `make build` writes to /trivial; these are hand-built binaries and their

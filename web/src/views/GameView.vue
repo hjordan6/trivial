@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRunStore } from '../stores/run'
+import { useAccountStore } from '../stores/account'
 import StartScreen from '../components/StartScreen.vue'
 import TimerBar from '../components/TimerBar.vue'
 import QuestionCard from '../components/QuestionCard.vue'
 import ResultsView from '../components/ResultsView.vue'
 
 const store = useRunStore()
+const account = useAccountStore()
 const currentIndex = ref(0)
 const card = ref<InstanceType<typeof QuestionCard>>()
 const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname)
 const questions = computed(() => store.puzzle?.questions ?? [])
 const currentQuestion = computed(() => questions.value[currentIndex.value])
 
-onBeforeMount(store.load)
+onBeforeMount(() => { store.load(); account.probe() })
 function onVisibilityChange() { if (!document.hidden) store.resync() }
 onMounted(() => document.addEventListener('visibilitychange', onVisibilityChange))
 onUnmounted(() => document.removeEventListener('visibilitychange', onVisibilityChange))

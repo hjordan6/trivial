@@ -59,6 +59,35 @@ type Run struct {
 	Answers     []Answer       `json:"answers"`
 }
 
+// Viewer is who is asking: this browser, and the account it is currently
+// signed in to.
+//
+// The two halves travel together because every place that resolves a run or
+// checks ownership needs both. Passing the player alone is what let a second
+// browser start a second run for a day the account had already played: the
+// browser was new, so nothing had been played, so a fresh board was correct on
+// the only evidence the query had.
+type Viewer struct {
+	PlayerID string
+	// UserID is the signed-in account, or nil when anonymous. Scope follows
+	// the session rather than the players.user_id attachment, which deliberately
+	// outlives a sign-out, so signing out narrows a browser back to its own
+	// runs -- the same rule the stats query already applies.
+	UserID *int64
+}
+
+// minePlayers lists the players whose runs count as this viewer's: the current
+// browser, plus every browser the same account has signed in on.
+//
+// $1 is the player and $2 the user, so a query that uses it starts its own
+// parameters at $3. A NULL user matches no row, which is what makes the
+// anonymous case fall out of the same query instead of needing a second one.
+const minePlayers = `WITH mine AS (
+    SELECT id FROM players WHERE id = $1
+    UNION
+    SELECT id FROM players WHERE user_id = $2
+)`
+
 func CreatePlayer(ctx context.Context, q db.DBTX, now time.Time) (string, error) {
 	var id string
 	err := q.QueryRow(ctx, `INSERT INTO players (created_at, last_seen_at) VALUES ($1,$1) RETURNING id`, now).Scan(&id)
@@ -82,7 +111,27 @@ func TouchPlayer(ctx context.Context, q db.DBTX, id string, now time.Time) error
 	return nil
 }
 
-func Start(ctx context.Context, q db.DBTX, playerID string, p *puzzle.Puzzle, now time.Time, referredBy *string) (*Run, error) {
+// Start returns the viewer's run for the date, creating one only if the
+// account does not already have one.
+//
+// The existing-run check is what makes a day belong to the account rather than
+// to the browser. The ON CONFLICT below only ever caught the same browser
+// asking twice; a second browser has a different player_id, so it conflicted
+// with nothing and got a clean board for a day already played.
+//
+// Two browsers calling this at the same instant can still both see no run and
+// both insert. The window is a few milliseconds and the result is not a
+// duplicate day: Current picks the earlier of the two for every later request,
+// so one of them simply stops being reachable.
+func Start(ctx context.Context, q db.DBTX, v Viewer, p *puzzle.Puzzle, now time.Time, referredBy *string) (*Run, error) {
+	existing, err := Current(ctx, q, v, p.Date, now)
+	if err != nil {
+		return nil, err
+	}
+	if existing != nil {
+		return existing, nil
+	}
+
 	seed, err := randomInt64()
 	if err != nil {
 		return nil, fmt.Errorf("option seed: %w", err)
@@ -93,29 +142,49 @@ func Start(ctx context.Context, q db.DBTX, playerID string, p *puzzle.Puzzle, no
 		INSERT INTO runs (player_id,puzzle_date,started_at,expires_at,option_seed,referred_by_run_id)
 		VALUES ($1,$2,$3::timestamptz,$3::timestamptz + make_interval(secs => $4::double precision),$5,$6)
 		ON CONFLICT (player_id,puzzle_date) DO UPDATE SET player_id=EXCLUDED.player_id
-		RETURNING id,started_at,expires_at`, playerID, p.Date, now, p.TimeLimitSeconds, seed, referredBy).Scan(&id, &started, &expires)
+		RETURNING id,started_at,expires_at`, v.PlayerID, p.Date, now, p.TimeLimitSeconds, seed, referredBy).Scan(&id, &started, &expires)
 	if err != nil {
 		return nil, fmt.Errorf("start run: %w", err)
 	}
-	return Load(ctx, q, id, playerID, now)
+	return Load(ctx, q, id, v, now)
 }
 
-func Current(ctx context.Context, q db.DBTX, playerID string, date clock.Date, now time.Time) (*Run, error) {
+// Current is the viewer's run for a date, across every browser the account has
+// signed in on, or nil when there is none.
+//
+// Where two browsers both hold a run for the date, the one started first wins.
+// That is the rule the stats query already uses to score such a day, and the
+// two have to agree: a board that says you have not played contradicting a
+// streak that says you have is worse than either answer alone. The trailing id
+// only breaks exact started_at ties, so the choice is stable between calls.
+func Current(ctx context.Context, q db.DBTX, v Viewer, date clock.Date, now time.Time) (*Run, error) {
 	var id string
-	err := q.QueryRow(ctx, `SELECT id FROM runs WHERE player_id=$1 AND puzzle_date=$2`, playerID, date).Scan(&id)
+	err := q.QueryRow(ctx, minePlayers+`
+		SELECT r.id FROM runs r JOIN mine m ON m.id = r.player_id
+		 WHERE r.puzzle_date = $3
+		 ORDER BY r.started_at, r.id
+		 LIMIT 1`, v.PlayerID, v.UserID, date).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	return Load(ctx, q, id, playerID, now)
+	return Load(ctx, q, id, v, now)
 }
 
-func Load(ctx context.Context, q db.DBTX, id, playerID string, now time.Time) (*Run, error) {
-	r := &Run{ID: id, PlayerID: playerID}
+// Load reads a run the viewer is entitled to, which is any run belonging to a
+// browser the account has signed in on -- not only the browser asking.
+//
+// PlayerID is filled from the row rather than from the viewer, so it stays the
+// browser that actually started the run even when a second one is reading it.
+func Load(ctx context.Context, q db.DBTX, id string, v Viewer, now time.Time) (*Run, error) {
+	r := &Run{ID: id}
 	var date clock.Date
-	err := q.QueryRow(ctx, `SELECT puzzle_date,started_at,expires_at,completed_at,option_seed FROM runs WHERE id=$1 AND player_id=$2`, id, playerID).Scan(&date, &r.StartedAt, &r.ExpiresAt, &r.CompletedAt, &r.OptionSeed)
+	err := q.QueryRow(ctx, minePlayers+`
+		SELECT r.player_id,r.puzzle_date,r.started_at,r.expires_at,r.completed_at,r.option_seed
+		  FROM runs r JOIN mine m ON m.id = r.player_id
+		 WHERE r.id = $3`, v.PlayerID, v.UserID, id).Scan(&r.PlayerID, &date, &r.StartedAt, &r.ExpiresAt, &r.CompletedAt, &r.OptionSeed)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotYourRun
 	}
@@ -123,10 +192,10 @@ func Load(ctx context.Context, q db.DBTX, id, playerID string, now time.Time) (*
 		return nil, err
 	}
 	if r.CompletedAt == nil && !now.Before(r.ExpiresAt) {
-		if err := Finish(ctx, q, id, playerID, now); err != nil {
+		if err := Finish(ctx, q, id, v, now); err != nil {
 			return nil, err
 		}
-		return Load(ctx, q, id, playerID, now)
+		return Load(ctx, q, id, v, now)
 	}
 	r.Puzzle, err = puzzle.Get(ctx, q, date)
 	if err != nil {
@@ -150,20 +219,19 @@ func Load(ctx context.Context, q db.DBTX, id, playerID string, now time.Time) (*
 	return r, rows.Err()
 }
 
-func Finish(ctx context.Context, q db.DBTX, id, playerID string, now time.Time) error {
+func Finish(ctx context.Context, q db.DBTX, id string, v Viewer, now time.Time) error {
 	var owned bool
-	err := q.QueryRow(ctx, `
-		WITH finished AS (
-			UPDATE runs SET completed_at=COALESCE(completed_at,$3::timestamptz)
-			WHERE id=$1 AND player_id=$2 RETURNING id,puzzle_date
+	err := q.QueryRow(ctx, minePlayers+`, finished AS (
+			UPDATE runs SET completed_at=COALESCE(completed_at,$4::timestamptz)
+			WHERE id=$3 AND player_id IN (SELECT id FROM mine) RETURNING id,puzzle_date
 		), swept AS (
 			INSERT INTO run_answers(run_id,question_id,stage,outcome,first_touched_at,resolved_at)
-			SELECT f.id,dpq.question_id,'free_text','expired',$3::timestamptz,$3::timestamptz
+			SELECT f.id,dpq.question_id,'free_text','expired',$4::timestamptz,$4::timestamptz
 			FROM finished f JOIN daily_puzzle_questions dpq ON dpq.puzzle_date=f.puzzle_date
-			ON CONFLICT (run_id,question_id) DO UPDATE SET outcome='expired',resolved_at=$3::timestamptz
+			ON CONFLICT (run_id,question_id) DO UPDATE SET outcome='expired',resolved_at=$4::timestamptz
 			WHERE run_answers.outcome IS NULL RETURNING 1
 		)
-		SELECT EXISTS(SELECT 1 FROM finished)`, id, playerID, now).Scan(&owned)
+		SELECT EXISTS(SELECT 1 FROM finished)`, v.PlayerID, v.UserID, id, now).Scan(&owned)
 	if err != nil {
 		return err
 	}
@@ -214,8 +282,8 @@ func questionData(ctx context.Context, q db.DBTX, runID string, qid int64) (Ques
 	return d, rows.Err()
 }
 
-func Reveal(ctx context.Context, q db.DBTX, runID, playerID string, qid int64, now time.Time) ([]string, error) {
-	r, err := Load(ctx, q, runID, playerID, now)
+func Reveal(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, now time.Time) ([]string, error) {
+	r, err := Load(ctx, q, runID, v, now)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +313,8 @@ func Reveal(ctx context.Context, q db.DBTX, runID, playerID string, qid int64, n
 	return options, nil
 }
 
-func AnswerQuestion(ctx context.Context, q db.DBTX, runID, playerID string, qid int64, stage Stage, submission string, now time.Time) (Answer, *grading.Result, error) {
-	r, err := Load(ctx, q, runID, playerID, now.Add(-2*time.Second))
+func AnswerQuestion(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, stage Stage, submission string, now time.Time) (Answer, *grading.Result, error) {
+	r, err := Load(ctx, q, runID, v, now.Add(-2*time.Second))
 	if err != nil {
 		return Answer{}, nil, err
 	}
@@ -299,7 +367,10 @@ func AnswerQuestion(ctx context.Context, q db.DBTX, runID, playerID string, qid 
 	}
 	if a.Outcome != nil {
 		a.CanonicalAnswer = d.Canonical
-		_, err = q.Exec(ctx, `UPDATE runs SET completed_at=$3 WHERE id=$1 AND player_id=$2 AND completed_at IS NULL AND 9=(SELECT count(*) FROM run_answers WHERE run_id=$1 AND outcome IS NOT NULL)`, runID, playerID, now)
+		// r.PlayerID, not the viewer: Load has already established that this
+		// viewer may write to the run, and on a second signed-in browser the
+		// run is owned by the browser that started it.
+		_, err = q.Exec(ctx, `UPDATE runs SET completed_at=$3 WHERE id=$1 AND player_id=$2 AND completed_at IS NULL AND 9=(SELECT count(*) FROM run_answers WHERE run_id=$1 AND outcome IS NOT NULL)`, runID, r.PlayerID, now)
 		if err != nil {
 			return Answer{}, result, err
 		}

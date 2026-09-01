@@ -1,13 +1,8 @@
 package httpapi
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	"crypto/subtle"
-	"encoding/base64"
 	"net/http"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -18,46 +13,23 @@ const (
 
 // adminKey derives the signing key from the password itself, so there is no
 // second secret to manage and changing the password invalidates every session
-// that was already handed out.
+// that was already handed out. Deliberately not APP_SECRET: keying on the
+// password is what makes rotating it a way to sign every operator out.
 func (s *Server) adminKey() []byte {
-	sum := sha256.Sum256([]byte(s.AdminPassword))
-	return sum[:]
+	return signingKey(s.AdminPassword)
 }
 
 // signAdminSession returns a cookie value carrying its own expiry, signed so a
-// client cannot extend it.
+// client cannot extend it. The payload is empty because the expiry is the whole
+// claim: there is only ever one admin.
 func (s *Server) signAdminSession(expires time.Time) string {
-	payload := strconv.FormatInt(expires.Unix(), 10)
-	mac := hmac.New(sha256.New, s.adminKey())
-	_, _ = mac.Write([]byte(payload))
-	return base64.RawURLEncoding.EncodeToString([]byte(payload)) + "." +
-		base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
+	return signExpiring(s.adminKey(), adminCookie, "", expires)
 }
 
 // validAdminSession reports whether a cookie value is intact and unexpired.
 func (s *Server) validAdminSession(value string, now time.Time) bool {
-	rawPayload, rawMAC, found := strings.Cut(value, ".")
-	if !found {
-		return false
-	}
-	payload, err := base64.RawURLEncoding.DecodeString(rawPayload)
-	if err != nil {
-		return false
-	}
-	got, err := base64.RawURLEncoding.DecodeString(rawMAC)
-	if err != nil {
-		return false
-	}
-	mac := hmac.New(sha256.New, s.adminKey())
-	_, _ = mac.Write(payload)
-	if !hmac.Equal(got, mac.Sum(nil)) {
-		return false
-	}
-	unix, err := strconv.ParseInt(string(payload), 10, 64)
-	if err != nil {
-		return false
-	}
-	return now.Before(time.Unix(unix, 0))
+	_, ok := unsignExpiring(s.adminKey(), adminCookie, value, now)
+	return ok
 }
 
 // requireAdmin gates every admin route.
