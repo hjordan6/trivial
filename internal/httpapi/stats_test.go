@@ -18,7 +18,18 @@ type statsFixture struct {
 	*authFixture
 	dates      []string
 	questionID []int64
-	userID     int64
+	// mixed is a second category asked at all three difficulties. Ranking
+	// categories against each other, and scoring a day at anything but the easy
+	// rate, both need more than the nine easy questions above.
+	mixed []mixedQuestion
+	// The two category slugs, in the same order as the question lists above.
+	slug, mixedSlug string
+	userID          int64
+}
+
+type mixedQuestion struct {
+	id         int64
+	difficulty string
 }
 
 func newStatsFixture(t *testing.T, days int) *statsFixture {
@@ -43,23 +54,42 @@ func newStatsFixture(t *testing.T, days int) *statsFixture {
 		}
 	}
 
-	slug := fmt.Sprintf("stats-%d", f.seq)
-	var topicID int64
-	if err := f.pool.QueryRow(ctx, `INSERT INTO topics(slug,name) VALUES($1,$1) RETURNING id`, slug).Scan(&topicID); err != nil {
-		t.Fatalf("insert topic: %v", err)
-	}
-	// Nine questions, so a run can be scored anywhere from 0 to 9.
-	for i := 0; i < 9; i++ {
+	newQuestion := func(topicID int64, difficulty, prompt string) int64 {
 		var qid int64
+		rating := map[string]int{"easy": 2, "medium": 6, "hard": 9}[difficulty]
 		err := f.pool.QueryRow(ctx,
 			`INSERT INTO questions(topic_id,difficulty,difficulty_rating,prompt,canonical_answer,status)
-			 VALUES($1,'easy',2,$2,'answer','active') RETURNING id`,
-			topicID, fmt.Sprintf("q%d?", i)).Scan(&qid)
+			 VALUES($1,$2,$3,$4,'answer','active') RETURNING id`,
+			topicID, difficulty, rating, prompt).Scan(&qid)
 		if err != nil {
 			t.Fatalf("insert question: %v", err)
 		}
-		sf.questionID = append(sf.questionID, qid)
+		return qid
 	}
+	newTopic := func(slug string) int64 {
+		var id int64
+		if err := f.pool.QueryRow(ctx, `INSERT INTO topics(slug,name) VALUES($1,$1) RETURNING id`, slug).Scan(&id); err != nil {
+			t.Fatalf("insert topic: %v", err)
+		}
+		return id
+	}
+
+	sf.slug = fmt.Sprintf("stats-%d", f.seq)
+	topicID := newTopic(sf.slug)
+	// Nine questions, so a run can be scored anywhere from 0 to 9.
+	for i := 0; i < 9; i++ {
+		sf.questionID = append(sf.questionID, newQuestion(topicID, "easy", fmt.Sprintf("q%d?", i)))
+	}
+
+	sf.mixedSlug = fmt.Sprintf("stats-mixed-%d", f.seq)
+	mixedTopicID := newTopic(sf.mixedSlug)
+	for _, difficulty := range []string{"easy", "medium", "hard"} {
+		sf.mixed = append(sf.mixed, mixedQuestion{
+			id:         newQuestion(mixedTopicID, difficulty, fmt.Sprintf("mixed-%s?", difficulty)),
+			difficulty: difficulty,
+		})
+	}
+	topicIDs := []int64{topicID, mixedTopicID}
 
 	if err := f.pool.QueryRow(ctx,
 		`INSERT INTO users(email,created_at) VALUES($1,$2) RETURNING id`,
@@ -77,10 +107,10 @@ func newStatsFixture(t *testing.T, days int) *statsFixture {
 		if _, err := f.pool.Exec(ctx, `DELETE FROM daily_puzzles WHERE puzzle_date = ANY($1)`, sf.dates); err != nil {
 			t.Errorf("cleanup daily_puzzles: %v", err)
 		}
-		if _, err := f.pool.Exec(ctx, `DELETE FROM questions WHERE topic_id = $1`, topicID); err != nil {
+		if _, err := f.pool.Exec(ctx, `DELETE FROM questions WHERE topic_id = ANY($1)`, topicIDs); err != nil {
 			t.Errorf("cleanup questions: %v", err)
 		}
-		if _, err := f.pool.Exec(ctx, `DELETE FROM topics WHERE id = $1`, topicID); err != nil {
+		if _, err := f.pool.Exec(ctx, `DELETE FROM topics WHERE id = ANY($1)`, topicIDs); err != nil {
 			t.Errorf("cleanup topics: %v", err)
 		}
 	})
@@ -103,8 +133,30 @@ func (sf *statsFixture) player(t *testing.T, attached bool) string {
 	return id
 }
 
-// completeRun records a finished run scoring `correct` out of nine.
+// answerRow is one resolved question of a finished run.
+type answerRow struct {
+	questionID int64
+	outcome    string
+}
+
+// completeRun records a finished run scoring `correct` out of nine, every right
+// answer typed.
 func (sf *statsFixture) completeRun(t *testing.T, playerID, date string, correct int, startedAt time.Time) {
+	t.Helper()
+	answers := make([]answerRow, 0, len(sf.questionID))
+	for i, qid := range sf.questionID {
+		outcome := "miss"
+		if i < correct {
+			outcome = "star"
+		}
+		answers = append(answers, answerRow{qid, outcome})
+	}
+	sf.completeRunWith(t, playerID, date, startedAt, answers)
+}
+
+// completeRunWith records a finished run answer by answer, for tests that care
+// which question got which outcome.
+func (sf *statsFixture) completeRunWith(t *testing.T, playerID, date string, startedAt time.Time, answers []answerRow) {
 	t.Helper()
 	ctx := context.Background()
 	var runID string
@@ -115,15 +167,11 @@ func (sf *statsFixture) completeRun(t *testing.T, playerID, date string, correct
 	if err != nil {
 		t.Fatalf("insert run: %v", err)
 	}
-	for i, qid := range sf.questionID {
-		outcome := "miss"
-		if i < correct {
-			outcome = "star"
-		}
+	for _, a := range answers {
 		if _, err := sf.pool.Exec(ctx,
 			`INSERT INTO run_answers(run_id,question_id,stage,outcome,first_touched_at,resolved_at)
 			 VALUES($1,$2,'free_text',$3,$4,$4)`,
-			runID, qid, outcome, startedAt); err != nil {
+			runID, a.questionID, a.outcome, startedAt); err != nil {
 			t.Fatalf("insert run_answer: %v", err)
 		}
 	}

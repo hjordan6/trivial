@@ -7,7 +7,7 @@ DEV_QUESTION_COOLDOWN_DAYS ?= 7
 HTTP_ADDRESS ?= :8080
 BIN ?= trivial
 
-.PHONY: db-up db-down migrate seed replace-seed test lint fmt web-build build serve stop restart
+.PHONY: db-up db-down migrate seed replace-seed test lint fmt web-build build serve stop restart deploy deploy-status rollback
 
 db-up:
 	docker compose up -d db testdb
@@ -60,3 +60,16 @@ stop:
 	@echo "trivial server stopped"
 
 restart: stop serve
+
+# Deploy to this box: build, test, swap the binary in and restart, rolling back
+# automatically if the new one does not answer /healthz. Unlike `serve`, this
+# reads .env rather than the development defaults above, so it deploys the real
+# configuration. See scripts/deploy.sh --help.
+deploy:
+	./scripts/deploy.sh
+
+deploy-status:
+	@./scripts/deploy.sh --status
+
+rollback:
+	./scripts/deploy.sh --rollback

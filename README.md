@@ -55,6 +55,46 @@ revoke feature can overwrite in place.
 
 Nothing reads the resulting `friendships` rows yet. There is no friend list and
 no friend count; the rows accumulate for a later feature.
+## Deploying
+
+This box runs trivial as a plain detached process -- no systemd unit, no
+container, no reverse proxy -- so the deploy is one script:
+
+```sh
+make deploy               # or: ./scripts/deploy.sh
+```
+
+It checks formatting, vets, runs both test suites, rebuilds the Vue bundle and
+the Go binary, swaps the binary in, restarts, and waits for `/healthz`. If the
+new binary does not come up it puts the previous one back automatically, so a
+bad build costs a few seconds of downtime rather than a repair at the shell.
+
+```sh
+./scripts/deploy.sh --skip-tests   # build and restart only
+./scripts/deploy.sh --status       # what is running, and is it healthy
+./scripts/deploy.sh --rollback     # go back to the previous binary
+./scripts/deploy.sh --stop         # stop and stay stopped
+```
+
+Configuration comes from `.env`, never from the script, so what gets deployed
+is whatever that file says. Two things about it are worth knowing.
+
+`HTTP_ADDRESS` takes **one** `host:port`. It is handed straight to
+`http.Server`, so a comma-separated list is not a list -- it fails at listen
+with "too many colons in address", after the log has already announced that the
+server is listening. Use `:8092` to serve loopback, the tailnet and the LAN
+from one listener. The script refuses to start rather than let that failure
+happen at runtime.
+
+`DEVELOPMENT_MODE` must be `false` here. It swaps real email for the log sender
+and opens the run-reset endpoint, and it is set per process -- so a server
+someone started by hand with an override keeps it until the next deploy.
+`--status` reports the running process's value rather than the file's, which is
+the only honest answer.
+
+The order of the build is load-bearing: `web/dist` is compiled into the binary
+through `//go:embed`, so the bundle is always built before the Go binary.
+Migrations need no separate step -- `serve` runs them on startup.
 
 ## Starter library limits
 
