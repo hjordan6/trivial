@@ -88,6 +88,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/auth/session", s.currentSession)
 	mux.HandleFunc("DELETE /api/auth/session", s.destroySession)
 
+	mux.HandleFunc("POST /api/friends/invite", s.mintInvite)
+	mux.HandleFunc("GET /api/friends/invite/{token}", s.readInvite)
+
 	mux.HandleFunc("POST /api/admin/login", s.adminLogin)
 	mux.HandleFunc("POST /api/admin/logout", s.adminLogout)
 	mux.HandleFunc("GET /api/admin/session", s.adminSession)
