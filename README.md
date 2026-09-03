@@ -40,6 +40,22 @@ starts the game at `http://localhost:8080`, and enables a local-only reset
 button so the same daily puzzle can be replayed during development. The reset
 endpoint is disabled unless `DEVELOPMENT_MODE=true`.
 
+## Friend links
+
+A signed-in player can press **Send friend request** on the results screen,
+choose the name their friend will see, and share the link it produces. Opening
+that link and pressing **Accept** makes the two accounts friends — signing in
+first, and creating an account, if the recipient has neither.
+
+The link is reusable and does not expire: pressing the button again renames the
+sender but returns the same URL, so a link already sent to somebody keeps
+working. That also makes it a bearer credential — anyone holding it can become
+that player's friend — which is why it lives in a column that a future rotate or
+revoke feature can overwrite in place.
+
+Nothing reads the resulting `friendships` rows yet. There is no friend list and
+no friend count; the rows accumulate for a later feature.
+
 ## Starter library limits
 
 The seeded content (`seed/questions.json`) has 54 questions: 6 topics x 3
