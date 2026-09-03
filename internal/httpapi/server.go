@@ -81,6 +81,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/runs/{id}/questions/{qid}/answer", s.answer)
 	mux.HandleFunc("POST /api/runs/{id}/share", s.share)
 	mux.HandleFunc("GET /api/stats", s.stats)
+	mux.HandleFunc("GET /api/history", s.history)
 	mux.HandleFunc("POST /api/dev/reset", s.resetCurrentRun)
 
 	mux.HandleFunc("POST /api/auth/code", s.requestLoginCode)
@@ -475,9 +476,9 @@ type Stats struct {
 	LongestStreak     int     `json:"longest_streak"`
 }
 
-// statsQuery scores every day the viewer has played, one row per date, in date
-// order -- exactly the contract streaks() already expects, which is why widening
-// the scope needs no change in Go.
+// viewerRunsCTE names the one run per date that counts as the viewer's history.
+// Both /api/stats and /api/history read a day through it, so the two can never
+// disagree about which days a person has played.
 //
 // mine is this browser plus, when signed in, every other browser the same person
 // has signed in on. A NULL $2 matches no row, so the anonymous case falls out of
@@ -487,7 +488,7 @@ type Stats struct {
 // played first wins. DISTINCT ON with this ORDER BY is precisely that rule; the
 // trailing r.id only breaks exact started_at ties, so the choice is stable
 // across queries rather than depending on scan order.
-const statsQuery = `
+const viewerRunsCTE = `
 WITH mine AS (
     SELECT id FROM players WHERE id = $1
     UNION
@@ -497,7 +498,12 @@ WITH mine AS (
       FROM runs r JOIN mine m ON m.id = r.player_id
      WHERE r.completed_at IS NOT NULL
      ORDER BY r.puzzle_date, r.started_at, r.id
-)
+)`
+
+// statsQuery scores every day the viewer has played, one row per date, in date
+// order -- exactly the contract streaks() already expects, which is why widening
+// the scope needs no change in Go.
+const statsQuery = viewerRunsCTE + `
 SELECT c.puzzle_date,
        count(ra.outcome) FILTER (WHERE ra.outcome IN ('star','circle'))
   FROM chosen c LEFT JOIN run_answers ra ON ra.run_id = c.id

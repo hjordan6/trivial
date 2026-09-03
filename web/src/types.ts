@@ -8,6 +8,15 @@ export interface Answer { question_id:number; stage:Stage; free_text_submission?
 export interface Run { id:string; puzzle:Puzzle; started_at:string; expires_at:string; completed_at?:string; answers:Answer[] }
 export interface RunEnvelope { server_time:string; puzzle:Puzzle; run?:Run }
 export interface Stats { days_played:number; score_distribution:number[]; current_streak:number; longest_streak:number }
+
+// One finished day, scored by the server. asked counts questions the server
+// resolved, which for a finished run is the whole board: unanswered questions
+// are swept in as expired when the clock stops.
+export interface HistoryDay { date:string; points:number; correct:number; typed:number }
+export interface HistoryTopic { slug:string; name:string; asked:number; correct:number; points:number }
+// days is oldest first. Averages, bests and category rankings are derived in the
+// history store, not sent down the wire.
+export interface History { days:HistoryDay[]; topics:HistoryTopic[] }
 export interface APIError { code:string; message:string }
 
 // available is separate from signed_in because the app has to distinguish "you

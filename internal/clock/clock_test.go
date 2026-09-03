@@ -1,6 +1,7 @@
 package clock
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -76,5 +77,31 @@ func TestFakeClock(t *testing.T) {
 	var c Clock = Fake{T: want}
 	if !c.Now().Equal(want) {
 		t.Errorf("Fake.Now() = %v, want %v", c.Now(), want)
+	}
+}
+
+// A Date has to survive a round trip through JSON: the history endpoint encodes
+// dates that its own tests, and any client, then decode.
+func TestDateJSONRoundTrip(t *testing.T) {
+	want := Date{Year: 2026, Month: time.August, Day: 18}
+	encoded, err := json.Marshal(want)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(encoded) != `"2026-08-18"` {
+		t.Errorf("encoded = %s, want \"2026-08-18\"", encoded)
+	}
+	var got Date
+	if err := json.Unmarshal(encoded, &got); err != nil {
+		t.Fatal(err)
+	}
+	if !got.Equal(want) {
+		t.Errorf("decoded = %s, want %s", got, want)
+	}
+	if err := json.Unmarshal([]byte(`"the eighteenth"`), &got); err == nil {
+		t.Error("decoding nonsense as a date must fail")
+	}
+	if err := json.Unmarshal([]byte(`20260818`), &got); err == nil {
+		t.Error("decoding a number as a date must fail")
 	}
 }

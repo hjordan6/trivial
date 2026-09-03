@@ -60,6 +60,22 @@ func (d Date) String() string {
 // the implementation's Year/Month/Day fields.
 func (d Date) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
 
+// UnmarshalJSON reads back what MarshalJSON writes, so a client of the API --
+// including this project's own tests -- can decode a response into the same
+// type the server encoded it from.
+func (d *Date) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return fmt.Errorf("date must be a string such as \"2026-08-18\"")
+	}
+	parsed, err := ParseDate(s)
+	if err != nil {
+		return err
+	}
+	*d = parsed
+	return nil
+}
+
 // AddDays returns the date n days after d. n may be negative.
 func (d Date) AddDays(n int) Date {
 	t := d.time().AddDate(0, 0, n)

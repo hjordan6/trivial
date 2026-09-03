@@ -49,6 +49,9 @@ async function reset(){
     </div>
     <button class="primary" @click="share">{{copied?'Shared!':'Share result'}}</button>
     <button v-if="isLocal" class="dev-reset results-reset" @click="reset">↻ Play again locally</button>
+    <!-- The way back out of today: the stats below are three numbers, the
+         history page is the whole record. -->
+    <RouterLink class="history-link" to="/history">See my history →</RouterLink>
     <section v-if="store.stats" class="stats">
       <div><b>{{store.stats.days_played}}</b><span>played</span></div>
       <div><b>{{store.stats.current_streak}}</b><span>current streak</span></div>
