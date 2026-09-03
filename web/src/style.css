@@ -326,3 +326,6 @@ button:disabled { cursor: not-allowed; opacity: .35; }
    select it by hand where the share sheet is unavailable. It wraps rather than
    overflowing, because a token makes it just long enough to break a phone. */
 .friends__url { word-break: break-all; max-width: 34ch; text-align: center; }
+.invite { max-width: 34rem; margin: 0 auto; padding: 2rem 1rem; text-align: center; display: flex; flex-direction: column; gap: .9rem; align-items: center; }
+.invite__lede { margin: 0; max-width: 40ch; opacity: .85; }
+.invite__name { white-space: nowrap; }
