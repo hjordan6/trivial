@@ -184,11 +184,120 @@ func TestFriendRoutesAreUnavailableWithoutAMailer(t *testing.T) {
 	for _, tc := range []struct{ method, path string }{
 		{http.MethodPost, "/api/friends/invite"},
 		{http.MethodGet, "/api/friends/invite/anything"},
+		{http.MethodPost, "/api/friends/invite/anything/accept"},
 	} {
 		res := httptest.NewRecorder()
 		handler.ServeHTTP(res, httptest.NewRequest(tc.method, tc.path, strings.NewReader(`{}`)))
 		if res.Code != http.StatusServiceUnavailable {
 			t.Errorf("%s %s status = %d, want 503", tc.method, tc.path, res.Code)
+		}
+	}
+}
+
+func TestAcceptBefriendsTwoSignedInBrowsers(t *testing.T) {
+	f := newAuthFixture(t)
+	sender := signIn(t, f, "sender")
+	res := f.do(t, http.MethodPost, "/api/friends/invite", map[string]string{"nickname": "Sam"}, sender...)
+	var minted struct{ Token string }
+	if err := json.Unmarshal(res.Body.Bytes(), &minted); err != nil {
+		t.Fatal(err)
+	}
+
+	recipient := signIn(t, f, "recipient")
+	res = f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil, recipient...)
+	if res.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200: %s", res.Code, res.Body.String())
+	}
+	var got struct{ Nickname, Status string }
+	if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != "added" {
+		t.Errorf("status = %q, want added", got.Status)
+	}
+	if got.Nickname != "Sam" {
+		t.Errorf("nickname = %q, want Sam", got.Nickname)
+	}
+
+	// A second tap is a no-op, not a duplicate.
+	res = f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil, recipient...)
+	if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.Status != "already_friends" {
+		t.Errorf("second status = %q, want already_friends", got.Status)
+	}
+}
+
+func TestAcceptRequiresSignIn(t *testing.T) {
+	f := newAuthFixture(t)
+	sender := signIn(t, f, "sender")
+	res := f.do(t, http.MethodPost, "/api/friends/invite", map[string]string{"nickname": "Sam"}, sender...)
+	var minted struct{ Token string }
+	if err := json.Unmarshal(res.Body.Bytes(), &minted); err != nil {
+		t.Fatal(err)
+	}
+
+	res = f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil)
+	if res.Code != http.StatusUnauthorized {
+		t.Errorf("status = %d, want 401: %s", res.Code, res.Body.String())
+	}
+}
+
+func TestAcceptRejectsYourOwnInvite(t *testing.T) {
+	f := newAuthFixture(t)
+	sender := signIn(t, f, "sender")
+	res := f.do(t, http.MethodPost, "/api/friends/invite", map[string]string{"nickname": "Sam"}, sender...)
+	var minted struct{ Token string }
+	if err := json.Unmarshal(res.Body.Bytes(), &minted); err != nil {
+		t.Fatal(err)
+	}
+
+	res = f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil, sender...)
+	if res.Code != http.StatusConflict {
+		t.Errorf("status = %d, want 409: %s", res.Code, res.Body.String())
+	}
+}
+
+func TestAcceptRejectsAnUnknownToken(t *testing.T) {
+	f := newAuthFixture(t)
+	recipient := signIn(t, f, "recipient")
+
+	res := f.do(t, http.MethodPost, "/api/friends/invite/nosuchtoken/accept", nil, recipient...)
+	if res.Code != http.StatusNotFound {
+		t.Errorf("status = %d, want 404: %s", res.Code, res.Body.String())
+	}
+}
+
+// The guard that matters most. The invite token is a bearer credential that
+// will end up forwarded into group chats, so no friend route may ever echo an
+// address back -- that would make every shared link a way to read the sender's
+// email off the server. Asserted directly, because a promise like this erodes
+// quietly as handlers are edited.
+func TestNoFriendRouteEverReturnsAnEmailAddress(t *testing.T) {
+	f := newAuthFixture(t)
+	sender := signIn(t, f, "sender")
+	recipient := signIn(t, f, "recipient")
+
+	res := f.do(t, http.MethodPost, "/api/friends/invite", map[string]string{"nickname": "Sam"}, sender...)
+	bodies := []string{res.Body.String()}
+	var minted struct{ Token string }
+	if err := json.Unmarshal(res.Body.Bytes(), &minted); err != nil {
+		t.Fatal(err)
+	}
+
+	bodies = append(bodies,
+		f.do(t, http.MethodGet, "/api/friends/invite/"+minted.Token, nil).Body.String(),
+		f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil, recipient...).Body.String(),
+		f.do(t, http.MethodPost, "/api/friends/invite/"+minted.Token+"/accept", nil, sender...).Body.String(),
+		f.do(t, http.MethodGet, "/api/friends/invite/nosuchtoken", nil).Body.String(),
+	)
+	for i, body := range bodies {
+		if strings.Contains(body, "@") {
+			t.Errorf("response %d contains an address: %s", i, body)
+		}
+		if strings.Contains(body, "example.com") {
+			t.Errorf("response %d contains a domain: %s", i, body)
 		}
 	}
 }

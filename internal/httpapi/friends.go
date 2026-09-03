@@ -125,3 +125,37 @@ func (s *Server) readInvite(w http.ResponseWriter, r *http.Request) {
 	}
 	s.write(w, http.StatusOK, publicInviteResponse{Nickname: inv.Nickname})
 }
+
+// acceptInvite records the friendship.
+//
+// Not wrapped in a transaction: friends.Accept is one idempotent statement, so
+// there is nothing to make atomic with anything else. Contrast createSession,
+// which is deliberately un-transactional for the opposite reason -- rolling
+// back there would refund a brute-force budget.
+//
+// added and already_friends are both 200 and read identically in the UI.
+// Distinguishing them for the visitor would tell them something about a
+// friendship they may not remember making, for no benefit.
+func (s *Server) acceptInvite(w http.ResponseWriter, r *http.Request) {
+	if !s.friendsAvailable(w) {
+		return
+	}
+	user, ok := s.requireSignedIn(w, r)
+	if !ok {
+		return
+	}
+
+	inv, outcome, err := friends.Accept(r.Context(), s.Pool, r.PathValue("token"), user.ID, s.now())
+	switch {
+	case errors.Is(err, friends.ErrNoInvite):
+		s.fail(w, http.StatusNotFound, "no_such_invite", "This link doesn’t work any more.")
+		return
+	case errors.Is(err, friends.ErrSelfInvite):
+		s.fail(w, http.StatusConflict, "self_invite", "That’s your own friend link.")
+		return
+	case err != nil:
+		s.internal(w, err)
+		return
+	}
+	s.write(w, http.StatusOK, acceptResponse{Nickname: inv.Nickname, Status: string(outcome)})
+}

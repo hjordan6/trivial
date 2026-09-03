@@ -90,6 +90,7 @@ func (s *Server) Handler() http.Handler {
 
 	mux.HandleFunc("POST /api/friends/invite", s.mintInvite)
 	mux.HandleFunc("GET /api/friends/invite/{token}", s.readInvite)
+	mux.HandleFunc("POST /api/friends/invite/{token}/accept", s.acceptInvite)
 
 	mux.HandleFunc("POST /api/admin/login", s.adminLogin)
 	mux.HandleFunc("POST /api/admin/logout", s.adminLogout)
