@@ -649,6 +649,19 @@ func randomToken() (string, error) {
 	}
 	return base64.RawURLEncoding.EncodeToString(b), nil
 }
+
+// maxNicknameRunes bounds every caller-supplied display name: share nicknames
+// and friend-invite nicknames both. It matches the length CHECK on
+// friend_invites.nickname.
+const maxNicknameRunes = 40
+
+// cleanNickname trims, bounds, and normalises a caller-supplied display name,
+// returning nil for anything that is empty once trimmed.
+//
+// The bound is 40 *runes*, counted with a range loop rather than sliced at
+// s[:40]. Slicing by bytes cuts a multi-byte character in half and produces
+// invalid UTF-8, which Postgres rejects on a text column -- a 500 on what
+// should be a naming choice.
 func cleanNickname(v *string) *string {
 	if v == nil {
 		return nil
@@ -657,8 +670,13 @@ func cleanNickname(v *string) *string {
 	if s == "" {
 		return nil
 	}
-	if len(s) > 40 {
-		s = s[:40]
+	count := 0
+	for i := range s {
+		if count == maxNicknameRunes {
+			s = s[:i]
+			break
+		}
+		count++
 	}
 	return &s
 }
