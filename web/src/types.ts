@@ -44,3 +44,6 @@ export interface AdminQuestionInput {
   topic_slug:string; prompt:string; answer:string; difficulty_rating:number
   aliases:string[]; distractors:string[]; status:string
 }
+export interface FriendInvite { token:string; url:string; nickname:string }
+export interface PublicInvite { nickname:string }
+export interface AcceptResult { nickname:string; status:'added'|'already_friends' }

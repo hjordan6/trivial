@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { MAX_POINTS, useRunStore } from '../stores/run'
 import { useAccountStore } from '../stores/account'
 import SignIn from './SignIn.vue'
+import SendFriendRequest from './SendFriendRequest.vue'
 
 const store=useRunStore()
 const account=useAccountStore()
@@ -48,6 +49,7 @@ async function reset(){
       </div>
     </div>
     <button class="primary" @click="share">{{copied?'Shared!':'Share result'}}</button>
+    <SendFriendRequest />
     <button v-if="isLocal" class="dev-reset results-reset" @click="reset">↻ Play again locally</button>
     <!-- The way back out of today: the stats below are three numbers, the
          history page is the whole record. -->

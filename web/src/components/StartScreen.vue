@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { Puzzle } from '../types'
 import { DIFFICULTY_POINTS, FREE_TEXT_BONUS, MAX_POINTS, useRunStore } from '../stores/run'
 import SignIn from './SignIn.vue'
+import SendFriendRequest from './SendFriendRequest.vue'
 
 const props=defineProps<{puzzle:Puzzle}>()
 defineEmits<{start:[]}>()
@@ -101,5 +102,10 @@ const legend=[
          cookie needs to sign in first, or today attaches to a new browser and
          breaks the streak they came back for. -->
     <SignIn compact />
+
+    <!-- Also here, not only on the results screen. A player who never finishes
+         today's puzzle would otherwise have no route to the feature at all, and
+         the invite link is the thing that brings the second player in. -->
+    <SendFriendRequest compact />
   </main>
 </template>
