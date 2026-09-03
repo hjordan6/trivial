@@ -100,13 +100,7 @@ func (s *Server) requestLoginCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out := codeRequested{Status: "sent", Message: codeSentMessage}
-	if s.DevelopmentMode {
-		// Gated exactly like resetCurrentRun, so the code can only ever be
-		// echoed back on a development server.
-		out.DevCode = code
-	}
-	s.write(w, http.StatusAccepted, out)
+	s.write(w, http.StatusAccepted, codeRequested{Status: "sent", Message: codeSentMessage})
 }
 
 const codeSentMessage = "If that address can receive mail, a code is on its way."
@@ -114,7 +108,6 @@ const codeSentMessage = "If that address can receive mail, a code is on its way.
 type codeRequested struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
-	DevCode string `json:"dev_code,omitempty"`
 }
 
 // loginCodeMessage puts the code in the subject as well as the body, so it is
