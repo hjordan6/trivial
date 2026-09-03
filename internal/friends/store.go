@@ -64,3 +64,53 @@ func InviteByToken(ctx context.Context, q db.DBTX, token string) (Invite, error)
 	}
 	return inv, nil
 }
+
+// Accept records a mutual friendship between the invite's sender and userID.
+//
+// One statement, in three parts. The lookup, the insert, and the report of what
+// the insert did all have to agree, and splitting them would open a window
+// where a concurrent accept makes the reported outcome wrong.
+//
+// least()/greatest() is what satisfies the CHECK (user_low < user_high), so the
+// primary key rejects a duplicate in either direction, and ON CONFLICT DO
+// NOTHING turns that rejection into the already_friends outcome rather than an
+// error. Together they mean a double-tap costs nothing and needs no prior
+// existence check.
+//
+// This is a single data-modifying CTE read by the outer SELECT, not two of them
+// touching one row -- that second shape is the one Postgres documents as
+// unpredictable, and accounts.VerifyCode avoids it for the same reason.
+func Accept(ctx context.Context, q db.DBTX, token string, userID int64, now time.Time) (Invite, Outcome, error) {
+	var inv Invite
+	var inserted bool
+	err := q.QueryRow(ctx,
+		`WITH inv AS (
+		     SELECT token, user_id, nickname FROM friend_invites WHERE token = $1
+		 ), ins AS (
+		     INSERT INTO friendships (user_low, user_high, created_at)
+		     SELECT least(inv.user_id, $2), greatest(inv.user_id, $2), $3
+		       FROM inv
+		      WHERE inv.user_id <> $2
+		     ON CONFLICT DO NOTHING
+		     RETURNING 1
+		 )
+		 SELECT inv.token, inv.user_id, inv.nickname, EXISTS (SELECT 1 FROM ins)
+		   FROM inv`,
+		token, userID, now).Scan(&inv.Token, &inv.UserID, &inv.Nickname, &inserted)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Invite{}, "", ErrNoInvite
+	}
+	if err != nil {
+		return Invite{}, "", fmt.Errorf("accept friend invite: %w", err)
+	}
+	// The WHERE in the CTE already declined to insert this one; reporting it as
+	// its own error is what lets the page say "this is your own link" instead of
+	// claiming a friendship that was never made.
+	if inv.UserID == userID {
+		return inv, "", ErrSelfInvite
+	}
+	if inserted {
+		return inv, OutcomeAdded, nil
+	}
+	return inv, OutcomeAlreadyFriends, nil
+}
