@@ -72,13 +72,6 @@ describe('requestCode', () => {
     expect(store.error).toBe('Too many requests.')
     expect(store.step).toBe('email')
   })
-
-  it('carries a development code through so local sign-in needs no inbox', async () => {
-    stubFetch([{ body: { status: 'sent', message: 'Sent.', dev_code: '048221' } }])
-    const store = useAccountStore()
-    await store.requestCode('a@b.test')
-    expect(store.devCode).toBe('048221')
-  })
 })
 
 describe('verify', () => {
@@ -139,11 +132,10 @@ describe('signOut', () => {
 
 describe('changeEmail', () => {
   it('goes back a step for a mistyped address', async () => {
-    stubFetch([{ body: { status: 'sent', message: 'Sent.', dev_code: '1' } }])
+    stubFetch([{ body: { status: 'sent', message: 'Sent.' } }])
     const store = useAccountStore()
     await store.requestCode('a@b.test')
     store.changeEmail()
     expect(store.step).toBe('email')
-    expect(store.devCode).toBe('')
   })
 })

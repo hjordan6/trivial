@@ -597,24 +597,32 @@ func TestRequestCodeReportsAProviderOutage(t *testing.T) {
 	}
 }
 
-// The development echo is the only thing that makes the log-only sender usable
-// from the UI, and it must be impossible to get on a production server.
-func TestDevCodeIsOnlyEchoedInDevelopment(t *testing.T) {
+// A sign-in code proves you can read the address it was sent to, so it must
+// leave the server by mail and no other route. This asserts on the raw body
+// rather than a named field, because the danger is a future field of any name
+// putting it back -- and it holds with DevelopmentMode on, which is exactly the
+// misconfiguration that once turned a public server into an open door: anyone
+// could ask for a stranger's code and read it out of the response.
+func TestCodeIsNeverInTheResponse(t *testing.T) {
 	for _, dev := range []bool{false, true} {
 		t.Run(fmt.Sprintf("development=%v", dev), func(t *testing.T) {
 			f := newAuthFixture(t)
 			f.server.DevelopmentMode = dev
+			email := f.email("player")
 
-			res := f.do(t, http.MethodPost, "/api/auth/code", map[string]string{"email": f.email("player")})
-			var got codeRequested
-			if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
-				t.Fatal(err)
+			res := f.do(t, http.MethodPost, "/api/auth/code", map[string]string{"email": email})
+			if res.Code != http.StatusAccepted {
+				t.Fatalf("status = %d, want 202: %s", res.Code, res.Body.String())
 			}
-			if dev && got.DevCode == "" {
-				t.Error("dev_code is absent in development mode")
+
+			// What the player actually received, dug out of the mail the same
+			// way requestCode does.
+			_, code, found := strings.Cut(f.sender.last().Subject, "code: ")
+			if !found {
+				t.Fatalf("no code in subject %q", f.sender.last().Subject)
 			}
-			if !dev && got.DevCode != "" {
-				t.Errorf("dev_code = %q leaked with development mode off", got.DevCode)
+			if body := res.Body.String(); strings.Contains(body, code) {
+				t.Errorf("code %q leaked in the response body: %s", code, body)
 			}
 		})
 	}
