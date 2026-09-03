@@ -88,8 +88,6 @@ async function signOut() {
           ·
           <button class="account__link" type="button" @click="account.requestCode(account.pendingEmail)">Send another</button>
         </p>
-        <!-- Only ever set by a development server, where codes go to the log. -->
-        <p v-if="account.devCode" class="account__devcode">Development server — your code is {{account.devCode}}</p>
       </template>
     </template>
 
