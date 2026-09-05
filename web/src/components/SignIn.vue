@@ -66,8 +66,12 @@ async function signOut() {
       </template>
 
       <template v-else-if="account.step === 'code'">
+        <!-- The spam hint is temporary. The sending domain is new, so Gmail
+             still files some codes as spam while its reputation builds; this
+             line comes out once delivery settles. -->
         <p class="account__lede">
           We sent a six-digit code to <b>{{account.pendingEmail}}</b>. It works once.
+          If it is not in your inbox, check your spam folder.
         </p>
         <form @submit.prevent="submitCode">
           <label class="field account__code">

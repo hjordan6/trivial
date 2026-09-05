@@ -103,7 +103,11 @@ func (s *Server) requestLoginCode(w http.ResponseWriter, r *http.Request) {
 	s.write(w, http.StatusAccepted, codeRequested{Status: "sent", Message: codeSentMessage})
 }
 
-const codeSentMessage = "If that address can receive mail, a code is on its way."
+// The spam hint is temporary, and matches the wording in SignIn.vue: the
+// sending domain is new, so Gmail still files some codes as spam while its
+// reputation builds. Both come out together once delivery settles.
+const codeSentMessage = "If that address can receive mail, a code is on its way. " +
+	"If it is not in your inbox, check your spam folder."
 
 type codeRequested struct {
 	Status  string `json:"status"`
