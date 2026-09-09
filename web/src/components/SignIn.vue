@@ -92,6 +92,9 @@ async function signOut() {
           ·
           <button class="account__link" type="button" @click="account.requestCode(account.pendingEmail)">Send another</button>
         </p>
+        <!-- Set only by a development server that lists this address in
+             DEV_CODE_EMAILS, so staging can be signed into without an inbox. -->
+        <p v-if="account.devCode" class="account__devcode">Development server — your code is {{account.devCode}}</p>
       </template>
     </template>
 

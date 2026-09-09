@@ -20,6 +20,9 @@ export const useAccountStore = defineStore('account', () => {
   // shows and submits. It is deliberately not `email`: that one means "the
   // account you are signed in as".
   const pendingEmail = ref('')
+  // The six digits themselves, when the server chose to disclose them. Only a
+  // development server with this address in DEV_CODE_EMAILS ever does.
+  const devCode = ref('')
   const loading = ref(false)
   const error = ref('')
   const notice = ref('')
@@ -61,6 +64,7 @@ export const useAccountStore = defineStore('account', () => {
         body: JSON.stringify({ email: trimmed }),
       })
       pendingEmail.value = trimmed
+      devCode.value = sent.dev_code ?? ''
       step.value = 'code'
       notice.value = sent.message
       return true
@@ -82,6 +86,7 @@ export const useAccountStore = defineStore('account', () => {
       })
       email.value = session.email ?? ''
       step.value = 'done'
+      devCode.value = ''
       return true
     } catch (e) {
       // Stay on the code step so the player can retype rather than starting the
@@ -97,6 +102,7 @@ export const useAccountStore = defineStore('account', () => {
   function changeEmail() {
     reset()
     step.value = 'email'
+    devCode.value = ''
   }
 
   async function signOut() {
@@ -115,7 +121,7 @@ export const useAccountStore = defineStore('account', () => {
   }
 
   return {
-    available, email, step, pendingEmail, loading, error, notice,
+    available, email, step, pendingEmail, devCode, loading, error, notice,
     signedIn, probe, requestCode, verify, changeEmail, signOut,
   }
 })

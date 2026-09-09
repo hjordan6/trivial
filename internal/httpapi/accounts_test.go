@@ -603,6 +603,84 @@ func TestRequestCodeReportsAProviderOutage(t *testing.T) {
 // putting it back -- and it holds with DevelopmentMode on, which is exactly the
 // misconfiguration that once turned a public server into an open door: anyone
 // could ask for a stranger's code and read it out of the response.
+// The staging escape hatch, and the three ways it stays shut. DEV_CODE_EMAILS
+// is what makes sign-in usable on a server whose database is a copy of
+// production: the listed test account can be signed into from the UI, while the
+// real people in that copy cannot, even though they are in the same table.
+func TestCodeIsEchoedOnlyToListedAddresses(t *testing.T) {
+	// codeFor runs one request and returns what the response disclosed and what
+	// was actually mailed, so every case below asserts on both.
+	codeFor := func(t *testing.T, dev bool, allow []string, local string) (echoed, mailed string) {
+		t.Helper()
+		f := newAuthFixture(t)
+		f.server.DevelopmentMode = dev
+		// The list is normalized by config.emailList in production; the fixture
+		// builds addresses that are already lowercase, so listing them raw here
+		// matches what the loader would produce.
+		for i, a := range allow {
+			if a != "*" {
+				allow[i] = f.email(a)
+			}
+		}
+		f.server.DevCodeEmails = allow
+
+		res := f.do(t, http.MethodPost, "/api/auth/code", map[string]string{"email": f.email(local)})
+		if res.Code != http.StatusAccepted {
+			t.Fatalf("status = %d, want 202: %s", res.Code, res.Body.String())
+		}
+		var got codeRequested
+		if err := json.Unmarshal(res.Body.Bytes(), &got); err != nil {
+			t.Fatal(err)
+		}
+		_, mailed, found := strings.Cut(f.sender.last().Subject, "code: ")
+		if !found {
+			t.Fatalf("no code in subject %q", f.sender.last().Subject)
+		}
+		return got.DevCode, mailed
+	}
+
+	t.Run("listed address in development", func(t *testing.T) {
+		echoed, mailed := codeFor(t, true, []string{"tester"}, "tester")
+		if echoed != mailed {
+			t.Errorf("dev_code = %q, want the mailed code %q", echoed, mailed)
+		}
+	})
+
+	// The property the whole gate exists for: being on the staging server is
+	// not enough, you have to be one of the addresses it was set up for.
+	t.Run("unlisted address in development", func(t *testing.T) {
+		echoed, _ := codeFor(t, true, []string{"tester"}, "stranger")
+		if echoed != "" {
+			t.Errorf("dev_code = %q for an address that is not listed", echoed)
+		}
+	})
+
+	// The misconfiguration that caused 61e1816: development mode left on where
+	// it should not be. On its own it now discloses nothing.
+	t.Run("development mode alone echoes nothing", func(t *testing.T) {
+		echoed, _ := codeFor(t, true, nil, "tester")
+		if echoed != "" {
+			t.Errorf("dev_code = %q with an empty DEV_CODE_EMAILS", echoed)
+		}
+	})
+
+	// The other half: a list left in place on a production server. The flag is
+	// off, so the list is inert.
+	t.Run("a list without development mode echoes nothing", func(t *testing.T) {
+		echoed, _ := codeFor(t, false, []string{"tester", "*"}, "tester")
+		if echoed != "" {
+			t.Errorf("dev_code = %q with DEVELOPMENT_MODE off", echoed)
+		}
+	})
+
+	t.Run("wildcard in development", func(t *testing.T) {
+		echoed, mailed := codeFor(t, true, []string{"*"}, "anyone")
+		if echoed != mailed {
+			t.Errorf("dev_code = %q, want the mailed code %q", echoed, mailed)
+		}
+	})
+}
+
 func TestCodeIsNeverInTheResponse(t *testing.T) {
 	for _, dev := range []bool{false, true} {
 		t.Run(fmt.Sprintf("development=%v", dev), func(t *testing.T) {

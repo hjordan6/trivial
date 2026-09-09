@@ -23,7 +23,10 @@ export interface APIError { code:string; message:string }
 // are not signed in" from "this server has no sign-in at all", and it cannot
 // read the HttpOnly session cookie to work either out for itself.
 export interface AuthSession { available:boolean; signed_in:boolean; email?:string }
-export interface CodeRequested { status:string; message:string }
+// dev_code is present only when the server both runs in development mode and
+// lists this address in DEV_CODE_EMAILS. It is absent from every production
+// response, so treat it as an optional convenience and never a given.
+export interface CodeRequested { status:string; message:string; dev_code?:string }
 
 export interface AdminSlot { position:number; pinned:boolean; topic_slug:string|null; topic_name:string|null }
 export interface AdminDay { date:string; generated:boolean; has_runs:boolean; editable:boolean; slots:AdminSlot[] }

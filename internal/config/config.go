@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -15,10 +16,17 @@ const minAppSecretLength = 32
 
 // Config holds every environment-driven setting the application needs.
 type Config struct {
-	DatabaseURL          string
-	HTTPAddress          string
-	CookieSecure         bool
-	DevelopmentMode      bool
+	DatabaseURL     string
+	HTTPAddress     string
+	CookieSecure    bool
+	DevelopmentMode bool
+	// DevCodeEmails lists the addresses whose sign-in code may be shown in the
+	// HTTP response, and therefore in the UI. It does nothing unless
+	// DevelopmentMode is also on, so showing a code takes two deliberate
+	// settings rather than one flag -- see requestLoginCode for why that
+	// matters. A single "*" entry means every address, which is only safe on a
+	// server nobody else can reach.
+	DevCodeEmails        []string
 	PuzzleTimezone       *time.Location
 	QuestionCooldownDays int
 	// AnswerCooldownDays bars two questions with the same answer from landing
@@ -67,6 +75,7 @@ func Load() (Config, error) {
 	if cfg.DevelopmentMode, err = boolValue("DEVELOPMENT_MODE", false); err != nil {
 		return Config{}, err
 	}
+	cfg.DevCodeEmails = emailList("DEV_CODE_EMAILS")
 
 	tzName := envOr("PUZZLE_TIMEZONE", "America/Denver")
 	loc, err := time.LoadLocation(tzName)
@@ -155,4 +164,26 @@ func positiveInt(key string, fallback int) (int, error) {
 		return 0, fmt.Errorf("%s must be positive, got %d", key, n)
 	}
 	return n, nil
+}
+
+// emailList reads a comma-separated environment variable into normalized
+// addresses.
+//
+// Entries are lowercased and trimmed to match what accounts.NormalizeEmail
+// produces, so a comparison against a request's address is a plain string
+// equality and cannot be defeated by capitalisation or a stray space. Empty
+// entries are dropped rather than kept as "", which would otherwise match an
+// address that failed to parse.
+func emailList(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if v := strings.ToLower(strings.TrimSpace(part)); v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
 }

@@ -38,7 +38,11 @@ type Server struct {
 	Logger          *slog.Logger
 	CookieSecure    bool
 	DevelopmentMode bool
-	Assets          fs.FS
+	// DevCodeEmails lists the addresses whose sign-in code this server may put
+	// in the response body. Empty -- what a zero-valued Server gets -- means
+	// none, in every mode. See requestLoginCode.
+	DevCodeEmails []string
+	Assets        fs.FS
 	// AdminPassword gates every /api/admin route. Empty disables the admin
 	// surface entirely, which is what a zero-valued Server gets.
 	AdminPassword string

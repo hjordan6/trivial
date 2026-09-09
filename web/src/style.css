@@ -369,6 +369,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .account .primary { width: 100%; margin-top: 6px; }
 /* Wide, spaced and centred, so six digits read as six digits. */
 .account__code input { font: 600 22px/1 ui-monospace, monospace; letter-spacing: .4em; text-align: center; padding: 12px 10px; }
+.account__devcode { font: 12px ui-monospace, monospace; margin-top: 14px; padding: 9px 11px; background: var(--acid); border: 1px solid var(--ink); border-radius: 3px; }
 .friends { margin: 1.25rem 0; display: flex; flex-direction: column; gap: .6rem; align-items: center; }
 .friends__lede { max-width: 34ch; margin: 0; text-align: center; opacity: .85; }
 /* The URL is shown so a player can see what they are about to send, and can

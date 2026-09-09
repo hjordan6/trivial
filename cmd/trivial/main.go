@@ -56,6 +56,7 @@ func serve(ctx context.Context) error {
 		Logger:             slog.Default(),
 		CookieSecure:       cfg.CookieSecure,
 		DevelopmentMode:    cfg.DevelopmentMode,
+		DevCodeEmails:      cfg.DevCodeEmails,
 		Assets:             webassets.Dist,
 		AdminPassword:      cfg.AdminPassword,
 		CooldownDays:       cfg.QuestionCooldownDays,

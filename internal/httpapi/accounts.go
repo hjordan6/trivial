@@ -100,7 +100,44 @@ func (s *Server) requestLoginCode(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	s.write(w, http.StatusAccepted, codeRequested{Status: "sent", Message: codeSentMessage})
+	out := codeRequested{Status: "sent", Message: codeSentMessage}
+	if s.showCodeTo(email) {
+		out.DevCode = code
+	}
+	s.write(w, http.StatusAccepted, out)
+}
+
+// showCodeTo reports whether this server may hand the six-digit code straight
+// back to whoever asked for it, instead of only mailing it.
+//
+// This once existed as a bare DevelopmentMode check and was removed in 61e1816,
+// because the flag was on in a deployed environment: anyone could ask for a
+// stranger's code, read it out of the JSON, and sign in as them. A code proves
+// you can read the address it was sent to, and echoing it destroys that proof.
+//
+// It is back for the staging deployment, which needs sign-in to work against a
+// copy of production data without mailing the real people in it -- but gated on
+// a second, independent setting. DEV_CODE_EMAILS names the addresses this may
+// happen for, so a server that merely has DEVELOPMENT_MODE left on by accident
+// still echoes nothing, and a staging server exposes only the test accounts
+// deliberately listed rather than all 16 real ones. Two mistakes are needed
+// where one used to do.
+//
+// "*" restores the old blanket behaviour. It is deliberately spelled as a
+// value an operator has to type, not a default, and belongs only on a server
+// nobody else can reach.
+func (s *Server) showCodeTo(email string) bool {
+	if !s.DevelopmentMode {
+		return false
+	}
+	for _, allowed := range s.DevCodeEmails {
+		// email is already normalized by NormalizeEmail and the list by
+		// config.emailList, so both sides are lowercase and trimmed.
+		if allowed == "*" || allowed == email {
+			return true
+		}
+	}
+	return false
 }
 
 // The spam hint is temporary, and matches the wording in SignIn.vue: the
@@ -112,6 +149,10 @@ const codeSentMessage = "If that address can receive mail, a code is on its way.
 type codeRequested struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
+	// DevCode is the sign-in code itself, present only when showCodeTo allows
+	// it. omitempty keeps the field out of the JSON entirely otherwise, so a
+	// production response is byte-for-byte what it was before this existed.
+	DevCode string `json:"dev_code,omitempty"`
 }
 
 // loginCodeMessage puts the code in the subject as well as the body, so it is
