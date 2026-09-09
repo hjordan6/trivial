@@ -21,7 +21,11 @@ type Config struct {
 	DevelopmentMode      bool
 	PuzzleTimezone       *time.Location
 	QuestionCooldownDays int
-	TimeLimitSeconds     int
+	// AnswerCooldownDays bars two questions with the same answer from landing
+	// within this many days of each other, even when their prompts, topics,
+	// and difficulties differ.
+	AnswerCooldownDays int
+	TimeLimitSeconds   int
 	// AdminPassword gates the admin panel. Empty is legal and means the panel
 	// and its API do not exist: every admin route answers 404.
 	AdminPassword string
@@ -72,6 +76,9 @@ func Load() (Config, error) {
 	cfg.PuzzleTimezone = loc
 
 	if cfg.QuestionCooldownDays, err = positiveInt("QUESTION_COOLDOWN_DAYS", 180); err != nil {
+		return Config{}, err
+	}
+	if cfg.AnswerCooldownDays, err = positiveInt("ANSWER_COOLDOWN_DAYS", 14); err != nil {
 		return Config{}, err
 	}
 	if cfg.TimeLimitSeconds, err = positiveInt("TIME_LIMIT_SECONDS", 240); err != nil {

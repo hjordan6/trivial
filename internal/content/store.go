@@ -278,6 +278,63 @@ func UpdateTopicSettings(ctx context.Context, q db.DBTX, slug string, weight *in
 	return t, nil
 }
 
+// AnswerKey reduces an answer to the form the answer cooldown compares two
+// questions by. It is the same normalization the grader applies to player
+// input, so two questions are "the same answer" exactly when a player typing
+// one would be marked correct on the other's canonical answer — regardless of
+// their prompts, topics, or difficulties.
+//
+// Only canonical answers are compared, not aliases. Aliases are deliberately
+// broad ("Jokic" for "Nikola Jokić"), and two unrelated questions can easily
+// share one ("Smith"), so matching on aliases would collapse questions that
+// are not really the same answer.
+func AnswerKey(answer string) string {
+	return grading.Normalize(answer)
+}
+
+// AnswersUsedNear returns the set of answer keys already spent within
+// cooldownDays of the target date, in either direction. Uses on the target
+// date itself are ignored, matching EligibleQuestions, so regenerating a day
+// is not blocked by its own existing rows.
+//
+// A non-positive cooldownDays disables the answer cooldown and returns a nil
+// set. Callers must therefore not write to the returned map without checking
+// it for nil; reading a nil map is safe and reports every answer unused.
+func AnswersUsedNear(
+	ctx context.Context,
+	q db.DBTX,
+	target clock.Date,
+	cooldownDays int,
+) (map[string]bool, error) {
+	if cooldownDays <= 0 {
+		return nil, nil
+	}
+	rows, err := q.Query(ctx, `
+		SELECT DISTINCT qn.canonical_answer
+		FROM daily_puzzle_questions dpq
+		JOIN questions qn ON qn.id = dpq.question_id
+		WHERE dpq.puzzle_date <> $1::date
+		  AND abs(dpq.puzzle_date - $1::date) < $2`,
+		target, cooldownDays)
+	if err != nil {
+		return nil, fmt.Errorf("query answers used near %s: %w", target, err)
+	}
+	defer rows.Close()
+
+	used := map[string]bool{}
+	for rows.Next() {
+		var answer string
+		if err := rows.Scan(&answer); err != nil {
+			return nil, fmt.Errorf("scan used answer: %w", err)
+		}
+		used[AnswerKey(answer)] = true
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read answers used near %s: %w", target, err)
+	}
+	return used, nil
+}
+
 // EligibleQuestions returns the questions that may be used for a topic and
 // difficulty on the target date.
 //
@@ -285,6 +342,11 @@ func UpdateTopicSettings(ctx context.Context, q db.DBTX, slug string, weight *in
 // least three distractors, and has not been used within cooldownDays of the
 // target date in either direction. Uses on the target date itself are ignored,
 // so regenerating a day is not blocked by its own existing rows.
+//
+// This is the per-question cooldown only. The separate answer cooldown -- no
+// two questions sharing an answer inside its window -- cannot be applied
+// here, because it also has to account for the picks made earlier in the
+// board being built, which are not yet in the database. See AnswersUsedNear.
 func EligibleQuestions(
 	ctx context.Context,
 	q db.DBTX,

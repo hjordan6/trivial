@@ -433,3 +433,89 @@ func TestEligibleQuestionsOrdersByIDRegardlessOfHeapOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestAnswersUsedNearMatchesOnTheAnswerAlone(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	topicID, err := content.UpsertTopic(ctx, tx, "sports", "Sports")
+	if err != nil {
+		t.Fatalf("UpsertTopic: %v", err)
+	}
+	used := target(t)
+	// The answer that lands on the board carries a diacritic; the question
+	// the cooldown has to bar spells it plainly. AnswerKey folds both to the
+	// same form, which is the whole point: the rule is about what a player
+	// would type, not about the stored text.
+	id := makeQuestion(t, tx, topicID, content.Hard, "jokic-hard")
+	if _, err := tx.Exec(ctx,
+		`UPDATE questions SET canonical_answer = $1 WHERE id = $2`, "Nikola Jokić", id); err != nil {
+		t.Fatalf("set canonical answer: %v", err)
+	}
+	useQuestion(t, tx, id, topicID, content.Hard, used)
+
+	inWindow, err := content.AnswersUsedNear(ctx, tx, used.AddDays(5), 14)
+	if err != nil {
+		t.Fatalf("AnswersUsedNear inside the window: %v", err)
+	}
+	if !inWindow[content.AnswerKey("Nikola Jokic")] {
+		t.Errorf("AnswersUsedNear = %v, want it to contain the key for %q", inWindow, "Nikola Jokic")
+	}
+
+	outOfWindow, err := content.AnswersUsedNear(ctx, tx, used.AddDays(14), 14)
+	if err != nil {
+		t.Fatalf("AnswersUsedNear outside the window: %v", err)
+	}
+	if outOfWindow[content.AnswerKey("Nikola Jokic")] {
+		t.Error("an answer used 14 days before a 14-day window is still reported as spent")
+	}
+}
+
+func TestAnswersUsedNearIgnoresTheTargetDateItself(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	topicID, err := content.UpsertTopic(ctx, tx, "sports", "Sports")
+	if err != nil {
+		t.Fatalf("UpsertTopic: %v", err)
+	}
+	date := target(t)
+	id := makeQuestion(t, tx, topicID, content.Easy, "easy-1")
+	useQuestion(t, tx, id, topicID, content.Easy, date)
+
+	// Regenerating a day must not be blocked by the board it is replacing,
+	// matching EligibleQuestions.
+	used, err := content.AnswersUsedNear(ctx, tx, date, 14)
+	if err != nil {
+		t.Fatalf("AnswersUsedNear: %v", err)
+	}
+	if len(used) != 0 {
+		t.Errorf("AnswersUsedNear = %v, want empty for the target date's own board", used)
+	}
+}
+
+func TestAnswersUsedNearDisabledByANonPositiveWindow(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+
+	topicID, err := content.UpsertTopic(ctx, tx, "sports", "Sports")
+	if err != nil {
+		t.Fatalf("UpsertTopic: %v", err)
+	}
+	date := target(t)
+	id := makeQuestion(t, tx, topicID, content.Easy, "easy-1")
+	useQuestion(t, tx, id, topicID, content.Easy, date.AddDays(-1))
+
+	// A nil set is how "answer cooldown off" is represented, so callers can
+	// switch on it. Reading it must still be safe.
+	used, err := content.AnswersUsedNear(ctx, tx, date, 0)
+	if err != nil {
+		t.Fatalf("AnswersUsedNear: %v", err)
+	}
+	if used != nil {
+		t.Errorf("AnswersUsedNear = %v, want nil for a non-positive window", used)
+	}
+	if used[content.AnswerKey("Answer easy-1")] {
+		t.Error("nil set reported an answer as spent")
+	}
+}
