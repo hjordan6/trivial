@@ -55,10 +55,13 @@ type Server struct {
 	// TrustProxyIP allows X-Forwarded-For to name the client for rate limiting.
 	// Required behind a reverse proxy, unsafe without one.
 	TrustProxyIP bool
-	// CooldownDays and TimeLimitSeconds configure boards the admin panel
-	// generates or rebuilds. They mirror the CLI's generator settings.
-	CooldownDays     int
-	TimeLimitSeconds int
+	// CooldownDays, AnswerCooldownDays and TimeLimitSeconds configure boards
+	// the admin panel generates or rebuilds, and the day the player path
+	// fills in when the generation cron has not run. They mirror the CLI's
+	// generator settings.
+	CooldownDays       int
+	AnswerCooldownDays int
+	TimeLimitSeconds   int
 }
 
 type apiError struct {
@@ -275,15 +278,57 @@ func (s *Server) requireViewer(w http.ResponseWriter, r *http.Request) (play.Vie
 	return v, true
 }
 
+// puzzleSettings are the generator settings for boards this server produces
+// itself, with the same defaults the CLI applies. A zero-valued Server must
+// still generate a sane board rather than one with no cooldown at all.
+func (s *Server) puzzleSettings() puzzle.Settings {
+	set := puzzle.Settings{
+		CooldownDays:       s.CooldownDays,
+		AnswerCooldownDays: s.AnswerCooldownDays,
+		TimeLimitSeconds:   s.TimeLimitSeconds,
+	}
+	if set.CooldownDays <= 0 {
+		set.CooldownDays = 180
+	}
+	if set.AnswerCooldownDays <= 0 {
+		set.AnswerCooldownDays = 14
+	}
+	if set.TimeLimitSeconds <= 0 {
+		set.TimeLimitSeconds = 135
+	}
+	return set
+}
+
+// dailyPuzzle returns the board for a date, generating it on demand when the
+// generation cron has not run. A lapsed cron is recoverable and must not take
+// the game down; a library too thin to fill the day is not recoverable here,
+// and is logged and reported as the same "no puzzle" players saw before,
+// rather than as a server fault.
+//
+// Only the player path uses this. The admin views deliberately keep reading
+// with puzzle.Get, so an operator looking at an upcoming day is shown that it
+// has not been generated instead of silently generating it by looking.
+func (s *Server) dailyPuzzle(w http.ResponseWriter, r *http.Request, date clock.Date) (*puzzle.Puzzle, bool) {
+	p, err := puzzle.Ensure(r.Context(), s.Pool, date, s.puzzleSettings())
+	var insufficient *puzzle.InsufficientContentError
+	var pinStarved *puzzle.PinnedTopicStarvedError
+	switch {
+	case errors.As(err, &insufficient), errors.As(err, &pinStarved):
+		s.logger().Error("no puzzle and one cannot be generated", "date", date, "error", err)
+	case err != nil:
+		s.internal(w, err)
+		return nil, false
+	case p != nil:
+		return p, true
+	}
+	s.fail(w, http.StatusServiceUnavailable, "no_puzzle", "Today's puzzle is not available.")
+	return nil, false
+}
+
 func (s *Server) current(w http.ResponseWriter, r *http.Request) {
 	now := s.now()
-	p, err := puzzle.Get(r.Context(), s.Pool, s.date(now))
-	if err != nil {
-		s.internal(w, err)
-		return
-	}
-	if p == nil {
-		s.fail(w, http.StatusServiceUnavailable, "no_puzzle", "Today's puzzle is not available.")
+	p, ok := s.dailyPuzzle(w, r, s.date(now))
+	if !ok {
 		return
 	}
 	id := s.optionalPlayer(r)
@@ -330,13 +375,8 @@ func (s *Server) start(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	now := s.now()
-	p, err := puzzle.Get(r.Context(), s.Pool, s.date(now))
-	if err != nil {
-		s.internal(w, err)
-		return
-	}
-	if p == nil {
-		s.fail(w, 503, "no_puzzle", "Today's puzzle is not available.")
+	p, ok := s.dailyPuzzle(w, r, s.date(now))
+	if !ok {
 		return
 	}
 	var body struct {
