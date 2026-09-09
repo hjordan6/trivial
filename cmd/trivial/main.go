@@ -50,20 +50,21 @@ func serve(ctx context.Context) error {
 		return err
 	}
 	h := (&httpapi.Server{
-		Pool:             pool,
-		Clock:            clock.Real{},
-		Timezone:         cfg.PuzzleTimezone,
-		Logger:           slog.Default(),
-		CookieSecure:     cfg.CookieSecure,
-		DevelopmentMode:  cfg.DevelopmentMode,
-		Assets:           webassets.Dist,
-		AdminPassword:    cfg.AdminPassword,
-		CooldownDays:     cfg.QuestionCooldownDays,
-		TimeLimitSeconds: cfg.TimeLimitSeconds,
-		AppSecret:        cfg.AppSecret,
-		Mailer:           loginMailer(cfg),
-		Accounts:         accounts.Config{CodeTTL: cfg.LoginCodeTTL},
-		TrustProxyIP:     cfg.TrustProxyIP,
+		Pool:               pool,
+		Clock:              clock.Real{},
+		Timezone:           cfg.PuzzleTimezone,
+		Logger:             slog.Default(),
+		CookieSecure:       cfg.CookieSecure,
+		DevelopmentMode:    cfg.DevelopmentMode,
+		Assets:             webassets.Dist,
+		AdminPassword:      cfg.AdminPassword,
+		CooldownDays:       cfg.QuestionCooldownDays,
+		AnswerCooldownDays: cfg.AnswerCooldownDays,
+		TimeLimitSeconds:   cfg.TimeLimitSeconds,
+		AppSecret:          cfg.AppSecret,
+		Mailer:             loginMailer(cfg),
+		Accounts:           accounts.Config{CodeTTL: cfg.LoginCodeTTL},
+		TrustProxyIP:       cfg.TrustProxyIP,
 	}).Handler()
 	server := &http.Server{Addr: cfg.HTTPAddress, Handler: h, ReadHeaderTimeout: 5 * time.Second}
 	slog.Info("http server listening", "address", cfg.HTTPAddress)

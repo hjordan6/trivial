@@ -96,6 +96,24 @@ The order of the build is load-bearing: `web/dist` is compiled into the binary
 through `//go:embed`, so the bundle is always built before the Go binary.
 Migrations need no separate step -- `serve` runs them on startup.
 
+## Daily generation
+
+`puzzles generate` is the intended path: run it from cron ahead of time so a
+day's board exists — and can be reviewed or hand-edited — before players see
+it.
+
+If a day is nonetheless missing when the first request for it arrives, the
+server generates it on demand rather than serving an error, so a lapsed cron
+cannot take the game down. Generation is seeded off the date, so the board
+produced this way is the same one the cron would have written. Concurrent
+first requests take a Postgres advisory lock keyed on the date, so exactly
+one of them generates and the rest are served its board.
+
+The fallback relaxes nothing. A day the library cannot fill still fails: the
+API answers `503 no_puzzle` and logs the `InsufficientContentError` naming
+which constraint starved which topic. That is the signal to add content, and
+it is the one case where a missing day stays missing.
+
 ## Starter library limits
 
 The seeded content (`seed/questions.json`) has 54 questions: 6 topics x 3
@@ -117,6 +135,34 @@ library is therefore expected, not a bug: it's the no-repeat guarantee
 refusing to re-serve a question that's still on cooldown, and the generator
 deliberately writes nothing for a day it can't fully fill rather than
 producing a partial one.
+
+## Answer cooldown
+
+Two questions with the same answer may not land within
+`ANSWER_COOLDOWN_DAYS` of each other (default 14), even when their prompts,
+topics, and difficulties all differ. Asking "Which Serbian center is a
+multiple-time NBA MVP?" on Monday and "Who won the 2024 NBA MVP award?" on
+Tuesday are two different questions under the 180-day question cooldown, but
+the same answer twice to a player, so the answer cooldown bars the pair.
+
+Two questions count as the same answer when their canonical answers match
+after the grader's normalization -- the same comparison used to mark player
+input correct, so "Nikola Jokic" and "Nikola Jokić" are one answer. Only
+canonical answers are compared, not accepted aliases: aliases are
+deliberately broad and unrelated questions can share one ("Smith").
+
+The rule applies within a board as well as across days, since a board's nine
+questions are zero days apart. Like the question cooldown it is a hard
+constraint: a topic whose remaining questions all repeat a spent answer is
+skipped, and a day that cannot fill three topics fails rather than repeating
+one. `InsufficientContentError` names which constraint starved each topic, so
+`no eligible question` (the library needs more questions there) is
+distinguishable from `answer already used in the answer cooldown` (it needs
+more variety in the answers it already has).
+
+Set `ANSWER_COOLDOWN_DAYS` to a shorter value in development, the same way
+`QUESTION_COOLDOWN_DAYS` is shortened. Already-generated puzzles are never
+revisited, so changing it only affects days generated afterward.
 
 ## Topic weights
 
@@ -392,8 +438,21 @@ The importer groups questions by category, derives stable external IDs from
 their prompts, removes accepted answers from the distractor set, and requires
 at least three distinct wrong options.
 
+Duplicate answers across an import are allowed -- they are a scheduling
+concern, not an import error. `question_dump.json`, for instance, asks about
+Taylor Swift under both Music and Modern Pop Culture, and about George
+Washington twice within U.S. History at two difficulties. The answer cooldown
+simply keeps such pairs at least two weeks apart, so the cost of a duplicated
+answer is a slightly thinner pool on any given day rather than a rejected
+file.
+
 For local work, generate in short batches (e.g. `--days 5`) instead of
 trying to fill a long run at once. To actually sustain a full year at the
 production 180-day cooldown, `seed/questions.json` needs enough breadth
 that 9 distinct questions a day never repeat within 180 days -- on the
 order of 1,600 eligible questions, roughly 540 per difficulty.
+
+The answer cooldown makes that a floor on distinct *answers*, not just
+distinct questions: 200 questions covering 190 answers behave like a
+190-answer library across any two-week span. Count answers when sizing the
+library.

@@ -130,6 +130,49 @@ func TestGenerateForRefusesAStarvedPin(t *testing.T) {
 	if starved.Slug != "beta" || starved.Difficulty != content.Hard {
 		t.Errorf("got %s(%s), want beta(hard)", starved.Slug, starved.Difficulty)
 	}
+	if starved.Reason != puzzle.StarvedNoEligibleQuestion {
+		t.Errorf("Reason = %q, want %q", starved.Reason, puzzle.StarvedNoEligibleQuestion)
+	}
+	assertNoBoard(t, tx, date)
+}
+
+// TestPinnedTopicStarvedByTheAnswerCooldown covers the interaction between
+// pinning and the answer cooldown. A pin the library can serve, but whose
+// answers are spoken for nearby, fails like any other starved pin — and says
+// so, because the fix is to move the pin rather than to write new questions.
+//
+// The pin here needs two questions with one answer between them, so nothing
+// but the answer cooldown can stop it filling.
+func TestPinnedTopicStarvedByTheAnswerCooldown(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	ctx := context.Background()
+	date := mustDate(t, "2026-09-07")
+
+	pinned := seedTopicWithAnswers(t, tx, "pinned", map[content.Difficulty]string{
+		content.Easy:   "Marie Curie",
+		content.Medium: "Unique pinned medium",
+		content.Hard:   "Marie Curie",
+	})
+	for _, slug := range []string{"alpha", "beta"} {
+		seedTopic(t, tx, slug)
+	}
+	if err := puzzle.SetPins(ctx, tx, date, map[int]int64{0: pinned.ID}); err != nil {
+		t.Fatalf("SetPins: %v", err)
+	}
+
+	g := puzzle.Generator{DB: tx, CooldownDays: 180, AnswerCooldownDays: 14, TimeLimitSeconds: 135}
+	_, err := g.GenerateFor(ctx, date)
+
+	var starved *puzzle.PinnedTopicStarvedError
+	if !errors.As(err, &starved) {
+		t.Fatalf("err = %T (%v), want *PinnedTopicStarvedError", err, err)
+	}
+	if starved.Slug != "pinned" || starved.Difficulty != content.Hard {
+		t.Errorf("got %s(%s), want pinned(hard)", starved.Slug, starved.Difficulty)
+	}
+	if starved.Reason != puzzle.StarvedAnswerRepeat {
+		t.Errorf("Reason = %q, want %q", starved.Reason, puzzle.StarvedAnswerRepeat)
+	}
 	assertNoBoard(t, tx, date)
 }
 

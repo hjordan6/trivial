@@ -18,6 +18,7 @@ var managedEnv = []string{
 	"APP_SECRET",
 	"PUZZLE_TIMEZONE",
 	"QUESTION_COOLDOWN_DAYS",
+	"ANSWER_COOLDOWN_DAYS",
 	"TIME_LIMIT_SECONDS",
 	"LOGIN_CODE_TTL_MINUTES",
 	"RESEND_API_KEY",
@@ -44,6 +45,9 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.QuestionCooldownDays != 180 {
 		t.Errorf("QuestionCooldownDays = %d, want 180", cfg.QuestionCooldownDays)
+	}
+	if cfg.AnswerCooldownDays != 14 {
+		t.Errorf("AnswerCooldownDays = %d, want 14", cfg.AnswerCooldownDays)
 	}
 	if cfg.TimeLimitSeconds != 240 {
 		t.Errorf("TimeLimitSeconds = %d, want 240", cfg.TimeLimitSeconds)
@@ -112,6 +116,11 @@ func TestLoadErrors(t *testing.T) {
 			name:    "zero cooldown",
 			env:     map[string]string{"DATABASE_URL": "postgres://x/y", "APP_SECRET": testSecret, "QUESTION_COOLDOWN_DAYS": "0"},
 			wantErr: "must be positive",
+		},
+		{
+			name:    "zero answer cooldown",
+			env:     map[string]string{"DATABASE_URL": "postgres://x/y", "APP_SECRET": testSecret, "ANSWER_COOLDOWN_DAYS": "0"},
+			wantErr: "ANSWER_COOLDOWN_DAYS",
 		},
 		{
 			name:    "negative time limit",

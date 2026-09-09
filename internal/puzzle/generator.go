@@ -20,10 +20,33 @@ const topicsPerDay = 3
 
 // Generator builds the daily board.
 type Generator struct {
-	DB               pgx.Tx
-	CooldownDays     int
-	TimeLimitSeconds int
+	DB pgx.Tx
+	// CooldownDays is the window in which one question may not repeat.
+	CooldownDays int
+	// AnswerCooldownDays is the window in which one *answer* may not repeat,
+	// no matter how many distinct questions ask for it. Two questions with
+	// the same answer are barred from landing within this many days of each
+	// other even when their prompts, topics, and difficulties all differ.
+	// Non-positive disables the rule.
+	AnswerCooldownDays int
+	TimeLimitSeconds   int
 }
+
+// StarvedReason says which constraint left a topic unable to fill a board.
+// The two are indistinguishable from the outside -- a topic is skipped either
+// way -- but they call for opposite fixes: more questions versus more variety
+// in the answers the existing questions have.
+type StarvedReason string
+
+const (
+	// StarvedNoEligibleQuestion means the topic had no active, well-formed
+	// question at that difficulty outside the question cooldown.
+	StarvedNoEligibleQuestion StarvedReason = "no eligible question"
+	// StarvedAnswerRepeat means the topic had eligible questions at that
+	// difficulty, but every one of them repeats an answer already spent
+	// inside the answer cooldown.
+	StarvedAnswerRepeat StarvedReason = "answer already used in the answer cooldown"
+)
 
 // StarvedTopic records a topic that was skipped and the difficulty that
 // starved it. It is the signal that the library needs content in a specific
@@ -31,25 +54,27 @@ type Generator struct {
 type StarvedTopic struct {
 	Slug       string
 	Difficulty content.Difficulty
+	Reason     StarvedReason
 }
 
 // InsufficientContentError means the library cannot fill a board without
 // violating the question cooldown. The cooldown is never relaxed to avoid it.
 type InsufficientContentError struct {
-	Date         clock.Date
-	Accepted     int
-	CooldownDays int
-	Starved      []StarvedTopic
+	Date               clock.Date
+	Accepted           int
+	CooldownDays       int
+	AnswerCooldownDays int
+	Starved            []StarvedTopic
 }
 
 func (e *InsufficientContentError) Error() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "cannot generate puzzle for %s: only %d of %d topics could fill a board without breaking the %d-day cooldown",
-		e.Date, e.Accepted, topicsPerDay, e.CooldownDays)
+	fmt.Fprintf(&b, "cannot generate puzzle for %s: only %d of %d topics could fill a board without breaking the %d-day question cooldown or the %d-day answer cooldown",
+		e.Date, e.Accepted, topicsPerDay, e.CooldownDays, e.AnswerCooldownDays)
 	if len(e.Starved) > 0 {
 		b.WriteString("; starved topics:")
 		for _, s := range e.Starved {
-			fmt.Fprintf(&b, " %s(%s)", s.Slug, s.Difficulty)
+			fmt.Fprintf(&b, " %s(%s: %s)", s.Slug, s.Difficulty, s.Reason)
 		}
 	}
 	return b.String()
@@ -66,11 +91,16 @@ type PinnedTopicStarvedError struct {
 	Position     int
 	Difficulty   content.Difficulty
 	CooldownDays int
+	// Reason distinguishes a pin the library cannot serve at all from one
+	// whose questions are fine but whose answers are spoken for nearby. The
+	// second is fixable by moving the pin a few days rather than by writing
+	// new questions, so the operator needs to be told which it is.
+	Reason StarvedReason
 }
 
 func (e *PinnedTopicStarvedError) Error() string {
-	return fmt.Sprintf("pinned topic %s has no eligible %s question for %s under the %d-day cooldown",
-		e.Slug, e.Difficulty, e.Date, e.CooldownDays)
+	return fmt.Sprintf("pinned topic %s cannot fill %s for %s: %s",
+		e.Slug, e.Difficulty, e.Date, e.Reason)
 }
 
 // GenerateFor builds and stores the puzzle for a date.
@@ -111,6 +141,25 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 
 	rng := rand.New(rand.NewPCG(seedFor(date), 0x9E3779B97F4A7C15))
 
+	// spentAnswers starts as the answers already used inside the answer
+	// cooldown and grows as the board fills, so the rule holds across days
+	// and within the board being built. Only accepted topics contribute: a
+	// topic that starves halfway through must not leave its partial picks
+	// behind to block a later topic.
+	//
+	// A nil set is the one representation of "answer cooldown off", so the
+	// switch lives in exactly one place: AnswersUsedNear returns nil for a
+	// non-positive window, and every site below is a nil check rather than a
+	// second reading of AnswerCooldownDays.
+	//
+	// Pinned positions are filled first, so a pin always gets first claim on
+	// the answers it needs and can only ever be starved by another pin or by
+	// a nearby day -- never by a topic the generator chose itself.
+	spentAnswers, err := content.AnswersUsedNear(ctx, g.DB, date, g.AnswerCooldownDays)
+	if err != nil {
+		return nil, err
+	}
+
 	var (
 		entries  []Entry
 		starved  []StarvedTopic
@@ -121,7 +170,7 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 	// order that depends only on the pin set and not on map iteration.
 	for _, position := range sortedPositions(pins) {
 		topic := pins[position]
-		picked, missing, err := g.fillTopic(ctx, topic, date, position, rng)
+		picked, missing, err := g.fillTopic(ctx, topic, date, position, rng, spentAnswers)
 		if err != nil {
 			return nil, err
 		}
@@ -130,11 +179,13 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 				Date:         date,
 				Slug:         topic.Slug,
 				Position:     position,
-				Difficulty:   *missing,
+				Difficulty:   missing.Difficulty,
 				CooldownDays: g.CooldownDays,
+				Reason:       missing.Reason,
 			}
 		}
-		entries = append(entries, picked...)
+		entries = append(entries, picked.entries...)
+		spend(spentAnswers, picked)
 		accepted++
 	}
 
@@ -150,25 +201,27 @@ func (g Generator) GenerateFor(ctx context.Context, date clock.Date) (*Puzzle, e
 		if len(free) == 0 {
 			break
 		}
-		picked, missing, err := g.fillTopic(ctx, topic, date, free[0], rng)
+		picked, missing, err := g.fillTopic(ctx, topic, date, free[0], rng, spentAnswers)
 		if err != nil {
 			return nil, err
 		}
 		if missing != nil {
-			starved = append(starved, StarvedTopic{Slug: topic.Slug, Difficulty: *missing})
+			starved = append(starved, *missing)
 			continue
 		}
-		entries = append(entries, picked...)
+		entries = append(entries, picked.entries...)
+		spend(spentAnswers, picked)
 		free = free[1:]
 		accepted++
 	}
 
 	if accepted < topicsPerDay {
 		return nil, &InsufficientContentError{
-			Date:         date,
-			Accepted:     accepted,
-			CooldownDays: g.CooldownDays,
-			Starved:      starved,
+			Date:               date,
+			Accepted:           accepted,
+			CooldownDays:       g.CooldownDays,
+			AnswerCooldownDays: g.AnswerCooldownDays,
+			Starved:            starved,
 		}
 	}
 
@@ -268,28 +321,66 @@ func weightedTopicOrder(topics []content.Topic, rng *rand.Rand) []content.Topic 
 	return ordered
 }
 
+// topicPick is one topic's three questions together with the answers they
+// consume. The answers are kept separate from the entries because Entry is
+// serialized to players, and an answer key on it would leak the answer.
+type topicPick struct {
+	entries []Entry
+	answers map[string]bool
+}
+
+// spend folds an accepted topic's answers into the board-wide set. It is a
+// no-op when the answer cooldown is off, which is the nil set.
+func spend(spentAnswers map[string]bool, picked *topicPick) {
+	if spentAnswers == nil {
+		return
+	}
+	for answer := range picked.answers {
+		spentAnswers[answer] = true
+	}
+}
+
 // fillTopic picks one question at each difficulty for a topic. It returns a
-// non-nil difficulty when the topic has nothing eligible at that tier, which
-// tells the caller to skip the topic entirely.
+// non-nil StarvedTopic when the topic has nothing usable at that tier, which
+// tells the caller to skip the topic entirely -- or, for a pinned position,
+// to fail.
+//
+// spentAnswers is the set of answer keys already spent, and is read-only
+// here: fillTopic records its own picks in the returned topicPick so a
+// half-filled topic that ends up skipped costs nothing.
 func (g Generator) fillTopic(
 	ctx context.Context,
 	topic content.Topic,
 	date clock.Date,
 	position int,
 	rng *rand.Rand,
-) ([]Entry, *content.Difficulty, error) {
-	entries := make([]Entry, 0, len(content.AllDifficulties))
+	spentAnswers map[string]bool,
+) (*topicPick, *StarvedTopic, error) {
+	pick := &topicPick{
+		entries: make([]Entry, 0, len(content.AllDifficulties)),
+		answers: make(map[string]bool, len(content.AllDifficulties)),
+	}
 	for _, difficulty := range content.AllDifficulties {
 		candidates, err := content.EligibleQuestions(ctx, g.DB, topic.ID, difficulty, date, g.CooldownDays)
 		if err != nil {
 			return nil, nil, err
 		}
 		if len(candidates) == 0 {
-			missing := difficulty
-			return nil, &missing, nil
+			return nil, &StarvedTopic{
+				Slug: topic.Slug, Difficulty: difficulty, Reason: StarvedNoEligibleQuestion,
+			}, nil
+		}
+		if spentAnswers != nil {
+			candidates = withFreshAnswers(candidates, spentAnswers, pick.answers)
+			if len(candidates) == 0 {
+				return nil, &StarvedTopic{
+					Slug: topic.Slug, Difficulty: difficulty, Reason: StarvedAnswerRepeat,
+				}, nil
+			}
 		}
 		chosen := candidates[rng.IntN(len(candidates))]
-		entries = append(entries, Entry{
+		pick.answers[content.AnswerKey(chosen.CanonicalAnswer)] = true
+		pick.entries = append(pick.entries, Entry{
 			TopicID:       topic.ID,
 			TopicSlug:     topic.Slug,
 			TopicName:     topic.Name,
@@ -299,7 +390,22 @@ func (g Generator) fillTopic(
 			Prompt:        chosen.Prompt,
 		})
 	}
-	return entries, nil, nil
+	return pick, nil, nil
+}
+
+// withFreshAnswers drops the candidates whose answer is already spent, either
+// on a nearby day or earlier in the board being built. Order is preserved so
+// the caller's pick from the filtered list stays deterministic.
+func withFreshAnswers(candidates []content.Question, spent, takenSoFar map[string]bool) []content.Question {
+	fresh := make([]content.Question, 0, len(candidates))
+	for _, c := range candidates {
+		key := content.AnswerKey(c.CanonicalAnswer)
+		if spent[key] || takenSoFar[key] {
+			continue
+		}
+		fresh = append(fresh, c)
+	}
+	return fresh
 }
 
 // seedFor derives a stable RNG seed from a date, so regenerating a day

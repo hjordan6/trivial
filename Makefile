@@ -4,6 +4,7 @@ TEST_DATABASE_URL ?= postgres://trivial:trivial@localhost:5433/trivial_test?sslm
 # everyone out. Production must supply its own; see .env.example.
 APP_SECRET ?= dev-secret-not-for-production-0123456789
 DEV_QUESTION_COOLDOWN_DAYS ?= 7
+DEV_ANSWER_COOLDOWN_DAYS ?= 7
 HTTP_ADDRESS ?= :8080
 BIN ?= trivial
 
@@ -25,7 +26,7 @@ seed: migrate
 
 replace-seed: migrate
 	DATABASE_URL="$(DATABASE_URL)" go run ./cmd/trivial seed replace --file question_dump.json
-	DATABASE_URL="$(DATABASE_URL)" QUESTION_COOLDOWN_DAYS="$(DEV_QUESTION_COOLDOWN_DAYS)" go run ./cmd/trivial puzzles generate --days 1
+	DATABASE_URL="$(DATABASE_URL)" QUESTION_COOLDOWN_DAYS="$(DEV_QUESTION_COOLDOWN_DAYS)" ANSWER_COOLDOWN_DAYS="$(DEV_ANSWER_COOLDOWN_DAYS)" go run ./cmd/trivial puzzles generate --days 1
 
 test: db-up
 	TEST_DATABASE_URL="$(TEST_DATABASE_URL)" go test ./... -count=1

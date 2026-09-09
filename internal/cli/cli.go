@@ -265,9 +265,10 @@ func generateOneInTx(ctx context.Context, pool *pgxpool.Pool, cfg config.Config,
 	defer tx.Rollback(ctx)
 
 	g := puzzle.Generator{
-		DB:               tx,
-		CooldownDays:     cfg.QuestionCooldownDays,
-		TimeLimitSeconds: cfg.TimeLimitSeconds,
+		DB:                 tx,
+		CooldownDays:       cfg.QuestionCooldownDays,
+		AnswerCooldownDays: cfg.AnswerCooldownDays,
+		TimeLimitSeconds:   cfg.TimeLimitSeconds,
 	}
 	p, err := g.GenerateFor(ctx, date)
 	if err != nil {

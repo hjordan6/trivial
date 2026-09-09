@@ -46,15 +46,13 @@ type adminTopic struct {
 // adminGeneratorFor builds a generator bound to a transaction, using the same
 // settings the CLI uses.
 func (s *Server) adminGeneratorFor(tx pgx.Tx) puzzle.Generator {
-	cooldown := s.CooldownDays
-	if cooldown <= 0 {
-		cooldown = 180
+	set := s.puzzleSettings()
+	return puzzle.Generator{
+		DB:                 tx,
+		CooldownDays:       set.CooldownDays,
+		AnswerCooldownDays: set.AnswerCooldownDays,
+		TimeLimitSeconds:   set.TimeLimitSeconds,
 	}
-	limit := s.TimeLimitSeconds
-	if limit <= 0 {
-		limit = 135
-	}
-	return puzzle.Generator{DB: tx, CooldownDays: cooldown, TimeLimitSeconds: limit}
 }
 
 func (s *Server) adminPuzzles(w http.ResponseWriter, r *http.Request) {
