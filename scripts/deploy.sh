@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 #
 # Rebuild the Vue bundle and the Go binary, swap them in, and restart the
-# server. This box runs trivial as a plain detached process -- no systemd unit,
-# no container, no reverse proxy -- so "deploy" is: build, stop, swap, start,
-# prove it answers.
+# server, so "deploy" is: build, stop, swap, start, prove it answers.
+#
+# On this box the server is supervised by a systemd user unit named after the
+# checkout (trivial.service, trivial-qa.service) and reached from outside
+# through cloudflared. Where no unit is installed the script falls back to
+# running the binary as a plain detached process, which is what it did
+# everywhere before the units existed.
 #
 # The binary being replaced is kept as bin/trivial.prev and put back
 # automatically if the new one fails its health check, so a bad build costs a
@@ -31,6 +35,26 @@ readonly PREV="bin/trivial.prev"
 readonly NEXT="bin/trivial.next"
 readonly PIDFILE="bin/trivial.pid"
 readonly LOG="server.log"
+
+# UNIT is the systemd user unit supervising this checkout, or empty if there is
+# none.
+#
+# When a unit exists it owns the process, and going behind its back is not a
+# cosmetic problem: Restart=always means killing the binary directly has systemd
+# start the old one again five seconds later, in the middle of the binary swap.
+# So every start and stop below routes through systemctl when a unit is
+# installed, and uses the detached-process path when it is not.
+#
+# The unit is named after the checkout directory, so the production and QA
+# checkouts each find their own and neither can act on the other's.
+unit_name() {
+  local name; name="$(basename "$ROOT").service"
+  systemctl --user cat "$name" >/dev/null 2>&1 && printf '%s' "$name"
+  # Never fail: "no unit installed" is a normal answer, and a non-zero return
+  # would abort the script under `set -e`.
+  return 0
+}
+readonly UNIT="$(unit_name)"
 
 # Long enough to cover a cold start that has to open the pool and run
 # migrations, short enough that a crash-looping binary is reported rather than
@@ -161,6 +185,14 @@ server_pid() {
 # for -- the loop is for the kernel releasing the port, not for the process
 # finishing work.
 stop_server() {
+  if [[ -n "$UNIT" ]]; then
+    step "stopping $UNIT"
+    systemctl --user stop "$UNIT"
+    rm -f "$PIDFILE"
+    ok "stopped"
+    return 0
+  fi
+
   local pid; pid="$(server_pid)"
   if [[ -z "$pid" ]]; then
     ok "nothing running"
@@ -195,6 +227,20 @@ stop_server() {
 # stdin is what keeps it alive after the script exits -- without both, it dies
 # with its parent or blocks on a terminal read.
 start_server() {
+  if [[ -n "$UNIT" ]]; then
+    step "starting $UNIT on $HTTP_ADDRESS"
+    systemctl --user start "$UNIT"
+    # Take the pid from the supervisor rather than rediscovering it, so the
+    # health check below watches the process systemd actually started.
+    local pid; pid="$(systemctl --user show -p MainPID --value "$UNIT" 2>/dev/null || true)"
+    if [[ -n "$pid" && "$pid" != 0 ]]; then
+      printf '%s' "$pid" > "$PIDFILE"
+    else
+      rm -f "$PIDFILE"
+    fi
+    return 0
+  fi
+
   step "starting $BIN on $HTTP_ADDRESS"
   setsid nohup "./$BIN" serve >>"$LOG" 2>&1 </dev/null &
   disown 2>/dev/null || true
@@ -259,6 +305,13 @@ do_status() {
     printf 'running   no\n'
   fi
   printf 'address   %s\n' "$HTTP_ADDRESS"
+  if [[ -n "$UNIT" ]]; then
+    printf 'unit      %s (%s, %s at boot)\n' "$UNIT" \
+      "$(systemctl --user is-active "$UNIT" || true)" \
+      "$(systemctl --user is-enabled "$UNIT" || true)"
+  else
+    printf 'unit      none -- detached process, will not survive a reboot\n'
+  fi
   printf 'binary    %s\n' "$([[ -f $BIN ]] && date -r "$BIN" '+%Y-%m-%d %H:%M:%S' || echo 'not built')"
   printf 'rollback  %s\n' "$([[ -f $PREV ]] && date -r "$PREV" '+%Y-%m-%d %H:%M:%S' || echo 'none')"
   if [[ -n "$pid" ]]; then
