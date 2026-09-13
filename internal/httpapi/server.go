@@ -96,6 +96,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/auth/session", s.currentSession)
 	mux.HandleFunc("DELETE /api/auth/session", s.destroySession)
 
+	mux.HandleFunc("GET /api/friends/today", s.friendsToday)
+	mux.HandleFunc("GET /api/friends/all-time", s.allTime)
 	mux.HandleFunc("POST /api/friends/invite", s.mintInvite)
 	mux.HandleFunc("GET /api/friends/invite/{token}", s.readInvite)
 	mux.HandleFunc("POST /api/friends/invite/{token}/accept", s.acceptInvite)
@@ -545,7 +547,35 @@ WITH mine AS (
     SELECT DISTINCT ON (r.puzzle_date) r.id, r.puzzle_date
       FROM runs r JOIN mine m ON m.id = r.player_id
      WHERE r.completed_at IS NOT NULL
-     ORDER BY r.puzzle_date, r.started_at, r.id
+     ORDER BY r.puzzle_date, ` + chosenRunOrder + `
+)`
+
+// chosenRunOrder decides which run counts when one person played the same date
+// on more than one browser: the one they actually played first, with the run id
+// breaking an exact started_at tie so the answer is stable between queries
+// rather than depending on scan order.
+//
+// Written once and referenced by every query that picks a single run per person
+// per date. Two of them spelling the rule out separately is how a player's rank
+// comes to disagree with their own history page.
+const chosenRunOrder = `r.started_at, r.id`
+
+// userRunsCTE names the one run per user per date, for every account that has
+// finished one. It is the user-keyed counterpart of viewerRunsCTE, which stays
+// player-keyed because it must also answer for a signed-out browser -- a player
+// with no user at all.
+//
+// Supplied without a leading WITH so a caller can compose it with other CTEs.
+// Filtering the result by date is safe and is what the daily board does:
+// choosing one run per (user, date) and then keeping one date gives the same
+// rows as choosing only within that date.
+const userRunsCTE = `
+user_runs AS (
+    SELECT DISTINCT ON (p.user_id, r.puzzle_date)
+           p.user_id, r.puzzle_date, r.id AS run_id
+      FROM runs r JOIN players p ON p.id = r.player_id
+     WHERE r.completed_at IS NOT NULL AND p.user_id IS NOT NULL
+     ORDER BY p.user_id, r.puzzle_date, ` + chosenRunOrder + `
 )`
 
 // statsQuery scores every day the viewer has played, one row per date, in date

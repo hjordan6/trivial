@@ -47,6 +47,53 @@ export interface AdminQuestionInput {
   topic_slug:string; prompt:string; answer:string; difficulty_rating:number
   aliases:string[]; distractors:string[]; status:string
 }
+// Today's leaderboard. Each person carries their per-question outcomes as well
+// as their totals, so opening the side-by-side needs no second request.
+//
+// An outcome is all a friend's answer ever discloses -- never what they typed,
+// never the canonical answer. The board is the same nine questions for
+// everyone, so anything more would let an unplayed viewer read today's answers
+// off a friend who finished first.
+export interface FriendAnswer { question_id:number; outcome:Outcome }
+// played distinguishes "no finished run" from "a finished run worth 0 points",
+// which points alone cannot.
+export interface FriendToday {
+  user_id:number; nickname:string; played:boolean
+  correct:number; typed:number; points:number
+  answers:FriendAnswer[]
+}
+// friends arrives ranked by the server: everyone who played, best first, then
+// everyone who has not.
+export interface FriendsToday { date:string; you:FriendToday; friends:FriendToday[] }
+
+// The all-time board. `you` marks the viewer's own row: they are ranked inside
+// the friends list rather than beside it, because the question is where they
+// place among them.
+export interface AllTimeEntry {
+  user_id:number; nickname:string; days_played:number
+  average_points:number; rank:number; you:boolean
+}
+// Per category the average is per question, not per day -- categories come up
+// at different rates, so per-day figures are not comparable across them.
+export interface TopicEntry {
+  user_id:number; nickname:string; asked:number
+  average_points:number; rank:number; you:boolean
+}
+// The everyone scope carries a position and a field size, never a list of
+// people: a nickname falls back to the local part of an email address, which is
+// fine among friends and not fine published to strangers.
+export interface GlobalStanding { ranked:boolean; rank:number; of:number; best_average:number }
+// ranked is false until the viewer has answered minimum_questions in the topic.
+export interface TopicStanding {
+  slug:string; name:string; asked:number; ranked:boolean
+  friends:TopicEntry[]; global:GlobalStanding
+}
+export interface AllTime {
+  minimum_days:number; minimum_questions:number
+  days_played:number; qualified:boolean
+  friends:AllTimeEntry[]; global:GlobalStanding; topics:TopicStanding[]
+}
+
 export interface FriendInvite { token:string; url:string; nickname:string }
 export interface PublicInvite { nickname:string }
 export interface AcceptResult { nickname:string; status:'added'|'already_friends' }

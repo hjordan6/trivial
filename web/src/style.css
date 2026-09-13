@@ -16,8 +16,8 @@ button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .35; }
 #app { min-height: 100vh; }
 .eyebrow { text-transform: uppercase; letter-spacing: .16em; font: 500 12px ui-monospace, monospace; margin: 0 0 20px; }
-.start, .results, .history { max-width: 760px; margin: auto; padding: 10vh 28px; text-align: center; }
-.start h1, .results h1, .game h1, .history h1 { font-size: clamp(42px, 8vw, 82px); line-height: .96; letter-spacing: -.06em; margin: 0; }
+.start, .results, .history, .board { max-width: 760px; margin: auto; padding: 10vh 28px; text-align: center; }
+.start h1, .results h1, .game h1, .history h1, .board h1 { font-size: clamp(42px, 8vw, 82px); line-height: .96; letter-spacing: -.06em; margin: 0; }
 .start h1 em { font-family: Georgia, serif; font-weight: 400; }
 .lede { font-size: 19px; line-height: 1.6; max-width: 580px; margin: 32px auto; }
 .topics { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin: 28px; }
@@ -65,6 +65,95 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .result-row { display: contents; }
 .result-row__topic { display: none; }
 .result-cell__topic::after { content: ' · '; }
+.result-legend { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin: -20px 0 32px; padding: 0; font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+.result-legend b { font-size: 13px; }
+
+/* Today's leaderboard. One line per person, and a side-by-side of two boards
+   when a friend is opened. */
+.board-note { margin: 26px 0 0; font-size: 15px; line-height: 1.6; color: #45473f; }
+.board-list { list-style: none; padding: 0; margin: 34px 0 0; display: grid; gap: 8px; text-align: left; }
+.board-row { background: var(--paper); }
+/* The row is a button only when there is a board behind it to open, so the
+   unplayed rows carry the same padding here rather than inheriting it. */
+.board-row > span:first-child { display: block; padding: 14px 16px; }
+.board-row__open { display: grid; grid-template-columns: 1fr auto auto auto; align-items: baseline; gap: 14px;
+  width: 100%; padding: 14px 16px; background: none; border: 0; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+.board-row__open:hover { background: var(--acid); }
+.board-row--you { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 14px; padding: 14px 16px;
+  box-shadow: inset 0 0 0 2px var(--ink); }
+.board-row--you > span:first-child { padding: 0; }
+.board-row__name { font-size: 16px; letter-spacing: -.01em; }
+.board-row__name small { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; margin-left: 8px; }
+.board-row__score { font: 500 14px ui-monospace, monospace; }
+.board-row__points { font: 500 14px ui-monospace, monospace; color: #55564f; }
+.board-row__pending { font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #85857f; }
+.board-row__chevron { color: #85857f; }
+
+/* The two boards. A tab strip rather than two pages, because it is one
+   question asked over two spans of time. */
+.tabs { display: inline-flex; gap: 2px; margin: 30px 0 0; border: 2px solid var(--ink); padding: 2px; }
+.tabs button { border: 0; background: none; padding: 8px 20px; font: 500 12px ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: .1em; color: #55564f; }
+.tabs__on { background: var(--acid); color: var(--ink); }
+
+.alltime__eyebrow { margin: 38px 0 0; }
+/* A fixed width, so names start on the same line whether the rank is 1 or 11. */
+.alltime__rank { display: inline-block; min-width: 22px; font: 500 13px ui-monospace, monospace; color: #85857f; }
+.board-row--you .alltime__rank { color: var(--ink); }
+
+.global { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 20px; }
+.global__line { margin: 0; font-size: 15px; color: #45473f; }
+.global__line b { font-size: 30px; letter-spacing: -.03em; color: var(--ink); margin-right: 4px; }
+.global__line span { display: block; margin-top: 5px; font: 11px ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+
+.topic-block { margin-top: 22px; text-align: left; background: var(--paper); padding: 15px 17px; }
+.topic-block__head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 0 0 10px; font-size: 15px; letter-spacing: -.01em; }
+.topic-block__head small { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .08em; color: #85857f; }
+.topic-block__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.topic-block__list li { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 8px; font-size: 14px; }
+.topic-block__you { font-weight: 600; }
+.topic-block__avg { font: 500 13px ui-monospace, monospace; }
+.topic-block__thin, .topic-block__global { margin: 8px 0 0; font: 11px ui-monospace, monospace;
+  text-transform: uppercase; letter-spacing: .07em; color: #85857f; }
+
+.versus { margin: 34px 0 0; text-align: left; }
+/* Stacked, friend first, matching the order of the boards below. */
+.versus__head { display: grid; gap: 7px; margin-bottom: 22px; }
+.versus__head div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 7px; }
+.versus__head b { font-size: 18px; letter-spacing: -.02em; }
+.versus__head small { font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .06em; color: #6a6b65; }
+.versus__row { border-top: 1px solid var(--line); padding: 14px 0; }
+.versus__topic { margin: 0 0 10px; font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; }
+/* One grid per topic, three columns wide -- easy, medium, hard, the same order
+   the results screen uses. The friend's marks, the viewer's marks and the right
+   answer are rows inside it rather than separate grids, which is what keeps a
+   column's three cells describing the same question. */
+.versus__board { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px 8px; align-items: center; }
+/* Full-width row labels, so the three columns below stay aligned. */
+.versus__who { grid-column: 1 / -1; margin: 8px 0 0; font: 500 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #85857f; }
+.versus__who:first-child { margin-top: 0; }
+.versus__mark { background: var(--paper); padding: 8px 4px; font-size: 25px; text-align: center; line-height: 1.1; }
+.versus__answer { font: inherit; font-size: 12px; line-height: 1.35; text-align: center; color: #45473f;
+  overflow-wrap: break-word; hyphens: auto; border: 0; background: none; padding: 2px 0;
+  text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.versus__answer:hover, .versus__answer:focus-visible { color: var(--ink); text-decoration-color: var(--ink); }
+.versus__locked { margin-top: 18px; font-size: 14px; }
+
+/* The question behind an answer. A native <dialog>, so Escape, the focus trap
+   and the backdrop are the browser's job rather than ours. */
+.qdialog { border: 2px solid var(--ink); background: var(--paper); color: var(--ink);
+  padding: 0; width: min(440px, calc(100% - 36px)); }
+.qdialog::backdrop { background: rgba(27,29,27,.5); }
+.qdialog__card { display: grid; gap: 14px; padding: 26px; text-align: left; }
+.qdialog__meta { margin: 0; font: 500 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; }
+.qdialog__prompt { margin: 0; font-size: 18px; line-height: 1.45; letter-spacing: -.01em; }
+/* The answer, marked the way a correct answer is marked on the results card. */
+.qdialog__answer { margin: 0; font-size: 16px; font-weight: 600; display: inline-block; justify-self: start;
+  box-shadow: inset 0 -.55em 0 var(--acid); }
+.qdialog__marks { display: flex; gap: 18px; border-top: 1px solid var(--line); padding-top: 13px;
+  font: 11px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .07em; color: #6a6b65; }
+.qdialog__marks b { font-size: 16px; margin-right: 5px; vertical-align: -2px; }
 .stats { display: flex; justify-content: center; gap: 50px; margin-top: 55px; }
 .stats div { display: flex; flex-direction: column; }
 .stats b { font-size: 30px; }
@@ -73,6 +162,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .subscore { font: 500 14px ui-monospace, monospace; letter-spacing: .04em; color: #55564f; margin: 16px 0 0; }
 .history-link { display: inline-block; margin-top: 26px; font: 500 13px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: var(--ink); text-decoration: none; box-shadow: inset 0 -2px 0 var(--acid); }
 .history-link:hover { box-shadow: inset 0 -8px 0 var(--acid); }
+.results-friends { margin-top: 18px; }
 
 /* --- history page --------------------------------------------------------
    Four figures, two ranked category lists, and every day played. Everything
@@ -318,6 +408,18 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .result-cell { padding: 10px 8px; gap: 3px; }
   .result-cell b { font-size: 21px; }
   .result-cell__topic { display: none; }
+  .result-legend { gap: 5px 12px; margin: 8px 0 26px; }
+  .board { padding: 6vh 18px; }
+  .board-row__open, .board-row--you { gap: 8px; padding: 12px 13px; }
+  .board-row__name { font-size: 15px; }
+  .tabs button { padding: 8px 15px; letter-spacing: .07em; }
+  .topic-block { padding: 13px 14px; }
+  .versus__board { gap: 4px 5px; }
+  .versus__mark { padding: 6px 3px; font-size: 20px; }
+  .versus__answer { font-size: 11px; }
+  .qdialog__card { padding: 20px; gap: 12px; }
+  .qdialog__prompt { font-size: 16px; }
+  .versus__head b { font-size: 16px; }
   .result-cell__answer { font-size: 12px; line-height: 1.3; overflow-wrap: break-word; hyphens: auto; }
   .stats { gap: 20px; }
   .history { padding: 6vh 18px; }

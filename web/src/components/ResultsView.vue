@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { MAX_POINTS, useRunStore } from '../stores/run'
+import { MAX_POINTS, OUTCOME_SYMBOL, useRunStore } from '../stores/run'
 import { useAccountStore } from '../stores/account'
 import SignIn from './SignIn.vue'
 import SendFriendRequest from './SendFriendRequest.vue'
@@ -9,6 +9,17 @@ const store=useRunStore()
 const account=useAccountStore()
 const copied=ref(false)
 const isLocal=['localhost','127.0.0.1','::1'].includes(location.hostname)
+
+// The grid used to draw glyphs that said what they meant on their own -- a
+// star, an alarm clock -- and now draws four coloured squares, which do not.
+// Read off the shared map rather than retyped, so changing the vocabulary
+// cannot leave a key behind describing the old one.
+const LEGEND:[string,string][]=[
+  [OUTCOME_SYMBOL.star,'typed'],
+  [OUTCOME_SYMBOL.circle,'multiple choice'],
+  [OUTCOME_SYMBOL.miss,'missed'],
+  [OUTCOME_SYMBOL.expired,'out of time'],
+]
 
 // Share the plain site link. Challenge links (/c/{token}) aren't served yet, so
 // pointing people at one would hand them a 404.
@@ -28,6 +39,10 @@ async function reset(){
     <p class="eyebrow">Today’s result</p>
     <h1>{{store.points}} <span>/ {{MAX_POINTS}} pts</span></h1>
     <p class="subscore">{{store.score}} of 9 correct · {{store.stars}}⭐ typed</p>
+    <!-- Straight under the score, where the comparison it offers is still the
+         question being asked. Below the grid it was competing with the share
+         button for the same attention. -->
+    <RouterLink class="history-link results-friends" to="/friends">See your friends’ scores →</RouterLink>
     <!-- Above the grid while there is no account, because that is the only
          place a phone will show it: the grid, the share button and the three
          stat numbers run past the fold, and an offer nobody scrolls to may as
@@ -48,6 +63,9 @@ async function reset(){
         </div>
       </div>
     </div>
+    <ul class="result-legend">
+      <li v-for="[glyph,label] in LEGEND" :key="label"><b>{{glyph}}</b> {{label}}</li>
+    </ul>
     <button class="primary" @click="share">{{copied?'Shared!':'Share result'}}</button>
     <SendFriendRequest />
     <button v-if="isLocal" class="dev-reset results-reset" @click="reset">↻ Play again locally</button>
