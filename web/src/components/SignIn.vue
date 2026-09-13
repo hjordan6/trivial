@@ -25,8 +25,13 @@ async function submitCode() {
 }
 async function signOut() {
   if (!confirm('Sign out? Your scores stay saved to your email.')) return
-  await account.signOut()
-  await run.loadStats()
+  if (!await account.signOut()) return
+  // Signing out gives the browser a new player identity, so every store is now
+  // holding the previous account's data -- today's run, the leaderboard, the
+  // history. Reloading onto the game is the one thing that clears all of them
+  // at once, and it lands where signing out ought to leave you rather than on a
+  // friends page belonging to somebody you are no longer signed in as.
+  location.assign('/')
 }
 </script>
 

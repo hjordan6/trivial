@@ -156,3 +156,60 @@ describe('changeEmail', () => {
     expect(store.devCode).toBe('')
   })
 })
+
+// The dead end this recovers from: a browser whose session cookie is gone but
+// whose player row still belongs to the previous account. The app shows the
+// sign-in form, the server refuses with "sign out first", and the sign-out
+// button is not rendered because the app believes it is signed out.
+describe('signing in when the browser still belongs to someone else', () => {
+  it('signs the stale account out and replays the same code', async () => {
+    const calls = stubFetch([
+      { ok: false, body: { code: 'already_signed_in', message: 'This browser is already signed in as old@b.test. Sign out first.' } },
+      { body: {} },
+      { body: { available: true, signed_in: true, email: 'new@b.test' } },
+    ])
+    const store = useAccountStore()
+    store.pendingEmail = 'new@b.test'
+
+    expect(await store.verify('123456')).toBe(true)
+
+    expect(store.email).toBe('new@b.test')
+    expect(store.step).toBe('done')
+    expect(store.error).toBe('')
+    // Sign out, then the same six digits again -- never a fresh code request,
+    // which would spend the per-address rate limit recovering from our own
+    // dead end.
+    expect(calls.map(c => `${c.init?.method} ${c.path}`)).toEqual([
+      'POST /api/auth/session',
+      'DELETE /api/auth/session',
+      'POST /api/auth/session',
+    ])
+    expect(JSON.parse(String(calls[2].init?.body))).toEqual({ email: 'new@b.test', code: '123456' })
+  })
+
+  it('reports the failure if the retry also fails', async () => {
+    stubFetch([
+      { ok: false, body: { code: 'already_signed_in', message: 'Sign out first.' } },
+      { body: {} },
+      { ok: false, body: { code: 'invalid_code', message: 'That code is wrong.' } },
+    ])
+    const store = useAccountStore()
+    store.pendingEmail = 'new@b.test'
+
+    expect(await store.verify('123456')).toBe(false)
+    expect(store.error).toBe('That code is wrong.')
+    expect(store.signedIn).toBe(false)
+  })
+
+  it('leaves every other failure alone', async () => {
+    const calls = stubFetch([{ ok: false, body: { code: 'invalid_code', message: 'That code is wrong.' } }])
+    const store = useAccountStore()
+    store.pendingEmail = 'new@b.test'
+
+    expect(await store.verify('123456')).toBe(false)
+    expect(store.error).toBe('That code is wrong.')
+    // One attempt, and no sign-out: a mistyped code must not shed the browser's
+    // identity.
+    expect(calls).toHaveLength(1)
+  })
+})

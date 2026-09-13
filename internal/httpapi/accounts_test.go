@@ -817,3 +817,48 @@ func TestFailedGuessesAccumulateAcrossRequests(t *testing.T) {
 		t.Errorf("code = %q, want rate_limited", got)
 	}
 }
+
+// Signing out has to make the browser usable by a different account. It used to
+// not: destroySession cleared the session cookie but left players.user_id set,
+// and createSession reads that column to decide whether the browser already
+// belongs to somebody -- so the next sign-in was refused with a 409 telling the
+// player to sign out, which is what they had just done.
+func TestSignOutLetsAnotherAccountSignInOnTheSameBrowser(t *testing.T) {
+	f := newAuthFixture(t)
+	first := signIn(t, f, "first")
+
+	res := f.do(t, http.MethodDelete, "/api/auth/session", nil, first...)
+	if res.Code != http.StatusNoContent {
+		t.Fatalf("sign-out status = %d, want 204", res.Code)
+	}
+	// The player cookie is expired alongside the session one, which is what
+	// gives the browser a fresh identity to sign in with.
+	cleared := cookieNamed(res, playerCookie)
+	if cleared == nil || cleared.MaxAge >= 0 {
+		t.Fatalf("player cookie = %+v, want one expired by sign-out", cleared)
+	}
+
+	// A browser that kept its cookies but has signed out: exactly what the UI
+	// leaves behind, minus the two the response just expired.
+	second := f.email("second")
+	code := f.requestCode(t, second)
+	res = f.do(t, http.MethodPost, "/api/auth/session", map[string]string{"email": second, "code": code})
+	if res.Code != http.StatusOK {
+		t.Fatalf("second sign-in status = %d, want 200: %s", res.Code, res.Body.String())
+	}
+}
+
+// The guard that made the dead end is still worth having: a browser that has
+// NOT signed out must not be able to carry its runs into another account.
+func TestSigningInAsSomebodyElseWithoutSigningOutIsRefused(t *testing.T) {
+	f := newAuthFixture(t)
+	first := signIn(t, f, "first")
+
+	second := f.email("second")
+	code := f.requestCode(t, second)
+	res := f.do(t, http.MethodPost, "/api/auth/session", map[string]string{"email": second, "code": code}, first...)
+
+	if res.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want 409: %s", res.Code, res.Body.String())
+	}
+}

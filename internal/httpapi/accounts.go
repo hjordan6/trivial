@@ -274,8 +274,37 @@ func (s *Server) currentSession(w http.ResponseWriter, r *http.Request) {
 // the already_signed_in guard working after a sign-out, so a second person on a
 // shared computer cannot inherit the first person's history.
 func (s *Server) destroySession(w http.ResponseWriter, _ *http.Request) {
+	s.clearCookie(w, sessionCookie)
+
+	// The player cookie goes too, so the browser takes a fresh identity.
+	//
+	// Without this, signing out is a dead end for anyone with a second account.
+	// createSession refuses to re-point a player that already belongs to
+	// somebody -- rightly, because runs are keyed to the player, so re-pointing
+	// would hand this browser's entire history to the new account -- and it
+	// decides that from players.user_id, which clearing a session cookie does
+	// not touch. So the next sign-in was answered with a 409 telling the player
+	// to sign out, which is exactly what they had just done.
+	//
+	// Dropping the cookie rather than detaching the row is what keeps both
+	// halves true: the old player stays attached to the old user, so those runs
+	// stay theirs, and the next request mints a new empty player for the next
+	// sign-in to claim. Nothing is transferred and nothing is destroyed.
+	//
+	// The cost is that a browser's anonymous, pre-account runs become
+	// unreachable from this browser. They are not lost -- signing back in finds
+	// them through the old player -- which is why the confirmation says scores
+	// stay saved to the address.
+	s.clearCookie(w, playerCookie)
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// clearCookie expires one of our cookies with the same attributes it was set
+// with. A browser matches on name, path and domain, so a clear that disagrees
+// with the original leaves the old cookie in place.
+func (s *Server) clearCookie(w http.ResponseWriter, name string) {
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookie,
+		Name:     name,
 		Value:    "",
 		Path:     "/",
 		HttpOnly: true,
@@ -283,7 +312,6 @@ func (s *Server) destroySession(w http.ResponseWriter, _ *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   -1,
 	})
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (s *Server) setSessionCookie(w http.ResponseWriter, userID int64, now time.Time) {

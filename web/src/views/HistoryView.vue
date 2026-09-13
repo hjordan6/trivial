@@ -108,6 +108,6 @@ function percent(rate:number):string { return `${Math.round(rate*100)}%` }
     <RouterLink class="history-back" to="/">← Back to today</RouterLink>
     <!-- A history belongs to the account, not the browser: without one, this
          page only knows the days played in this browser. -->
-    <SignIn v-if="!account.signedIn" />
+    <SignIn />
   </main>
 </template>

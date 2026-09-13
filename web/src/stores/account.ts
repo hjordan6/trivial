@@ -32,6 +32,9 @@ export const useAccountStore = defineStore('account', () => {
   function fail(e: unknown) {
     error.value = (e as APIError)?.message || 'Something went wrong.'
   }
+  function codeOf(e: unknown) {
+    return (e as APIError)?.code ?? ''
+  }
   function reset() {
     error.value = ''
     notice.value = ''
@@ -76,19 +79,53 @@ export const useAccountStore = defineStore('account', () => {
     }
   }
 
-  async function verify(code: string) {
+  // submitCode is the request on its own, so the recovery in verify() can make
+  // it twice without repeating what a success means.
+  async function submitCode(code: string) {
+    const session = await api<AuthSession>('/api/auth/session', {
+      method: 'POST',
+      body: JSON.stringify({ email: pendingEmail.value, code }),
+    })
+    email.value = session.email ?? ''
+    step.value = 'done'
+    devCode.value = ''
+    return true
+  }
+
+  async function verify(rawCode: string) {
     reset()
     loading.value = true
+    const code = rawCode.trim()
     try {
-      const session = await api<AuthSession>('/api/auth/session', {
-        method: 'POST',
-        body: JSON.stringify({ email: pendingEmail.value, code: code.trim() }),
-      })
-      email.value = session.email ?? ''
-      step.value = 'done'
-      devCode.value = ''
-      return true
+      return await submitCode(code)
     } catch (e) {
+      // already_signed_in is a dead end unless it is handled here.
+      //
+      // A browser that has lost its session cookie -- it expired, or a sign-out
+      // cleared it back when sign-out left the player cookie in place -- still
+      // has a player row attached to the old account. The probe reports signed
+      // out, so the app shows this form, and the server refuses the sign-in
+      // with "sign out first". The button it means is rendered only when the
+      // app thinks you are signed in, so it is not on the screen. The player is
+      // told to press something that does not exist.
+      //
+      // Signing out here is precisely what the message asks for, and it is
+      // safe: it sheds the stale player without detaching it, so the previous
+      // account keeps every run it played on this browser.
+      //
+      // The code is replayed rather than re-requested because the server checks
+      // the browser before it consumes the code, so the one just typed is still
+      // live. Asking for another would spend the per-address rate limit on
+      // recovering from our own dead end.
+      if (codeOf(e) === 'already_signed_in') {
+        try {
+          await api<void>('/api/auth/session', { method: 'DELETE' })
+          return await submitCode(code)
+        } catch (retry) {
+          fail(retry)
+          return false
+        }
+      }
       // Stay on the code step so the player can retype rather than starting the
       // whole flow again.
       fail(e)
@@ -113,8 +150,10 @@ export const useAccountStore = defineStore('account', () => {
       email.value = ''
       pendingEmail.value = ''
       step.value = 'email'
+      return true
     } catch (e) {
       fail(e)
+      return false
     } finally {
       loading.value = false
     }
