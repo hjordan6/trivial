@@ -56,7 +56,7 @@ describe('run store',()=>{
 
   it('builds share text with the grid, both scores, and the bare link it was given',()=>{
     const store=runWith(MIXED)
-    expect(store.shareText('https://example.test')).toBe('Trivial 2026-08-19\n❓ ⭐🟢⏰\n❓ 🟢🔴⏰\n❓ ⭐⭐🔴\n5/9 · 23 pts in 2:15\nhttps://example.test')
+    expect(store.shareText('https://example.test')).toBe('Trivial 2026-08-19\n❓ ⭐🟢⏰\n❓ 🟢🔴⏰\n❓ ⭐⭐🔴\n23/54 pts · 5/9 in 2:15\nhttps://example.test')
   })
 
   it('labels each share row with its topic emoji',()=>{

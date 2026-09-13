@@ -13,6 +13,26 @@ export const DIFFICULTY_POINTS: Record<Difficulty, number> = { easy: 3, medium: 
 export const FREE_TEXT_BONUS = 2
 export const MAX_POINTS = 3 * (DIFFICULTY_POINTS.easy + DIFFICULTY_POINTS.medium + DIFFICULTY_POINTS.hard) + 9 * FREE_TEXT_BONUS
 
+// One glyph per outcome: a star for an answer typed from memory, a green dot
+// for one picked off the multiple-choice list, a red one for a miss, and a
+// clock for a question the timer took.
+//
+// Lives at module scope because four separate places render an outcome and each
+// used to carry its own copy of the map.
+export const OUTCOME_SYMBOL: Record<Outcome, string> = {
+  star: '⭐',
+  circle: '🟢',
+  miss: '🔴',
+  expired: '⏰',
+}
+// A question that was never resolved at all -- the run ended before it was
+// reached -- has no outcome, and reads as an empty cell.
+export const UNANSWERED_SYMBOL = '⬜'
+
+export function symbol(outcome?:Outcome):string {
+  return outcome ? OUTCOME_SYMBOL[outcome] : UNANSWERED_SYMBOL
+}
+
 // Every share row is labelled with its topic, so a grid alone says what the
 // board was about. Both the slugs the seed file builds and the ones in the
 // question dump are spelled out here; anything imported later falls back to a
@@ -134,11 +154,14 @@ export const useRunStore = defineStore('run', () => {
   }
   function startTicker(){ if(ticker)return; ticker=window.setInterval(async()=>{now.value=Date.now();if(run.value&&!complete.value&&remainingMs.value===0)await finish()},250) }
   async function resync(){if(run.value&&!complete.value)await load()}
-  function symbol(outcome?:Outcome){return ({star:'⭐',circle:'🟢',miss:'🔴',expired:'⏰'} as const)[outcome!] ?? '⬜'}
   function shareText(url:string){
     const rows=orderedRows().filter(row=>row.length).map(row=>`${topicEmoji(row[0].topic_slug,row[0].topic_name)} ${row.map(q=>symbol(answerMap.value.get(q.question_id)?.outcome)).join('')}`)
     const elapsed=run.value?.completed_at?Math.max(0,Math.round((Date.parse(run.value.completed_at)-Date.parse(run.value.started_at))/1000)):0
-    return `Trivial ${puzzle.value!.date}\n${rows.join('\n')}\n${score.value}/9 · ${points.value} pts in ${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}\n${url}`
+    // Points are quoted against the ceiling. A bare "23 pts" tells a reader
+    // who has not played nothing at all, and the ceiling is what makes the
+    // typing bonus visible as something worth chasing.
+    const time=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`
+    return `Trivial ${puzzle.value!.date}\n${rows.join('\n')}\n${points.value}/${MAX_POINTS} pts · ${score.value}/9 in ${time}\n${url}`
   }
 
   return {puzzle,run,loading,error,stats,answerMap,remainingMs,complete,score,stars,points,orderedRows,load,start,reveal,answer,finish,share,loadStats,resetForDevelopment,resync,symbol,shareText,topicEmoji}
