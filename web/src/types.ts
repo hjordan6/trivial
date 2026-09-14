@@ -57,10 +57,12 @@ export interface AdminQuestionInput {
 export interface FriendAnswer { question_id:number; outcome:Outcome }
 // played distinguishes "no finished run" from "a finished run worth 0 points",
 // which points alone cannot.
+// `you` marks the viewer's own row. They are ranked inside the list rather than
+// pinned above it: a friend who beat you today belongs above you.
 export interface FriendToday {
   user_id:number; nickname:string; played:boolean
   correct:number; typed:number; points:number
-  answers:FriendAnswer[]
+  answers:FriendAnswer[]; you:boolean
 }
 // friends arrives ranked by the server: everyone who played, best first, then
 // everyone who has not.

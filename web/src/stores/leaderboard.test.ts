@@ -12,7 +12,7 @@ beforeEach(() => {
 })
 
 function person(user_id:number, nickname:string, over:Partial<FriendToday> = {}):FriendToday {
-  return {user_id, nickname, played:true, correct:0, typed:0, points:0, answers:[], ...over}
+  return {user_id, nickname, played:true, correct:0, typed:0, points:0, answers:[], you:false, ...over}
 }
 
 describe('leaderboard store', () => {
@@ -137,5 +137,33 @@ describe('all-time tab', () => {
     expect(store.allTimeError).toBe('Server fell over.')
     expect(store.error).toBe('')
     expect(store.allTimeLoading).toBe(false)
+  })
+})
+
+describe('the viewer inside the ranked list', () => {
+  it('does not count itself as a friend', async () => {
+    // The list always carries the viewer, so its length cannot answer whether
+    // they actually know anybody on it.
+    mocks.api.mockResolvedValue({date:'2026-09-14', you:person(1,'me',{you:true}), friends:[person(1,'me',{you:true})]})
+    const store = useLeaderboardStore()
+
+    await store.load()
+
+    expect(store.friends).toHaveLength(1)
+    expect(store.hasFriends).toBe(false)
+  })
+
+  it('counts a real friend beside the viewer', async () => {
+    mocks.api.mockResolvedValue({
+      date:'2026-09-14', you:person(1,'me',{you:true}),
+      friends:[person(2,'ahead',{points:30}), person(1,'me',{points:10,you:true})],
+    })
+    const store = useLeaderboardStore()
+
+    await store.load()
+
+    expect(store.hasFriends).toBe(true)
+    // Server order is kept: the friend outscored the viewer, so they are first.
+    expect(store.friends.map(f => f.nickname)).toEqual(['ahead', 'me'])
   })
 })

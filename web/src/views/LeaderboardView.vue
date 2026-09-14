@@ -92,13 +92,15 @@ function onDialogClick(event:MouseEvent) {
 
         <p class="eyebrow alltime__eyebrow">Average points per day</p>
         <ol class="board-list">
-          <li v-for="e in board.allTime.friends" :key="e.user_id" class="board-row" :class="{'board-row--you':e.you}">
-            <span class="board-row__name">
-              <b class="alltime__rank">{{e.rank}}</b>{{e.nickname}}
-              <small v-if="e.you">you</small>
-            </span>
-            <span class="board-row__score">{{e.average_points}}</span>
-            <span class="board-row__points">{{e.days_played}} days</span>
+          <li v-for="e in board.allTime.friends" :key="e.user_id" class="row" :class="{'row--you':e.you}">
+            <div class="row__grid">
+              <span class="board-row__name">
+                <b class="alltime__rank">{{e.rank}}</b>{{e.nickname}}
+                <small v-if="e.you">you</small>
+              </span>
+              <span class="board-row__score">{{e.average_points}}</span>
+              <span class="board-row__points">{{e.days_played}} days</span>
+            </div>
           </li>
         </ol>
         <p v-if="!board.allTime.friends.length" class="board-note">
@@ -151,30 +153,27 @@ function onDialogClick(event:MouseEvent) {
       <SignIn />
     </template>
 
-    <!-- The list. Your own row sits on top, marked, so the comparison the page
-         exists to make is the first thing read. -->
+    <!-- One list, ranked by score, with the viewer in it rather than pinned
+         above it: a friend who beat you today belongs above you. -->
     <template v-else-if="!board.openFriend">
       <ol class="board-list">
-        <li class="board-row board-row--you">
-          <span class="board-row__name">{{board.you?.nickname}} <small>you</small></span>
-          <template v-if="board.you?.played">
-            <span class="board-row__score">{{board.you.correct}}/9</span>
-            <span class="board-row__points">{{board.you.points}} pts</span>
-          </template>
-          <span v-else class="board-row__pending">Not played yet</span>
-        </li>
-        <li v-for="friend in board.friends" :key="friend.user_id" class="board-row">
-          <!-- Only a friend who finished has a board to put beside yours. -->
-          <button v-if="friend.played" class="board-row__open" @click="board.open(friend.user_id)">
-            <span class="board-row__name">{{friend.nickname}}</span>
-            <span class="board-row__score">{{friend.correct}}/9</span>
-            <span class="board-row__points">{{friend.points}} pts</span>
+        <li v-for="person in board.friends" :key="person.user_id" class="row" :class="{'row--you':person.you}">
+          <!-- Only somebody else who finished has a board to put beside yours;
+               your own row is where you already are. -->
+          <button v-if="person.played&&!person.you" class="row__grid row__open" @click="board.open(person.user_id)">
+            <span class="board-row__name">{{person.nickname}}</span>
+            <span class="board-row__score">{{person.correct}}/9</span>
+            <span class="board-row__points">{{person.points}} pts</span>
             <span class="board-row__chevron" aria-hidden="true">→</span>
           </button>
-          <template v-else>
-            <span class="board-row__name">{{friend.nickname}}</span>
-            <span class="board-row__pending">Not played yet</span>
-          </template>
+          <div v-else class="row__grid">
+            <span class="board-row__name">{{person.nickname}}<small v-if="person.you">you</small></span>
+            <template v-if="person.played">
+              <span class="board-row__score">{{person.correct}}/9</span>
+              <span class="board-row__points">{{person.points}} pts</span>
+            </template>
+            <span v-else class="board-row__pending">Not played yet</span>
+          </div>
         </li>
       </ol>
 

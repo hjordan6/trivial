@@ -118,8 +118,13 @@ func TestFriendsTodayRanksFriendsByPoints(t *testing.T) {
 	if got.You.Points != 5 || got.You.Correct != 1 {
 		t.Errorf("you = %d pts / %d correct, want 5/1", got.You.Points, got.You.Correct)
 	}
-	if len(got.Friends) != 2 {
-		t.Fatalf("friends = %d, want 2", len(got.Friends))
+	// The viewer is ranked inside the list, not pinned above it: they scored 5,
+	// so both friends belong ahead of them.
+	if len(got.Friends) != 3 {
+		t.Fatalf("friends = %d, want 3 including the viewer", len(got.Friends))
+	}
+	if !got.Friends[2].You || got.Friends[2].Points != 5 {
+		t.Errorf("last = %+v, want the viewer on 5 points", got.Friends[2])
 	}
 	if got.Friends[0].UserID != ahead || got.Friends[0].Points != 18 {
 		t.Errorf("first = user %d with %d pts, want user %d with 18", got.Friends[0].UserID, got.Friends[0].Points, ahead)
@@ -146,8 +151,12 @@ func TestFriendsTodayOmitsStrangers(t *testing.T) {
 
 	got := lf.get(t, lf.playerCookie(lf.player(t, true)), lf.sessionFor(lf.userID))
 
-	if len(got.Friends) != 0 {
-		t.Errorf("friends = %+v, want none", got.Friends)
+	// The viewer's own row is the only one; a stranger who played today is not
+	// in it.
+	for _, f := range got.Friends {
+		if !f.You {
+			t.Errorf("a non-friend appeared: %+v", f)
+		}
 	}
 }
 
@@ -160,14 +169,12 @@ func TestFriendsTodayListsAFriendWhoHasNotPlayed(t *testing.T) {
 
 	got := lf.get(t, lf.playerCookie(lf.player(t, true)), lf.sessionFor(lf.userID))
 
-	if len(got.Friends) != 1 {
-		t.Fatalf("friends = %d, want 1", len(got.Friends))
-	}
-	if got.Friends[0].Played {
+	idleRow := rowFor(t, got, idle)
+	if idleRow.Played {
 		t.Error("played = true, want false for a friend with no completed run")
 	}
-	if got.Friends[0].Points != 0 || len(got.Friends[0].Answers) != 0 {
-		t.Errorf("unplayed friend = %d pts / %d answers, want 0/0", got.Friends[0].Points, len(got.Friends[0].Answers))
+	if idleRow.Points != 0 || len(idleRow.Answers) != 0 {
+		t.Errorf("unplayed friend = %d pts / %d answers, want 0/0", idleRow.Points, len(idleRow.Answers))
 	}
 }
 
@@ -187,10 +194,7 @@ func TestFriendsTodayIgnoresAnUnfinishedRun(t *testing.T) {
 
 	got := lf.get(t, lf.playerCookie(lf.player(t, true)), lf.sessionFor(lf.userID))
 
-	if len(got.Friends) != 1 {
-		t.Fatalf("friends = %d, want 1", len(got.Friends))
-	}
-	if got.Friends[0].Played {
+	if rowFor(t, got, playing).Played {
 		t.Error("played = true, want false while the run is still open")
 	}
 }
@@ -203,4 +207,16 @@ func TestFriendsTodayRequiresSignIn(t *testing.T) {
 	if res.Code != http.StatusUnauthorized {
 		t.Errorf("status = %d, want 401: %s", res.Code, res.Body.String())
 	}
+}
+
+// rowFor finds one person's row in the ranked list.
+func rowFor(t *testing.T, board FriendsToday, userID int64) FriendToday {
+	t.Helper()
+	for _, f := range board.Friends {
+		if f.UserID == userID {
+			return f
+		}
+	}
+	t.Fatalf("user %d is not on the board: %+v", userID, board.Friends)
+	return FriendToday{}
 }

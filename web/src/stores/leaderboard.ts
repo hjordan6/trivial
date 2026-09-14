@@ -23,7 +23,7 @@ export const useLeaderboardStore = defineStore('leaderboard', () => {
   const allTimeLoading = ref(false)
   const allTimeError = ref('')
 
-  const hasFriends = computed(() => friends.value.length > 0)
+  const hasFriends = computed(() => friends.value.some(f => !f.you))
   const selected = computed(() => friends.value.find(f => f.user_id === openFriend.value))
 
   // Outcomes by question id, which is how the side-by-side looks a person up

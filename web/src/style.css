@@ -75,16 +75,13 @@ button:disabled { cursor: not-allowed; opacity: .35; }
    than a note in the margin. */
 .board-empty { margin: 34px 0 0; font-size: 19px; line-height: 1.45; letter-spacing: -.01em; }
 .board-list { list-style: none; padding: 0; margin: 34px 0 0; display: grid; gap: 8px; text-align: left; }
-.board-row { background: var(--paper); }
-/* The row is a button only when there is a board behind it to open, so the
-   unplayed rows carry the same padding here rather than inheriting it. */
-.board-row > span:first-child { display: block; padding: 14px 16px; }
-.board-row__open { display: grid; grid-template-columns: 1fr auto auto auto; align-items: baseline; gap: 14px;
-  width: 100%; padding: 14px 16px; background: none; border: 0; cursor: pointer; text-align: left; font: inherit; color: inherit; }
-.board-row__open:hover { background: var(--acid); }
-.board-row--you { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 14px; padding: 14px 16px;
-  box-shadow: inset 0 0 0 2px var(--ink); }
-.board-row--you > span:first-child { padding: 0; }
+.row { background: var(--paper); }
+.row--you { box-shadow: inset 0 0 0 2px var(--ink); }
+.row__grid { display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 14px;
+  width: 100%; padding: 14px 16px; text-align: left; }
+/* The button carries a fourth column for its chevron. */
+.row__open { grid-template-columns: 1fr auto auto auto; background: none; border: 0; cursor: pointer; font: inherit; color: inherit; }
+.row__open:hover { background: var(--acid); }
 .board-row__name { font-size: 16px; letter-spacing: -.01em; }
 .board-row__name small { font: 10px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .1em; color: #6a6b65; margin-left: 8px; }
 .board-row__score { font: 500 14px ui-monospace, monospace; }
@@ -102,7 +99,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .alltime__eyebrow { margin: 38px 0 0; }
 /* A fixed width, so names start on the same line whether the rank is 1 or 11. */
 .alltime__rank { display: inline-block; min-width: 22px; font: 500 13px ui-monospace, monospace; color: #85857f; }
-.board-row--you .alltime__rank { color: var(--ink); }
+.row--you .alltime__rank { color: var(--ink); }
 
 .global { margin-top: 34px; border-top: 1px solid var(--line); padding-top: 20px; }
 .global__line { margin: 0; font-size: 15px; color: #45473f; }
@@ -413,7 +410,7 @@ button:disabled { cursor: not-allowed; opacity: .35; }
   .result-cell__topic { display: none; }
   .result-legend { gap: 5px 12px; margin: 8px 0 26px; }
   .board { padding: 6vh 18px; }
-  .board-row__open, .board-row--you { gap: 8px; padding: 12px 13px; }
+  .row__grid { gap: 8px; padding: 12px 13px; }
   .board-row__name { font-size: 15px; }
   .tabs button { padding: 8px 15px; letter-spacing: .07em; }
   .topic-block { padding: 13px 14px; }

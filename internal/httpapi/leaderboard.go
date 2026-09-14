@@ -36,6 +36,11 @@ type FriendToday struct {
 	Typed    int            `json:"typed"`
 	Points   int            `json:"points"`
 	Answers  []FriendAnswer `json:"answers"`
+	// You marks the viewer's own row. They are ranked inside the list rather
+	// than pinned above it, the same way the all-time board places them: a
+	// friend who beat you today belongs above you, which is the whole point of
+	// looking.
+	You bool `json:"you"`
 }
 
 // FriendsToday is the whole board: the viewer, and everyone they are friends
@@ -49,6 +54,10 @@ type FriendToday struct {
 // Friends carries each person's per-question outcomes, not just their totals,
 // so opening the side-by-side costs no second request. Nine outcomes per friend
 // is small enough that fetching them up front beats a round trip per tap.
+//
+// It includes the viewer, marked with You. The separate You field is kept
+// because the side-by-side needs the viewer's own board without searching the
+// list for it.
 type FriendsToday struct {
 	Date    clock.Date    `json:"date"`
 	You     FriendToday   `json:"you"`
@@ -171,14 +180,16 @@ func (s *Server) friendsToday(w http.ResponseWriter, r *http.Request) {
 	// A viewer with no completed run still has a row in `people`, so this is
 	// only nil if the caller's own user row vanished mid-request.
 	if you := byUser[user.ID]; you != nil {
+		you.You = true
 		out.You = *you
 	} else {
-		out.You = FriendToday{UserID: user.ID, Answers: []FriendAnswer{}}
+		out.You = FriendToday{UserID: user.ID, Answers: []FriendAnswer{}, You: true}
 	}
 	for _, id := range order {
-		if id != user.ID {
-			out.Friends = append(out.Friends, *byUser[id])
-		}
+		out.Friends = append(out.Friends, *byUser[id])
+	}
+	if byUser[user.ID] == nil {
+		out.Friends = append(out.Friends, out.You)
 	}
 
 	// Ranked here rather than in the client because the ordering is part of
