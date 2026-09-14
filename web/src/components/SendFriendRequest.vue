@@ -11,7 +11,11 @@ import SignIn from './SignIn.vue'
 //
 // Both open the same panel. Only the way in differs, the same split SignIn
 // already makes between its start-screen and results-screen forms.
-const props = defineProps<{compact?:boolean}>()
+// link renders it as a plain text link instead of a button, for places that
+// offer it permanently rather than at a moment -- the friends page keeps it on
+// screen whether or not you have any, where a full-width button would shout
+// every time you looked at the board.
+const props = defineProps<{compact?:boolean; link?:boolean}>()
 
 const account = useAccountStore()
 const friends = useFriendsStore()
@@ -66,6 +70,9 @@ function share() {
         Playing against someone?
         <button class="account__link" type="button" @click="begin">Send them a friend link</button>
       </p>
+      <button v-else-if="link" class="account__link" type="button" @click="begin">
+        Send a friend request
+      </button>
       <button v-else class="primary primary--small" type="button" @click="begin">
         Send friend request
       </button>

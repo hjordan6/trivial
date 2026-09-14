@@ -178,12 +178,7 @@ function onDialogClick(event:MouseEvent) {
         </li>
       </ol>
 
-      <!-- A leaderboard of one is the invite page in disguise, so it offers the
-           link rather than an empty list. -->
-      <template v-if="!board.hasFriends">
-        <p class="board-note">No friends yet. Send someone your link and their result shows up here.</p>
-        <SendFriendRequest />
-      </template>
+      <p v-if="!board.hasFriends" class="board-empty">You don’t have any trivial friends yet!</p>
 
       <RouterLink class="history-link" to="/">← Back to today’s game</RouterLink>
     </template>
@@ -248,6 +243,8 @@ function onDialogClick(event:MouseEvent) {
         <button class="primary primary--small" type="button" autofocus @click="closeDetail">Close</button>
       </article>
     </dialog>
+
+    <SendFriendRequest v-if="!board.signedOut" link />
 
     <!-- The account line, and with it the way out. It sits outside the branches
          above because this is the page where wanting to look as somebody else
