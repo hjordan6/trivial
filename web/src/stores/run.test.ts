@@ -83,6 +83,7 @@ describe('run store',()=>{
       ['literature-language','Literature & Language','📚'],
       ['technology-internet','Technology & Internet','💻'],
       ['modern-pop-culture','Modern Pop Culture','✨'],
+      ['general-knowledge','General Knowledge','🧠'],
     ]
     for(const [slug,name,emoji] of seeded) expect([slug,topicEmoji(slug,name)]).toEqual([slug,emoji])
   })
@@ -91,5 +92,12 @@ describe('run store',()=>{
     expect(topicEmoji('food-and-drink','Food & Drink')).toBe('🍽️')
     expect(topicEmoji('ancient-mythology','Ancient Mythology')).toBe('🏛️')
     expect(topicEmoji('mystery-box','Mystery Box')).toBe('❓')
+  })
+
+  // "General" must not outrank a real subject: General Science is science.
+  it('reads a general-knowledge topic as the brain, without swallowing real subjects',()=>{
+    expect(topicEmoji('general-trivia','General Trivia')).toBe('🧠')
+    expect(topicEmoji('grab-bag','Grab Bag')).toBe('🧠')
+    expect(topicEmoji('general-science','General Science')).toBe('🔬')
   })
 })
