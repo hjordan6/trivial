@@ -54,6 +54,7 @@ export const TOPIC_EMOJI: Record<string, string> = {
   'literature-language': '📚',
   'technology-internet': '💻',
   'modern-pop-culture': '✨',
+  'general-knowledge': '🧠',
 }
 
 const TOPIC_KEYWORD_EMOJI: [RegExp, string][] = [
@@ -73,6 +74,10 @@ const TOPIC_KEYWORD_EMOJI: [RegExp, string][] = [
   [/animal|wildlife|nature/i, '🐾'],
   [/myth|religio|folklore/i, '🔮'],
   [/business|econom|money|financ/i, '💰'],
+  // Last, so a topic that is generally *about* something -- "General
+  // Science" -- still matches its own subject above rather than landing
+  // here on the strength of the word "general" alone.
+  [/general|trivia|miscellan|assorted|potpourri|grab bag/i, '🧠'],
 ]
 
 export function topicEmoji(slug:string, name = ''):string {
