@@ -71,12 +71,8 @@ async function signOut() {
       </template>
 
       <template v-else-if="account.step === 'code'">
-        <!-- The spam hint is temporary. The sending domain is new, so Gmail
-             still files some codes as spam while its reputation builds; this
-             line comes out once delivery settles. -->
         <p class="account__lede">
           We sent a six-digit code to <b>{{account.pendingEmail}}</b>. It works once.
-          If it is not in your inbox, check your spam folder.
         </p>
         <form @submit.prevent="submitCode">
           <label class="field account__code">
@@ -88,6 +84,12 @@ async function signOut() {
               v-model="code" inputmode="numeric" autocomplete="one-time-code"
               maxlength="6" pattern="\d*" placeholder="000000" autofocus>
           </label>
+          <!-- The spam hint is temporary. The sending domain is new, so Gmail
+               still files some codes as spam while its reputation builds; this
+               line comes out once delivery settles. It sits between the field
+               and the button, where someone waiting on a code that has not
+               arrived is already looking. -->
+          <p class="account__spam">If it is not in your inbox, check your spam folder.</p>
           <button class="primary primary--small" type="submit" :disabled="account.loading || code.length < 6">
             {{account.loading ? 'Checking…' : 'Sign in'}}
           </button>

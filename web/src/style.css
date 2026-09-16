@@ -464,6 +464,9 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .account--promoted .eyebrow { margin-bottom: 12px; }
 .account--promoted .account__lede { margin-bottom: 12px; }
 .account__lede { font-size: 14px; line-height: 1.55; color: #55564f; margin: 0 0 14px; }
+/* Same size as the lede it used to live in, bold so it is read rather than
+   skimmed past by someone staring at an empty inbox. */
+.account__spam { font-size: 14px; font-weight: 700; line-height: 1.55; color: #55564f; margin: 0 0 4px; }
 .account__status { font-size: 14px; color: #55564f; margin: 0; text-align: center; }
 .account__signout { font-size: 14px; margin-left: 7px; }
 .account__invite { margin-top: 0; }
