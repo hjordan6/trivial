@@ -6,6 +6,7 @@ import StartScreen from '../components/StartScreen.vue'
 import TimerBar from '../components/TimerBar.vue'
 import QuestionCard from '../components/QuestionCard.vue'
 import ResultsView from '../components/ResultsView.vue'
+import SignInGate from '../components/SignInGate.vue'
 
 const store = useRunStore()
 const account = useAccountStore()
@@ -33,6 +34,39 @@ async function answer(id:number, stage:'free_text'|'multiple_choice', value:stri
   const result = await store.answer(id, stage, value)
   if (stage === 'free_text' && !result.outcome) card.value?.setOptions(await store.reveal(id))
 }
+// The sign-in gate sits between the last answer and the result, and is asked at
+// most once a day: "continue as guest" is remembered under the puzzle date, so
+// a refresh, a second tab or coming back this evening does not ask again, while
+// tomorrow's result gets a fresh ask.
+//
+// Keyed by date rather than a single flag because the answer means "not today",
+// not "never" -- a player who declines in March should still be offered it in
+// April, when they have a streak worth keeping.
+function guestKey(date:string) { return `trivial:guest:${date}` }
+const guestToday = ref(false)
+watch(() => store.puzzle?.date, date => {
+  // Private browsing and blocked storage both throw here rather than returning
+  // null. Failing to read is treated as "not dismissed", which asks once more
+  // than it should rather than silently never asking.
+  try { guestToday.value = !!date && localStorage.getItem(guestKey(date)) === '1' }
+  catch { guestToday.value = false }
+}, {immediate:true})
+
+function continueAsGuest() {
+  const date = store.puzzle?.date
+  // The ref is set either way: a browser that cannot persist the choice must
+  // still get past the gate for this page view.
+  guestToday.value = true
+  if (date) try { localStorage.setItem(guestKey(date), '1') } catch { /* nothing to do */ }
+}
+
+// account.available is null until the probe answers, and that is deliberately
+// not treated as "show it": a gate that flashes up over a result the player is
+// already reading is worse than one that arrives a beat late. A server with no
+// sign-in configured never shows it at all.
+const showGate = computed(() =>
+  store.complete && account.available === true && !account.signedIn && !guestToday.value)
+
 async function resetGame() {
   if (!confirm('Reset today’s local run and play again?')) return
   await store.resetForDevelopment()
@@ -43,6 +77,7 @@ async function resetGame() {
 <template>
   <div v-if="store.loading" class="loading">Preparing today’s board…</div>
   <div v-else-if="store.error" class="loading"><h1>Not today.</h1><p>{{store.error}}</p></div>
+  <SignInGate v-else-if="showGate" @guest="continueAsGuest" />
   <ResultsView v-else-if="store.complete" />
   <StartScreen v-else-if="!store.run" :puzzle="store.puzzle!" @start="store.start" />
   <main v-else class="game game--single">

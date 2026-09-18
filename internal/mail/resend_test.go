@@ -67,6 +67,59 @@ func TestResendSendsTheExpectedRequest(t *testing.T) {
 	}
 }
 
+// TestResendSendsBothBodies covers the multipart/alternative case: a message
+// with markup has to arrive with both parts, or a client that prefers HTML and
+// one that cannot render it disagree about what was sent.
+func TestResendSendsBothBodies(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+			t.Errorf("decode body: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	sender := Resend{APIKey: "re_test", From: "Trivial <login@example.test>", Endpoint: srv.URL}
+	err := sender.Send(context.Background(), Message{
+		To:      "player@example.test",
+		Subject: "Your Trivial sign-in code: 048221",
+		Text:    "048221",
+		HTML:    "<b>048221</b>",
+	})
+	if err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if got["text"] != "048221" {
+		t.Errorf("text = %v", got["text"])
+	}
+	if got["html"] != "<b>048221</b>" {
+		t.Errorf("html = %v", got["html"])
+	}
+}
+
+// A message with no markup must serialise to exactly the request this sent
+// before HTML existed, rather than an empty html field the provider would have
+// to decide what to do with.
+func TestResendOmitsTheHTMLFieldWhenThereIsNone(t *testing.T) {
+	var got map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&got); err != nil {
+			t.Errorf("decode body: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer srv.Close()
+
+	sender := Resend{APIKey: "re_test", From: "Trivial <login@example.test>", Endpoint: srv.URL}
+	if err := sender.Send(context.Background(), Message{To: "a@b.test", Subject: "s", Text: "t"}); err != nil {
+		t.Fatalf("Send() error = %v", err)
+	}
+	if _, ok := got["html"]; ok {
+		t.Errorf("html field present on a text-only message: %v", got)
+	}
+}
+
 // TestResendClassifiesFailures pins the one distinction the caller acts on: a
 // 4xx is the address being refused, which the player should be told about, and
 // anything else is our problem and worth retrying.

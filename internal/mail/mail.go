@@ -13,12 +13,18 @@ import (
 
 // Message is one outbound email.
 //
-// Text only, on purpose: a six-digit code needs no markup, and a text-only body
-// is what reaches an inbox rather than a spam folder.
+// Text is required and HTML is optional, which is the multipart/alternative
+// bargain: a client that can render markup gets the designed version, and a
+// client that cannot -- plus every spam filter that scores a message with no
+// text part -- gets a plain body that says the same thing. Sending HTML alone
+// would be the one combination that hurts delivery, so Text is never empty.
 type Message struct {
 	To      string
 	Subject string
 	Text    string
+	// HTML is the rendered alternative. Empty means send the text on its own,
+	// which is what the mail-test command and any future notice do.
+	HTML string
 }
 
 // Sender delivers a message. Implementations must be safe for concurrent use.
@@ -44,6 +50,9 @@ func (l Logger) Send(_ context.Context, m Message) error {
 	if log == nil {
 		log = slog.Default()
 	}
+	// The text part is logged and the HTML one is not. Both carry the same
+	// code, and a wall of markup in the terminal would bury the six digits this
+	// sender exists to surface.
 	log.Info("login email (development sender; not actually sent)",
 		"to", m.To, "subject", m.Subject, "body", m.Text)
 	return nil

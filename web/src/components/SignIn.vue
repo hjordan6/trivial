@@ -3,9 +3,15 @@ import { ref } from 'vue'
 import { useAccountStore } from '../stores/account'
 import { useRunStore } from '../stores/run'
 
+// Two variants, both of which only change what surrounds the form:
+//
 // compact renders the collapsed, one-line form used on the start screen, where
 // signing in is a recovery path rather than the thing being offered.
-const props = defineProps<{compact?:boolean}>()
+//
+// gate renders it inside SignInGate, where the card around it has already made
+// the pitch -- so the heading and the lede come off and the form is the whole
+// content. The form itself, and every rule about the code, stays shared.
+const props = defineProps<{compact?:boolean; gate?:boolean}>()
 
 const account = useAccountStore()
 const run = useRunStore()
@@ -37,7 +43,7 @@ async function signOut() {
 
 <template>
   <!-- Nothing at all when this server has no sign-in configured. -->
-  <section v-if="account.available" class="account" :class="{'account--compact':compact}">
+  <section v-if="account.available" class="account" :class="{'account--compact':compact,'account--gate':gate}">
     <template v-if="account.signedIn">
       <p class="account__status">
         Saving your scores to <b>{{account.email}}</b>.
@@ -54,8 +60,8 @@ async function signOut() {
 
     <template v-else>
       <template v-if="account.step === 'email'">
-        <p v-if="!compact" class="eyebrow">Keep your streak</p>
-        <p class="account__lede">
+        <p v-if="!compact && !gate" class="eyebrow">Keep your streak</p>
+        <p v-if="!gate" class="account__lede">
           Add an email and your scores follow you to any device — and come back if
           this browser forgets you. No password, and it stays optional.
         </p>
@@ -71,13 +77,21 @@ async function signOut() {
       </template>
 
       <template v-else-if="account.step === 'code'">
-        <!-- The spam hint is temporary. The sending domain is new, so Gmail
-             still files some codes as spam while its reputation builds; this
-             line comes out once delivery settles. -->
         <p class="account__lede">
           We sent a six-digit code to <b>{{account.pendingEmail}}</b>. It works once.
-          If it is not in your inbox, check your spam folder.
         </p>
+        <!-- The spam hint used to be the tail of the sentence above, where it
+             read as a formality and got skipped. It is a callout because it is
+             the single most common reason a sign-in stalls: the mail arrived,
+             the player never saw it, and from here that looks identical to the
+             mail never being sent. Temporary, like the wording in the email
+             itself -- the sending domain is new, so Gmail still files some
+             codes as spam while its reputation builds, and both come out once
+             delivery settles. -->
+        <aside class="spam-note">
+          <b>Not there? Check your spam folder.</b>
+          <span>Our sending domain is new, so codes often land in spam or promotions. Mark it “not spam” and the next one won’t.</span>
+        </aside>
         <form @submit.prevent="submitCode">
           <label class="field account__code">
             <span>Code</span>
