@@ -464,9 +464,6 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .account--promoted .eyebrow { margin-bottom: 12px; }
 .account--promoted .account__lede { margin-bottom: 12px; }
 .account__lede { font-size: 14px; line-height: 1.55; color: #55564f; margin: 0 0 14px; }
-/* Same size as the lede it used to live in, bold so it is read rather than
-   skimmed past by someone staring at an empty inbox. */
-.account__spam { font-size: 14px; font-weight: 700; line-height: 1.55; color: #55564f; margin: 0 0 4px; }
 .account__status { font-size: 14px; color: #55564f; margin: 0; text-align: center; }
 .account__signout { font-size: 14px; margin-left: 7px; }
 .account__invite { margin-top: 0; }
@@ -475,6 +472,60 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 /* Wide, spaced and centred, so six digits read as six digits. */
 .account__code input { font: 600 22px/1 ui-monospace, monospace; letter-spacing: .4em; text-align: center; padding: 12px 10px; }
 .account__devcode { font: 12px ui-monospace, monospace; margin-top: 14px; padding: 9px 11px; background: var(--acid); border: 1px solid var(--ink); border-radius: 3px; }
+/* The spam callout on the code step. Loud on purpose: a mail that arrived and
+   was never seen looks exactly like a mail that was never sent, and a player
+   who believes the second one gives up instead of looking. It borrows the
+   form-error palette because it is the same kind of message -- something to act
+   on before retrying -- not a decorative aside. */
+.spam-note { display: block; margin: 0 0 14px; padding: 12px 14px; border: 1px solid var(--orange); border-left-width: 4px; border-radius: 3px; background: #fdeceb; color: #8d2c19; }
+.spam-note b { display: block; font-size: 15px; line-height: 1.35; margin-bottom: 4px; }
+.spam-note span { display: block; font-size: 13px; line-height: 1.5; }
+
+/* The sign-in gate: the one ask, between the last answer and the result.
+   A native <dialog>, so the focus trap, the inert background and Escape are the
+   browser's job rather than ours -- the same bargain .qdialog makes. */
+.gate { border: 2px solid var(--ink); border-radius: 6px; background: var(--paper); color: var(--ink);
+        padding: 0; width: 420px; max-width: calc(100vw - 28px);
+        /* dvh, not vh: on a phone the software keyboard opens the moment the
+           email field is focused, and vh keeps measuring the screen as if it
+           had not, which puts the guest button under the keyboard with no way
+           to scroll to it. */
+        max-height: calc(100dvh - 28px); overflow-y: auto; box-shadow: 10px 10px 0 var(--acid); }
+.gate::backdrop { background: rgba(27,29,27,.62); }
+.gate__card { padding: 26px 24px 20px; text-align: left; }
+.gate__eyebrow { margin-bottom: 8px; color: #6a6b65; }
+/* Deliberately not the clamp() display size the rest of the app uses for h1:
+   inside a 420px card that would wrap to three lines and push the form itself
+   below the fold on a phone, which is the one place this must not happen. */
+.gate__title { font-size: 28px; line-height: 1.1; letter-spacing: -.03em; margin: 0 0 12px; }
+.gate__lede { font-size: 15px; line-height: 1.55; color: #55564f; margin: 0 0 14px; }
+.gate__points { list-style: none; margin: 0 0 18px; padding: 0; display: grid; gap: 7px; }
+.gate__points li { position: relative; padding-left: 20px; font-size: 14px; line-height: 1.45; color: #55564f; }
+.gate__points li::before { content: "✓"; position: absolute; left: 0; font-weight: 700; color: var(--ink); }
+/* The form fills the card rather than sitting in the narrow column it uses on a
+   page, and the card's own heading has already said what it is for. */
+.account--gate { margin: 0; max-width: none; }
+.gate .spam-note { margin-bottom: 14px; }
+/* The way out. Underlined rather than boxed, so it reads as the secondary
+   choice -- but full width, in plain words, and never behind a delay: an escape
+   hatch that has to be hunted for is a dark pattern, not a nudge. */
+.gate__guest { display: block; width: 100%; margin-top: 18px; padding: 11px 0; border: 0; border-top: 1px solid var(--line);
+               background: transparent; font: 500 14px system-ui, sans-serif; color: #55564f; text-decoration: underline; text-underline-offset: 3px; }
+.gate__guest:hover { color: var(--ink); }
+.gate__fine { margin-top: 2px; text-align: center; }
+
+@media (max-width: 420px) {
+  .gate { box-shadow: 6px 6px 0 var(--acid); }
+  .gate__card { padding: 22px 18px 16px; }
+  .gate__title { font-size: 25px; }
+}
+/* Short screens, not narrow ones: the three selling points are the first thing
+   to go when the card cannot fit both them and the form, and that is a question
+   about height. A phone in portrait has room for all of it. */
+@media (max-height: 660px) {
+  .gate__points { display: none; }
+  .gate__lede { margin-bottom: 10px; }
+}
 .friends { margin: 1.25rem 0; display: flex; flex-direction: column; gap: .6rem; align-items: center; }
 .friends__lede { max-width: 34ch; margin: 0; text-align: center; opacity: .85; }
 /* The URL is shown so a player can see what they are about to send, and can

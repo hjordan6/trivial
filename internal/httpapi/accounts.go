@@ -140,9 +140,10 @@ func (s *Server) showCodeTo(email string) bool {
 	return false
 }
 
-// The spam hint is temporary, and matches the wording in SignIn.vue: the
-// sending domain is new, so Gmail still files some codes as spam while its
-// reputation builds. Both come out together once delivery settles.
+// The spam hint is temporary, and is said in three places that come out
+// together once delivery settles: here, the callout on SignIn.vue's code step,
+// and the email itself. The sending domain is new, so Gmail still files some
+// codes as spam while its reputation builds.
 const codeSentMessage = "If that address can receive mail, a code is on its way. " +
 	"If it is not in your inbox, check your spam folder."
 
@@ -153,20 +154,6 @@ type codeRequested struct {
 	// it. omitempty keeps the field out of the JSON entirely otherwise, so a
 	// production response is byte-for-byte what it was before this existed.
 	DevCode string `json:"dev_code,omitempty"`
-}
-
-// loginCodeMessage puts the code in the subject as well as the body, so it is
-// readable from a notification without opening the mail. That is the whole
-// payoff of choosing a code over a link: the player never leaves their tab.
-func loginCodeMessage(email, code string) mail.Message {
-	return mail.Message{
-		To:      email,
-		Subject: "Your Trivial sign-in code: " + code,
-		Text: code + " is your Trivial sign-in code.\n\n" +
-			"It works once, and only in the tab you started in. If you asked for\n" +
-			"more than one code, only the newest one works.\n\n" +
-			"If you did not ask for this, you can ignore this email.",
-	}
 }
 
 // createSession verifies a code and signs the player in.

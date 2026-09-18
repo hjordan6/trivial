@@ -41,12 +41,16 @@ func (r Resend) Send(ctx context.Context, m Message) error {
 	if r.From == "" {
 		return fmt.Errorf("resend: no from address configured")
 	}
+	// html is omitempty so a text-only message serialises to exactly the request
+	// this sent before HTML existed, rather than an empty html field the
+	// provider would have to decide what to do with.
 	body, err := json.Marshal(struct {
 		From    string   `json:"from"`
 		To      []string `json:"to"`
 		Subject string   `json:"subject"`
 		Text    string   `json:"text"`
-	}{From: r.From, To: []string{m.To}, Subject: m.Subject, Text: m.Text})
+		HTML    string   `json:"html,omitempty"`
+	}{From: r.From, To: []string{m.To}, Subject: m.Subject, Text: m.Text, HTML: m.HTML})
 	if err != nil {
 		return fmt.Errorf("resend: encode request: %w", err)
 	}
