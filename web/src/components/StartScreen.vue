@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { Puzzle } from '../types'
+import { useAccountStore } from '../stores/account'
 import { DIFFICULTY_POINTS, FREE_TEXT_BONUS, MAX_POINTS, useRunStore } from '../stores/run'
 import SignIn from './SignIn.vue'
 import SendFriendRequest from './SendFriendRequest.vue'
@@ -9,6 +10,12 @@ const props=defineProps<{puzzle:Puzzle}>()
 defineEmits<{start:[]}>()
 
 const store=useRunStore()
+const account=useAccountStore()
+// The rules are for newcomers. A signed-in player has been here before, so the
+// card starts folded for them and open for everyone else. The session probe is
+// async and may land after this renders, so follow it rather than reading it once.
+const howtoOpen=ref(!account.signedIn)
+watch(()=>account.signedIn,signedIn=>{howtoOpen.value=!signedIn})
 // One pill per topic. Before the clock starts the server usually sends just the
 // three topics, but a returning player gets all nine questions back, which
 // would otherwise render each topic three times.
@@ -42,8 +49,8 @@ const legend=[
 
     <!-- The four things a first-timer has to know, loud and above the fold. The
          finer print lives in the collapsed section underneath. -->
-    <section class="howto">
-      <h2>How to play</h2>
+    <details class="howto" :open="howtoOpen" @toggle="howtoOpen=($event.target as HTMLDetailsElement).open">
+      <summary><h2>How to play</h2></summary>
       <ol class="rules">
         <li>
           <div>
@@ -80,7 +87,7 @@ const legend=[
           </div>
         </li>
       </ol>
-    </section>
+    </details>
 
     <p class="eyebrow">Today’s topics</p>
     <div class="topics"><span v-for="topic in topics" :key="topic.topic_slug">{{topic.topic_name}}</span></div>
