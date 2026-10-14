@@ -208,7 +208,13 @@ button:disabled { cursor: not-allowed; opacity: .35; }
    same ink border and acid shadow as the start button rather than the quiet
    hairlines used everywhere else. */
 .howto { text-align: left; max-width: 620px; margin: 36px auto 40px; background: var(--paper); border: 2px solid var(--ink); box-shadow: 7px 7px 0 var(--acid); padding: 26px 28px 30px; }
-.howto h2 { margin: 0 0 22px; font: 500 12px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .16em; }
+.howto summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.howto summary::-webkit-details-marker { display: none; }
+.howto summary::after { content: '+'; font: 500 18px ui-monospace, monospace; line-height: 1; }
+.howto[open] summary::after { content: '−'; }
+.howto[open] summary { margin-bottom: 22px; }
+.howto:not([open]) { padding-bottom: 26px; }
+.howto h2 { margin: 0; font: 500 12px ui-monospace, monospace; text-transform: uppercase; letter-spacing: .16em; }
 .rules { list-style: none; counter-reset: rule; margin: 0; padding: 0; display: grid; gap: 22px; }
 .rules li { counter-increment: rule; display: flex; align-items: flex-start; gap: 14px; }
 .rules li::before { content: counter(rule); flex: none; width: 27px; height: 27px; border-radius: 999px; background: var(--ink); color: var(--paper); display: grid; place-content: center; font: 700 13px ui-monospace, monospace; }
