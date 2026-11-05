@@ -20,6 +20,11 @@ type Result struct {
 	Matched string
 	// Distance is the edit distance to Matched, or -1 when nothing was compared.
 	Distance int
+	// ReadsAsWrongOption reports that the input would pass as a spelling of
+	// one of the wrong options, by the same rules an alias is matched with.
+	// Such an answer is settled -- the player picked a known-wrong answer -- so
+	// it is never worth a second opinion on whether it might be right.
+	ReadsAsWrongOption bool
 }
 
 // Grade compares a player's raw input against a question's already-normalized
@@ -45,12 +50,17 @@ func Grade(input string, normalizedAliases, normalizedDistractors []string) Resu
 	// raw here — a distractor gets no tolerance of its own, it just has to be
 	// no further away than the alias that would otherwise have matched.
 	nearestDistractor := -1
+	readsAsWrongOption := false
 	for _, distractor := range normalizedDistractors {
 		if distractor == "" {
 			continue
 		}
-		if d := damerauLevenshtein(normalized, distractor); nearestDistractor < 0 || d < nearestDistractor {
+		d := damerauLevenshtein(normalized, distractor)
+		if nearestDistractor < 0 || d < nearestDistractor {
 			nearestDistractor = d
+		}
+		if acceptable(normalized, distractor, d) {
+			readsAsWrongOption = true
 		}
 	}
 	closerToWrongAnswer := func(aliasDistance int) bool {
@@ -90,12 +100,14 @@ func Grade(input string, normalizedAliases, normalizedDistractors []string) Resu
 		// Report the alias that would have matched either way, so a rejection
 		// here is still legible in logs; only Correct differs.
 		accepted.Correct = !closerToWrongAnswer(accepted.Distance)
+		accepted.ReadsAsWrongOption = readsAsWrongOption
 		return accepted
 	}
 
 	if haveBest && bestSlack <= 1 && !closerToWrongAnswer(best.Distance) {
 		best.NearMiss = true
 	}
+	best.ReadsAsWrongOption = readsAsWrongOption
 	return best
 }
 

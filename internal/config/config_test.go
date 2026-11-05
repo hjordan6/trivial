@@ -23,6 +23,7 @@ var managedEnv = []string{
 	"LOGIN_CODE_TTL_MINUTES",
 	"RESEND_API_KEY",
 	"MAIL_FROM",
+	"TYPESAFE_API_KEY",
 	"TRUST_PROXY_IP",
 }
 
@@ -57,6 +58,25 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.TrustProxyIP {
 		t.Error("TrustProxyIP = true, want false: trusting a caller-supplied header must be opt-in")
+	}
+	if cfg.TypeSafeAPIKey != "" {
+		t.Errorf("TypeSafeAPIKey = %q, want empty: the answer judge must be opt-in", cfg.TypeSafeAPIKey)
+	}
+}
+
+func TestLoadReadsTheAnswerJudgeKey(t *testing.T) {
+	for _, k := range managedEnv {
+		t.Setenv(k, "")
+	}
+	t.Setenv("DATABASE_URL", "postgres://x/y")
+	t.Setenv("TYPESAFE_API_KEY", "ts_test")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.TypeSafeAPIKey != "ts_test" {
+		t.Errorf("TypeSafeAPIKey = %q, want ts_test", cfg.TypeSafeAPIKey)
 	}
 }
 

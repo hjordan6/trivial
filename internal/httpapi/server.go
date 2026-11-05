@@ -19,6 +19,7 @@ import (
 
 	"github.com/hjordan6/trivial/internal/accounts"
 	"github.com/hjordan6/trivial/internal/clock"
+	"github.com/hjordan6/trivial/internal/judge"
 	"github.com/hjordan6/trivial/internal/mail"
 	"github.com/hjordan6/trivial/internal/play"
 	"github.com/hjordan6/trivial/internal/puzzle"
@@ -53,6 +54,10 @@ type Server struct {
 	// Mailer delivers sign-in codes. Nil means accounts do not exist on this
 	// server, which is what a zero-valued Server gets.
 	Mailer mail.Sender
+	// Judge gives a typed answer the alias grader rejected a second opinion
+	// before the player sees the result. Nil -- what a zero-valued Server
+	// gets -- grades on aliases alone.
+	Judge judge.Judge
 	// Accounts tunes the sign-in code lifetime and rate limits. Its signing key
 	// is filled from AppSecret, so a caller cannot set the two inconsistently.
 	Accounts accounts.Config
@@ -461,7 +466,7 @@ func (s *Server) answer(w http.ResponseWriter, r *http.Request) {
 		s.fail(w, 400, "invalid_request", "Invalid JSON body.")
 		return
 	}
-	a, result, err := play.AnswerQuestion(r.Context(), s.Pool, r.PathValue("id"), v, qid, body.Stage, strings.TrimSpace(body.Answer), s.now())
+	a, result, err := play.AnswerQuestion(r.Context(), s.Pool, play.Judging{Judge: s.Judge, Log: s.logger()}, r.PathValue("id"), v, qid, body.Stage, strings.TrimSpace(body.Answer), s.now())
 	if err != nil {
 		s.playError(w, err)
 		return

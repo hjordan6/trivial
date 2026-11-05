@@ -15,6 +15,7 @@ import (
 	"github.com/hjordan6/trivial/internal/config"
 	"github.com/hjordan6/trivial/internal/db"
 	"github.com/hjordan6/trivial/internal/httpapi"
+	"github.com/hjordan6/trivial/internal/judge"
 	"github.com/hjordan6/trivial/internal/mail"
 	webassets "github.com/hjordan6/trivial/web"
 )
@@ -64,12 +65,23 @@ func serve(ctx context.Context) error {
 		TimeLimitSeconds:   cfg.TimeLimitSeconds,
 		AppSecret:          cfg.AppSecret,
 		Mailer:             loginMailer(cfg),
+		Judge:              answerJudge(cfg),
 		Accounts:           accounts.Config{CodeTTL: cfg.LoginCodeTTL},
 		TrustProxyIP:       cfg.TrustProxyIP,
 	}).Handler()
 	server := &http.Server{Addr: cfg.HTTPAddress, Handler: h, ReadHeaderTimeout: 5 * time.Second}
 	slog.Info("http server listening", "address", cfg.HTTPAddress)
 	return server.ListenAndServe()
+}
+
+// answerJudge returns the judge that second-guesses rejected typed answers, or
+// nil to grade on aliases alone.
+func answerJudge(cfg config.Config) judge.Judge {
+	if cfg.TypeSafeAPIKey == "" {
+		slog.Info("no TYPESAFE_API_KEY: typed answers are graded on aliases alone")
+		return nil
+	}
+	return judge.Jev{APIKey: cfg.TypeSafeAPIKey}
 }
 
 // loginMailer picks how sign-in codes get delivered, or nil for not at all.

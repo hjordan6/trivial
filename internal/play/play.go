@@ -242,29 +242,34 @@ func Finish(ctx context.Context, q db.DBTX, id string, v Viewer, now time.Time) 
 }
 
 type QuestionData struct {
+	Prompt               string
 	Canonical            string
 	Aliases, Distractors []string
+	// AliasText holds the aliases as written, for the judge to read. Aliases
+	// holds them normalized, for the grader.
+	AliasText []string
 }
 
 func questionData(ctx context.Context, q db.DBTX, runID string, qid int64) (QuestionData, error) {
 	var d QuestionData
-	err := q.QueryRow(ctx, `SELECT qu.canonical_answer FROM runs r JOIN daily_puzzle_questions dpq ON dpq.puzzle_date=r.puzzle_date JOIN questions qu ON qu.id=dpq.question_id WHERE r.id=$1 AND qu.id=$2`, runID, qid).Scan(&d.Canonical)
+	err := q.QueryRow(ctx, `SELECT qu.prompt, qu.canonical_answer FROM runs r JOIN daily_puzzle_questions dpq ON dpq.puzzle_date=r.puzzle_date JOIN questions qu ON qu.id=dpq.question_id WHERE r.id=$1 AND qu.id=$2`, runID, qid).Scan(&d.Prompt, &d.Canonical)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return d, ErrQuestion
 	}
 	if err != nil {
 		return d, err
 	}
-	rows, err := q.Query(ctx, `SELECT normalized FROM question_aliases WHERE question_id=$1`, qid)
+	rows, err := q.Query(ctx, `SELECT alias, normalized FROM question_aliases WHERE question_id=$1 ORDER BY id`, qid)
 	if err != nil {
 		return d, err
 	}
 	for rows.Next() {
-		var s string
-		if err := rows.Scan(&s); err != nil {
+		var text, normalized string
+		if err := rows.Scan(&text, &normalized); err != nil {
 			return d, err
 		}
-		d.Aliases = append(d.Aliases, s)
+		d.AliasText = append(d.AliasText, text)
+		d.Aliases = append(d.Aliases, normalized)
 	}
 	rows.Close()
 	rows, err = q.Query(ctx, `SELECT option_text FROM question_distractors WHERE question_id=$1`, qid)
@@ -313,7 +318,7 @@ func Reveal(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, n
 	return options, nil
 }
 
-func AnswerQuestion(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, stage Stage, submission string, now time.Time) (Answer, *grading.Result, error) {
+func AnswerQuestion(ctx context.Context, q db.DBTX, jd Judging, runID string, v Viewer, qid int64, stage Stage, submission string, now time.Time) (Answer, *grading.Result, error) {
 	r, err := Load(ctx, q, runID, v, now.Add(-2*time.Second))
 	if err != nil {
 		return Answer{}, nil, err
@@ -337,6 +342,11 @@ func AnswerQuestion(ctx context.Context, q db.DBTX, runID string, v Viewer, qid 
 			normalizedDistractors[i] = grading.Normalize(distractor)
 		}
 		gr := grading.Grade(submission, d.Aliases, normalizedDistractors)
+		if !gr.Correct && jd.wouldJudge(submission, gr) && jd.secondOpinion(ctx, q, runID, qid, d, submission) {
+			// Not a near miss any more: it has just become an alias, which
+			// is all the near-miss log exists to suggest.
+			gr.Correct, gr.NearMiss = true, false
+		}
 		result = &gr
 		if gr.Correct {
 			o := Star
