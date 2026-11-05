@@ -158,3 +158,26 @@ func TestGradeNeverNearMissesADistractor(t *testing.T) {
 		t.Errorf("Grade(sixteen) = {Correct:%v NearMiss:%v}, want both false", got.Correct, got.NearMiss)
 	}
 }
+
+// TestGradeReadsAsWrongOption pins which rejections are settled by a wrong
+// option. A misspelt distractor is; a wrong answer that merely isn't an alias
+// is not, because that is exactly the case a second opinion exists for.
+func TestGradeReadsAsWrongOption(t *testing.T) {
+	aliases := []string{"mariana trench"}
+	distractors := []string{"tonga trench", "java trench"}
+	tests := []struct {
+		input string
+		want  bool
+	}{
+		{"Tonga Trench", true},
+		{"tonga trensh", true},
+		{"mariana", false},
+		{"pacific", false},
+		{"Mariana Trench", false},
+	}
+	for _, tt := range tests {
+		if got := Grade(tt.input, aliases, distractors).ReadsAsWrongOption; got != tt.want {
+			t.Errorf("Grade(%q).ReadsAsWrongOption = %v, want %v", tt.input, got, tt.want)
+		}
+	}
+}

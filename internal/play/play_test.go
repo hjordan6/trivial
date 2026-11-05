@@ -87,10 +87,10 @@ func TestRunLifecycle(t *testing.T) {
 	if !reflect.DeepEqual(first, second) {
 		t.Fatalf("options changed: %v vs %v", first, second)
 	}
-	if _, _, err := play.AnswerQuestion(context.Background(), tx, run.ID, play.Viewer{PlayerID: playerID}, qid, play.FreeText, "answer-0-easy", now); !errors.Is(err, play.ErrInvalidStage) {
+	if _, _, err := play.AnswerQuestion(context.Background(), tx, play.Judging{}, run.ID, play.Viewer{PlayerID: playerID}, qid, play.FreeText, "answer-0-easy", now); !errors.Is(err, play.ErrInvalidStage) {
 		t.Fatalf("free text after reveal error=%v", err)
 	}
-	a, _, err := play.AnswerQuestion(context.Background(), tx, run.ID, play.Viewer{PlayerID: playerID}, qid, play.MultipleChoice, "answer-0-easy", now)
+	a, _, err := play.AnswerQuestion(context.Background(), tx, play.Judging{}, run.ID, play.Viewer{PlayerID: playerID}, qid, play.MultipleChoice, "answer-0-easy", now)
 	if err != nil {
 		t.Fatal(err)
 	}

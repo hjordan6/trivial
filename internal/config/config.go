@@ -49,6 +49,10 @@ type Config struct {
 	// Required whenever ResendAPIKey is set, because Resend refuses a domain it
 	// has not verified.
 	MailFrom string
+	// TypeSafeAPIKey turns on the answer judge (internal/judge): a typed
+	// answer the alias grader rejects is put to TypeSafe's Jev model before
+	// the player sees the result. Empty is legal and means aliases alone.
+	TypeSafeAPIKey string
 	// LoginCodeTTL is how long a sign-in code stays valid.
 	LoginCodeTTL time.Duration
 	// TrustProxyIP makes the per-IP rate limiter read the last hop of
@@ -102,6 +106,8 @@ func Load() (Config, error) {
 	if cfg.ResendAPIKey != "" && cfg.MailFrom == "" {
 		return Config{}, fmt.Errorf("MAIL_FROM is required when RESEND_API_KEY is set")
 	}
+
+	cfg.TypeSafeAPIKey = os.Getenv("TYPESAFE_API_KEY")
 
 	ttlMinutes, err := positiveInt("LOGIN_CODE_TTL_MINUTES", 15)
 	if err != nil {
