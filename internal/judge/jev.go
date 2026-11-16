@@ -21,7 +21,7 @@ const jevModel = "jev-1.14.0"
 // maxErrorBody caps how much of a failure response is carried into an error.
 const maxErrorBody = 4 << 10
 
-// The three questions put to Jev in every request. The player's answer is
+// The four questions put to Jev in every request. The player's answer is
 // only ever data in the request's state; these never change, so nothing a
 // player types can rewrite what Jev is asked.
 //
@@ -73,6 +73,27 @@ var jevQuestions = map[string]jevQuestion{
 				"word: 'Hemingway' for 'Ernest Hemingway', 'Golden Gate' for 'The " +
 				"Golden Gate Bridge', 'Women's suffrage' for 'The women's suffrage " +
 				"movement'; or it is a full alternate name rather than a fragment.",
+		},
+	},
+	"misspelling": {
+		Type: "noul",
+		Instructions: "Compare player_answer with correct_answer and with each entry in " +
+			"already_accepted. Is player_answer one of those answers, misspelled -- the " +
+			"right words written wrong, the way someone who knows the answer but not " +
+			"how to spell it would write it?",
+		Criteria: map[string]string{
+			"true": "player_answer is one of those answers with letters dropped, doubled, " +
+				"swapped or wrong, spelled the way it sounds, or with spaces in the " +
+				"wrong place, e.g. 'Nostradamous' for 'Nostradamus', 'Fibonnachi' for " +
+				"'Fibonacci', 'Tchaikovski' for 'Tchaikovsky', 'Bucking ham Palice' " +
+				"for 'Buckingham Palace'.",
+			"false": "player_answer is a different word, name or thing, however alike they " +
+				"look or sound ('Austria' for 'Australia', 'Pluto' for 'Plato'); a " +
+				"misspelling of something other than those answers ('Mozzart' when the " +
+				"answer is 'Beethoven'); only part of the answer, or the answer with a " +
+				"word replaced ('Rock' for 'Rockefeller', 'Golden Gate Park' for " +
+				"'Golden Gate Bridge'); or a different number ('Ocean's Twelve' for " +
+				"'Ocean's Eleven').",
 		},
 	},
 }
@@ -186,6 +207,9 @@ func (j Jev) Score(ctx context.Context, q Question, typed string) (Scores, error
 		return Scores{}, err
 	}
 	if s.TooVague, err = score("too_vague"); err != nil {
+		return Scores{}, err
+	}
+	if s.Misspelling, err = score("misspelling"); err != nil {
 		return Scores{}, err
 	}
 	return s, nil

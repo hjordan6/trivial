@@ -21,7 +21,8 @@ func TestJevSendsTheAnswerAsStateAndReadsScores(t *testing.T) {
 		w.Write([]byte(`{"model":"jev-1.14.0","answers":{
 			"acceptable":{"type":"noul","noul":0.93},
 			"names_other_thing":{"type":"noul","noul":0.04},
-			"too_vague":{"type":"noul","noul":0.19}},
+			"too_vague":{"type":"noul","noul":0.19},
+			"misspelling":{"type":"noul","noul":0.17}},
 			"usage":{"input_tokens":870,"output_tokens":0}}`))
 	}))
 	defer srv.Close()
@@ -35,7 +36,7 @@ func TestJevSendsTheAnswerAsStateAndReadsScores(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.Acceptable != 0.93 || s.NamesOtherThing != 0.04 || s.TooVague != 0.19 || s.Model != "jev-1.14.0" {
+	if s.Acceptable != 0.93 || s.NamesOtherThing != 0.04 || s.TooVague != 0.19 || s.Misspelling != 0.17 || s.Model != "jev-1.14.0" {
 		t.Errorf("scores = %+v", s)
 	}
 	if got.Model != jevModel {
@@ -47,7 +48,7 @@ func TestJevSendsTheAnswerAsStateAndReadsScores(t *testing.T) {
 	if got.State.WrongOptions == nil {
 		t.Error("wrong_options sent as null, want []")
 	}
-	for _, name := range []string{"acceptable", "names_other_thing", "too_vague"} {
+	for _, name := range []string{"acceptable", "names_other_thing", "too_vague", "misspelling"} {
 		if _, ok := got.Questions[name]; !ok {
 			t.Errorf("request is missing question %q", name)
 		}
@@ -68,7 +69,23 @@ func TestJevMissingScoreIsAnError(t *testing.T) {
 	}))
 	defer srv.Close()
 	if _, err := (Jev{APIKey: "key", Endpoint: srv.URL}).Score(context.Background(), Question{}, "x"); err == nil {
-		t.Fatal("Score succeeded on a reply missing two scores")
+		t.Fatal("Score succeeded on a reply missing three scores")
+	}
+}
+
+// The misspelling score is a way to a yes, so a reply missing only that one
+// must fail too, not quietly fall back to "acceptable" alone.
+func TestJevMissingMisspellingIsAnError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"model":"jev-1.14.0","answers":{
+			"acceptable":{"type":"noul","noul":0.99},
+			"names_other_thing":{"type":"noul","noul":0.01},
+			"too_vague":{"type":"noul","noul":0.01}}}`))
+	}))
+	defer srv.Close()
+	_, err := Jev{APIKey: "key", Endpoint: srv.URL}.Score(context.Background(), Question{}, "x")
+	if err == nil || !strings.Contains(err.Error(), "misspelling") {
+		t.Fatalf("err = %v, want a missing misspelling score error", err)
 	}
 }
 
@@ -97,6 +114,16 @@ func TestAccepts(t *testing.T) {
 		{"names something else", Scores{Acceptable: 0.88, NamesOtherThing: 0.49, TooVague: 0.21}, false},
 		// Measured: "Mary" for "Typhoid Mary".
 		{"too vague", Scores{Acceptable: 0.76, NamesOtherThing: 0.19, TooVague: 0.83}, false},
+		// Measured: "pallendrom" for "Palindrome".
+		{"misspelt, not otherwise acceptable", Scores{Acceptable: 0.41, Misspelling: 0.97, NamesOtherThing: 0.06, TooVague: 0.06}, true},
+		{"misspelling at its limit", Scores{Acceptable: 0.1, Misspelling: 0.65, NamesOtherThing: 0.35, TooVague: 0.45}, true},
+		// Measured: "Stein" for "John Steinbeck".
+		{"misspelling too low", Scores{Acceptable: 0.38, Misspelling: 0.41, NamesOtherThing: 0.34, TooVague: 0.37}, false},
+		// Measured: "Google" for "A googol". The vetoes apply to a
+		// misspelling as much as to anything else.
+		{"misspelt into something else", Scores{Acceptable: 0.17, Misspelling: 0.80, NamesOtherThing: 0.93, TooVague: 0.09}, false},
+		// Measured: "bees" for "The honeybee".
+		{"misspelt but too vague", Scores{Acceptable: 0.5, Misspelling: 0.9, NamesOtherThing: 0.05, TooVague: 0.58}, false},
 	}
 	for _, tt := range tests {
 		if got := tt.s.Accepts(DefaultThresholds); got != tt.want {

@@ -121,14 +121,15 @@ func (jd Judging) secondOpinion(ctx context.Context, q db.DBTX, runID string, qi
 	}
 	accepted := scores.Accepts(thresholds)
 	log.Info("judged answer", "accepted", accepted,
-		"acceptable", scores.Acceptable, "names_other_thing", scores.NamesOtherThing,
-		"too_vague", scores.TooVague, "model", scores.Model, "elapsed_ms", elapsed.Milliseconds())
+		"acceptable", scores.Acceptable, "misspelling", scores.Misspelling,
+		"names_other_thing", scores.NamesOtherThing, "too_vague", scores.TooVague,
+		"model", scores.Model, "elapsed_ms", elapsed.Milliseconds())
 
 	// The verdict is recorded even when saving fails below, so a judge that
 	// said no is not asked again; the player's answer is graded on the
 	// verdict regardless, since that is what the judge actually said.
-	if _, err := q.Exec(ctx, `INSERT INTO judged_answers(question_id,normalized,submission,acceptable,names_other_thing,too_vague,model,accepted) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT DO NOTHING`,
-		qid, normalized, submission, scores.Acceptable, scores.NamesOtherThing, scores.TooVague, scores.Model, accepted); err != nil {
+	if _, err := q.Exec(ctx, `INSERT INTO judged_answers(question_id,normalized,submission,acceptable,misspelling,names_other_thing,too_vague,model,accepted) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9) ON CONFLICT DO NOTHING`,
+		qid, normalized, submission, scores.Acceptable, scores.Misspelling, scores.NamesOtherThing, scores.TooVague, scores.Model, accepted); err != nil {
 		log.Error("judge: record verdict", "error", err)
 	}
 	if accepted {

@@ -45,9 +45,10 @@ def main():
         print(json.dumps(dict(question, player_answer=args.answer), indent=2))
 
     answers, ms, data = judge_test.judge(key, args.model, question, args.answer)
-    label = judge_test.verdict(answers, args.yes, args.other, args.vague).upper()
+    label = judge_test.verdict(answers, args.yes, args.other, args.vague, args.spelled).upper()
     print()
     print(f"{label}  acceptable={answers['acceptable']:.2f}  "
+          f"misspelling={answers['misspelling']:.2f}  "
           f"names_other_thing={answers['names_other_thing']:.2f}  "
           f"too_vague={answers['too_vague']:.2f}  {ms:.0f} ms  {data.get('model')}")
 

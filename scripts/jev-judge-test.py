@@ -62,6 +62,77 @@ CASES = [
     (843, "the eye", False),
     (1090, "miracle", False),
     (1220, "mary", False),
+
+    # Misspellings the alias grader accepted on its own until its tolerance was
+    # cut to plain typos (internal/grading). Every one was typed in production;
+    # the judge now has to catch them instead.
+    (517, "chlorafil", True),
+    (517, "chlorifil", True),
+    (222, "ghengis kahn", True),
+    (222, "ghengas khan", True),
+    (444, "oddessy", True),
+    (444, "odyessy", True),
+    (628, "amelia aerhart", True),
+    (628, "amelia airhaert", True),
+    (657, "andy circus", True),
+    (657, "andy sircus", True),
+    (440, "alice ein wonderland", True),
+    (1030, "cheata", True),
+    (1289, "checkov", True),
+    (458, "dis lipa", True),
+    (154, "frank lloyed write", True),
+    (544, "giannis atetekumpo", True),
+    (439, "kilamjaro", True),
+    (648, "last ga ga", True),
+    (75, "leona messi", True),
+    (245, "ljubicia", True),
+    (1094, "lougainus", True),
+    (147, "lueve", True),
+    (619, "machevaveli", True),
+    (865, "mongul", True),
+    (25, "nepolean", True),
+    (253, "okalongo", True),
+    (983, "pallendrom", True),
+    (1163, "rosie th eriveter", True),
+    (627, "sacaguia", True),
+    (283, "scena", True),
+    (486, "servence", True),
+    (632, "signing frued", True),
+    (170, "tic tok", True),
+    (1233, "vexology", True),
+    (510, "wu tang klan", True),
+    (1318, "bees", True),
+    (620, "jean de arc", True),
+    # Not misspellings, but the grader used to take them on edit distance too.
+    (100, "chris nolan", True),
+    (702, "mt fuji", True),
+    (1003, "nato phonetic", True),
+    (510, "wu tang", True),
+    # The grader accepted all of these at two to six edits, and every one is a
+    # different answer. A misspelling score that lets these through is wrong.
+    (583, "little rock five", False),
+    (1256, "kate moss", False),
+    (1029, "finding dory", False),
+    (844, "dallas stars", False),
+    (862, "gold", False),
+    (666, "stein", False),
+    (1006, "domino", False),
+    (1163, "ross", False),
+    (29, "hun", False),
+    (781, "us", False),
+    (1041, "google", False),
+    # Misspellings of a wrong answer, from the judge's own rejections. Spelled
+    # badly is not the same as spelled badly *for this answer*.
+    (496, "Gorriliz", False),
+    (257, "Nucleous", False),
+    (662, "Tibbet", False),
+    (1311, "Medel", False),
+    (428, "Sahera", False),
+    (461, "megan the stalion", False),
+    (810, "Fahrenheit 527", False),
+    (1167, "Transoceanic Railroad", False),
+    (1318, "Bumble bee", False),
+    (1056, "Joe montana", False),
 ]
 
 INSTRUCTIONS = (
@@ -133,22 +204,57 @@ VAGUE_CRITERIA = {
 }
 
 
+# A fourth question, for misspellings. "acceptable" lumps a misspelling in with
+# nicknames, surnames and abbreviations, and scores a badly mangled one low:
+# "onimonipea" for "Onomatopoeia" scraped in at 0.68. This asks only about
+# spelling, so a player who plainly meant the answer can be accepted on it
+# alone. It is a second way to reach "yes", not a veto: the other two questions
+# still have to pass.
+SPELLING_INSTRUCTIONS = (
+    "Compare player_answer with correct_answer and with each entry in "
+    "already_accepted. Is player_answer one of those answers, misspelled -- the "
+    "right words written wrong, the way someone who knows the answer but not "
+    "how to spell it would write it?"
+)
+SPELLING_CRITERIA = {
+    "true": (
+        "player_answer is one of those answers with letters dropped, doubled, "
+        "swapped or wrong, spelled the way it sounds, or with spaces in the "
+        "wrong place, e.g. 'Nostradamous' for 'Nostradamus', 'Fibonnachi' for "
+        "'Fibonacci', 'Tchaikovski' for 'Tchaikovsky', 'Bucking ham Palice' "
+        "for 'Buckingham Palace'."
+    ),
+    "false": (
+        "player_answer is a different word, name or thing, however alike they "
+        "look or sound ('Austria' for 'Australia', 'Pluto' for 'Plato'); a "
+        "misspelling of something other than those answers ('Mozzart' when the "
+        "answer is 'Beethoven'); only part of the answer, or the answer with a "
+        "word replaced ('Rock' for 'Rockefeller', 'Golden Gate Park' for "
+        "'Golden Gate Bridge'); or a different number ('Ocean's Twelve' for "
+        "'Ocean's Eleven')."
+    ),
+}
+
+
 # The thresholds internal/judge applies (judge.DefaultThresholds). Keep them in
 # step: these scripts are how a change to either is measured first.
 MIN_ACCEPTABLE = 0.65
+MIN_MISSPELLING = 0.65
 MAX_NAMES_OTHER_THING = 0.35
 MAX_TOO_VAGUE = 0.45
 
 
-def verdict(answers, yes=MIN_ACCEPTABLE, other=MAX_NAMES_OTHER_THING, vague=MAX_TOO_VAGUE):
+def verdict(answers, yes=MIN_ACCEPTABLE, other=MAX_NAMES_OTHER_THING, vague=MAX_TOO_VAGUE,
+            spelled=MIN_MISSPELLING):
     """Accept or reject, as the game would.
 
-    Accepting needs all three: a high enough "acceptable", and a low enough
-    "names something else" and "too vague". Anything else is a rejection --
-    there is no review queue, so an answer that is not clearly right stays
-    wrong.
+    Accepting needs a high enough "acceptable" or "misspelling", and a low
+    enough "names something else" and "too vague". Anything else is a
+    rejection -- there is no review queue, so an answer that is not clearly
+    right stays wrong.
     """
-    if (answers["acceptable"] >= yes and answers["names_other_thing"] <= other
+    if ((answers["acceptable"] >= yes or answers["misspelling"] >= spelled)
+            and answers["names_other_thing"] <= other
             and answers["too_vague"] <= vague):
         return "accept"
     return "reject"
@@ -197,6 +303,9 @@ def judge(key, model, question, player_answer):
             "too_vague": {
                 "type": "noul", "instructions": VAGUE_INSTRUCTIONS, "criteria": VAGUE_CRITERIA,
             },
+            "misspelling": {
+                "type": "noul", "instructions": SPELLING_INSTRUCTIONS, "criteria": SPELLING_CRITERIA,
+            },
         },
     }).encode()
     req = urllib.request.Request(ENDPOINT, data=body, headers={
@@ -225,6 +334,8 @@ def add_threshold_args(p):
                    help=f"...and names_other_thing <= this (default {MAX_NAMES_OTHER_THING})")
     p.add_argument("--vague", type=float, default=MAX_TOO_VAGUE,
                    help=f"...and too_vague <= this (default {MAX_TOO_VAGUE})")
+    p.add_argument("--spelled", type=float, default=MIN_MISSPELLING,
+                   help=f"...or, in place of --yes, misspelling >= this (default {MIN_MISSPELLING})")
 
 
 def main():
@@ -244,14 +355,14 @@ def main():
     latencies = []
     model_seen = None
     print(f"{'id':>5}  {'player typed':<34} {'answer':<30} {'want':<6} "
-          f"{'ok':>5} {'other':>5} {'vague':>5}  verdict")
+          f"{'ok':>5} {'spell':>5} {'other':>5} {'vague':>5}  verdict")
     for qid, typed, want in CASES:
         q = questions[qid]
         answers, ms, data = judge(key, args.model, q, typed)
         latencies.append(ms)
         tokens += data.get("usage", {}).get("input_tokens", 0)
         model_seen = data.get("model", model_seen)
-        v = verdict(answers, args.yes, args.other, args.vague)
+        v = verdict(answers, args.yes, args.other, args.vague, args.spelled)
         if (v == "accept") == want:
             right += 1
             mark = "ok"
@@ -263,12 +374,13 @@ def main():
             mark = "wrong no"
         print(f"{qid:>5}  {typed[:34]:<34} {q['correct_answer'][:30]:<30} "
               f"{'yes' if want else 'no':<6} {answers['acceptable']:5.2f} "
-              f"{answers['names_other_thing']:5.2f} {answers['too_vague']:5.2f}  {v:<7} {mark}")
+              f"{answers['misspelling']:5.2f} {answers['names_other_thing']:5.2f} "
+              f"{answers['too_vague']:5.2f}  {v:<7} {mark}")
 
     latencies.sort()
     n = len(CASES)
     print()
-    print(f"model {model_seen}, thresholds acceptable>={args.yes} "
+    print(f"model {model_seen}, thresholds (acceptable>={args.yes} or misspelling>={args.spelled}) "
           f"names_other_thing<={args.other} too_vague<={args.vague}")
     print(f"{right}/{n} right")
     print(f"wrong approvals: {wrong_yes}   <- the mistake that matters: it would be saved for everyone")
