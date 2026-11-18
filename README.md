@@ -96,6 +96,30 @@ The order of the build is load-bearing: `web/dist` is compiled into the binary
 through `//go:embed`, so the bundle is always built before the Go binary.
 Migrations need no separate step -- `serve` runs them on startup.
 
+### Moving to a new hostname
+
+Cookies belong to the host that set them, so a plain redirect to a new domain
+would greet every returning player as a stranger. Players with an email can sign
+back in, but an anonymous player's history would be stranded on the old host. So
+the server does the move itself:
+
+```sh
+CANONICAL_HOST=dailytrivial.com
+MOVED_FROM_HOSTS=trivial.jordanlabs.cc
+```
+
+Page loads on an old host get a `302` to the same path on the new one. If the
+browser has a player cookie, the redirect goes through `/handoff` with a
+two-minute signed token carrying the player and any sign-in, and the new host
+sets the same cookies before sending the browser on. It never overwrites a
+player the browser already has on the new host. API calls and `/assets/` stay
+served on the old host, so a tab that was open mid-game can still finish.
+
+For this to work, both hostnames have to reach this server. That means no
+edge redirect on the old host yet. Once returning players have come through,
+which takes a few months, replace it with an edge redirect and empty
+`MOVED_FROM_HOSTS`.
+
 ## Daily generation
 
 `puzzles generate` is the intended path: run it from cron ahead of time so a
