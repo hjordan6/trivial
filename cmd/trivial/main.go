@@ -68,6 +68,8 @@ func serve(ctx context.Context) error {
 		Judge:              answerJudge(cfg),
 		Accounts:           accounts.Config{CodeTTL: cfg.LoginCodeTTL},
 		TrustProxyIP:       cfg.TrustProxyIP,
+		CanonicalHost:      cfg.CanonicalHost,
+		MovedFrom:          cfg.MovedFromHosts,
 	}).Handler()
 	server := &http.Server{Addr: cfg.HTTPAddress, Handler: h, ReadHeaderTimeout: 5 * time.Second}
 	slog.Info("http server listening", "address", cfg.HTTPAddress)

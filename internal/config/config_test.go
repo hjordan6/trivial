@@ -25,6 +25,8 @@ var managedEnv = []string{
 	"MAIL_FROM",
 	"TYPESAFE_API_KEY",
 	"TRUST_PROXY_IP",
+	"CANONICAL_HOST",
+	"MOVED_FROM_HOSTS",
 }
 
 func TestLoadDefaults(t *testing.T) {
@@ -202,6 +204,47 @@ func TestValidateForServe(t *testing.T) {
 			}
 			if !strings.Contains(err.Error(), tt.wantErr) {
 				t.Errorf("ValidateForServe() error = %q, want it to contain %q", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestLoadMovedHosts(t *testing.T) {
+	for _, k := range managedEnv {
+		t.Setenv(k, "")
+	}
+	t.Setenv("DATABASE_URL", "postgres://x/y")
+	t.Setenv("CANONICAL_HOST", " DailyTrivial.com ")
+	t.Setenv("MOVED_FROM_HOSTS", "trivial.jordanlabs.cc, Trivia.jordanlabs.cc,,")
+
+	cfg, err := Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.CanonicalHost != "dailytrivial.com" {
+		t.Errorf("CanonicalHost = %q", cfg.CanonicalHost)
+	}
+	want := []string{"trivial.jordanlabs.cc", "trivia.jordanlabs.cc"}
+	if strings.Join(cfg.MovedFromHosts, ",") != strings.Join(want, ",") {
+		t.Errorf("MovedFromHosts = %v, want %v", cfg.MovedFromHosts, want)
+	}
+}
+
+func TestLoadMovedHostsRejectsMisconfiguration(t *testing.T) {
+	for name, env := range map[string][2]string{
+		"no canonical":       {"", "trivial.jordanlabs.cc"},
+		"canonical with url": {"https://dailytrivial.com", "trivial.jordanlabs.cc"},
+		"canonical in list":  {"dailytrivial.com", "trivial.jordanlabs.cc,dailytrivial.com"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			for _, k := range managedEnv {
+				t.Setenv(k, "")
+			}
+			t.Setenv("DATABASE_URL", "postgres://x/y")
+			t.Setenv("CANONICAL_HOST", env[0])
+			t.Setenv("MOVED_FROM_HOSTS", env[1])
+			if _, err := Load(); err == nil {
+				t.Error("Load() accepted it")
 			}
 		})
 	}

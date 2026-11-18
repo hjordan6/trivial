@@ -64,6 +64,13 @@ type Server struct {
 	// TrustProxyIP allows X-Forwarded-For to name the client for rate limiting.
 	// Required behind a reverse proxy, unsafe without one.
 	TrustProxyIP bool
+	// CanonicalHost is the hostname the game now lives at, e.g.
+	// "dailytrivial.com". With MovedFrom it turns on the handoff in
+	// handoff.go; empty -- what a zero-valued Server gets -- turns it off.
+	CanonicalHost string
+	// MovedFrom lists the hostnames the game used to live at. Page loads on
+	// them are sent to CanonicalHost with the browser's identity carried over.
+	MovedFrom []string
 	// CooldownDays, AnswerCooldownDays and TimeLimitSeconds configure boards
 	// the admin panel generates or rebuilds, and the day the player path
 	// fills in when the generation cron has not run. They mirror the CLI's
@@ -85,6 +92,7 @@ type envelope struct {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET "+handoffPath, s.claimHandoff)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusNoContent) })
 	mux.HandleFunc("GET /api/runs/current", s.current)
 	mux.HandleFunc("POST /api/runs", s.start)
@@ -131,7 +139,7 @@ func (s *Server) Handler() http.Handler {
 		}
 		mux.Handle("GET /", spaHandler(assets))
 	}
-	return mux
+	return s.withMovedHosts(mux)
 }
 
 func (s *Server) resetCurrentRun(w http.ResponseWriter, r *http.Request) {

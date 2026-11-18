@@ -60,6 +60,12 @@ type Config struct {
 	// control: the header is caller-supplied otherwise, which would let anyone
 	// mint a fresh rate-limit bucket per request.
 	TrustProxyIP bool
+	// CanonicalHost is the hostname the game is served at. Only used, with
+	// MovedFromHosts, to move players off an old hostname.
+	CanonicalHost string
+	// MovedFromHosts are old hostnames whose page loads are handed off to
+	// CanonicalHost along with the browser's identity.
+	MovedFromHosts []string
 }
 
 // Load reads configuration from the environment, applying defaults and
@@ -117,6 +123,22 @@ func Load() (Config, error) {
 
 	if cfg.TrustProxyIP, err = boolValue("TRUST_PROXY_IP", false); err != nil {
 		return Config{}, err
+	}
+
+	cfg.CanonicalHost = strings.ToLower(strings.TrimSpace(os.Getenv("CANONICAL_HOST")))
+	cfg.MovedFromHosts = hostList("MOVED_FROM_HOSTS")
+	// Old hosts with nowhere to send them would be silently ignored, which is
+	// the kind of half-configured state that looks like it is working.
+	if len(cfg.MovedFromHosts) > 0 && cfg.CanonicalHost == "" {
+		return Config{}, fmt.Errorf("CANONICAL_HOST is required when MOVED_FROM_HOSTS is set")
+	}
+	if strings.ContainsAny(cfg.CanonicalHost, "/:") {
+		return Config{}, fmt.Errorf("CANONICAL_HOST %q must be a bare hostname, like dailytrivial.com", cfg.CanonicalHost)
+	}
+	for _, h := range cfg.MovedFromHosts {
+		if h == cfg.CanonicalHost {
+			return Config{}, fmt.Errorf("MOVED_FROM_HOSTS includes CANONICAL_HOST %q, which would redirect it to itself", h)
+		}
 	}
 	return cfg, nil
 }
@@ -187,6 +209,18 @@ func emailList(key string) []string {
 	}
 	var out []string
 	for _, part := range strings.Split(raw, ",") {
+		if v := strings.ToLower(strings.TrimSpace(part)); v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// hostList reads a comma-separated list of hostnames, lowercased and trimmed,
+// with empty entries dropped.
+func hostList(key string) []string {
+	var out []string
+	for _, part := range strings.Split(os.Getenv(key), ",") {
 		if v := strings.ToLower(strings.TrimSpace(part)); v != "" {
 			out = append(out, v)
 		}
