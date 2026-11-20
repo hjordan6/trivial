@@ -267,3 +267,52 @@ func TestAnonymousBrowsersDoNotShareRuns(t *testing.T) {
 		t.Errorf("Load() error = %v, want ErrNotYourRun", err)
 	}
 }
+
+// TestRevealStrikesTheWrongOptionTyped pins that the choices after a wrong
+// typed answer cross out the option the player already gave -- and only when
+// what they typed reads as that option.
+func TestRevealStrikesTheWrongOptionTyped(t *testing.T) {
+	tx := testsupport.Tx(t, testsupport.MustPool(t))
+	p, now := fixture(t, tx, 135)
+	ctx := context.Background()
+	playerID, _ := play.CreatePlayer(ctx, tx, now)
+	v := play.Viewer{PlayerID: playerID}
+	run, err := play.Start(ctx, tx, v, p, now, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		qid    int64
+		typed  string
+		struck string
+	}{
+		{p.Entries[0].QuestionID, "Wrong 0 0 3", "wrong-0-0-3"},
+		{p.Entries[1].QuestionID, "something else entirely", ""},
+	}
+	for _, tt := range tests {
+		a, _, err := play.AnswerQuestion(ctx, tx, play.Judging{}, run.ID, v, tt.qid, play.FreeText, tt.typed, now)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if a.Outcome != nil {
+			t.Fatalf("typed %q resolved as %v; want it left open", tt.typed, *a.Outcome)
+		}
+		for i := 0; i < 2; i++ { // and again, as a reload asks
+			c, err := play.Reveal(ctx, tx, run.ID, v, tt.qid, now.Add(time.Duration(i)*time.Second))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if c.Struck != tt.struck {
+				t.Errorf("typed %q: struck %q, want %q", tt.typed, c.Struck, tt.struck)
+			}
+		}
+	}
+	// Show choices without typing first: nothing to strike.
+	c, err := play.Reveal(ctx, tx, run.ID, v, p.Entries[2].QuestionID, now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.Struck != "" {
+		t.Errorf("untyped reveal struck %q", c.Struck)
+	}
+}

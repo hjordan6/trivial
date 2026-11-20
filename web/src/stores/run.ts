@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '../api'
-import type { Answer, Difficulty, Outcome, Puzzle, Question, Run, RunEnvelope, Stage, Stats } from '../types'
+import type { Answer, Choices, Difficulty, Outcome, Puzzle, Question, Run, RunEnvelope, Stage, Stats } from '../types'
 
 // Boards are always laid out topic-by-topic, easiest first, no matter what
 // order the server dealt the questions in for this particular run.
@@ -136,7 +136,7 @@ export const useRunStore = defineStore('run', () => {
   }
 
   async function start() { hydrate(await api<RunEnvelope>('/api/runs', {method:'POST',body:'{}'})) }
-  async function reveal(questionID:number) { return (await api<{options:string[]}>(`/api/runs/${run.value!.id}/questions/${questionID}/reveal-options`,{method:'POST'})).options }
+  async function reveal(questionID:number) { return api<Choices>(`/api/runs/${run.value!.id}/questions/${questionID}/reveal-options`,{method:'POST'}) }
   async function answer(questionID:number, stage:Stage, answer:string) {
     try {
       const resolved = await api<Answer>(`/api/runs/${run.value!.id}/questions/${questionID}/answer`,{method:'POST',body:JSON.stringify({stage,answer})})

@@ -449,12 +449,12 @@ func (s *Server) reveal(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	options, err := play.Reveal(r.Context(), s.Pool, r.PathValue("id"), v, qid, s.now())
+	choices, err := play.Reveal(r.Context(), s.Pool, r.PathValue("id"), v, qid, s.now())
 	if err != nil {
 		s.playError(w, err)
 		return
 	}
-	s.write(w, 200, map[string]any{"options": options})
+	s.write(w, 200, choices)
 }
 
 func (s *Server) answer(w http.ResponseWriter, r *http.Request) {
