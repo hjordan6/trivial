@@ -1,13 +1,17 @@
 package httpapi
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/hjordan6/trivial/internal/accounts"
 	"github.com/hjordan6/trivial/internal/clock"
+	"github.com/hjordan6/trivial/internal/play"
 )
 
 const handoffPlayer = "6b7a1c4e-0d2f-4a58-9b31-8f0c5e2d7a44"
@@ -277,5 +281,75 @@ func TestHandoffRejectsForgedTokens(t *testing.T) {
 				t.Errorf("cookies set from a bad token: %v", cookiesOf(res))
 			}
 		})
+	}
+}
+
+// signedInOnOldHost signs a fresh browser in through the real flow and sets the
+// fixture up to hand players off, returning that browser's cookies.
+func signedInOnOldHost(t *testing.T, f *authFixture, email string) (player, session *http.Cookie) {
+	t.Helper()
+	f.server.CanonicalHost = "dailytrivial.com"
+	f.server.MovedFrom = []string{"trivial.jordanlabs.cc"}
+	code := f.requestCode(t, email)
+	res := f.do(t, http.MethodPost, "/api/auth/session", map[string]string{"email": email, "code": code})
+	if res.Code != http.StatusOK {
+		t.Fatalf("sign in status = %d: %s", res.Code, res.Body.String())
+	}
+	return cookieNamed(res, playerCookie), cookieNamed(res, sessionCookie)
+}
+
+// TestHandoffSignsInABrowserThatAlreadyVisitedTheNewHost is the bug this
+// guards: a browser that had picked up an anonymous player on the new host --
+// one visit there is enough -- used to have its sign-in dropped on every
+// handoff. The sign-in now comes across the way typing a code there would
+// bring it: the new host's player joins the account, and its run is kept.
+func TestHandoffSignsInABrowserThatAlreadyVisitedTheNewHost(t *testing.T) {
+	f := newAuthFixture(t)
+	email := f.email("mover")
+	oldPlayer, oldSession := signedInOnOldHost(t, f, email)
+
+	here, err := play.CreatePlayer(context.Background(), f.pool, f.now)
+	if err != nil {
+		t.Fatal(err)
+	}
+	existing := &http.Cookie{Name: playerCookie, Value: sign(f.server.appKey(), playerCookie, here)}
+
+	res := handoffRoundTrip(t, f.server, "/", []*http.Cookie{oldPlayer, oldSession}, []*http.Cookie{existing})
+
+	got := cookiesOf(res)
+	if _, ok := got[playerCookie]; ok {
+		t.Error("the new host's player was replaced; its run would be stranded")
+	}
+	session, ok := got[sessionCookie]
+	if !ok {
+		t.Fatal("no session cookie set: the sign-in was dropped")
+	}
+
+	probe := f.do(t, http.MethodGet, "/api/auth/session", nil, existing, session)
+	var back sessionResponse
+	if err := json.Unmarshal(probe.Body.Bytes(), &back); err != nil {
+		t.Fatal(err)
+	}
+	if !back.SignedIn || back.Email != email {
+		t.Errorf("new host session = %+v, want signed in as %s", back, email)
+	}
+}
+
+// TestHandoffNeverMovesAnotherAccountsBrowser: the same rule sign-in itself
+// enforces. A browser already belonging to someone else on the new host keeps
+// them.
+func TestHandoffNeverMovesAnotherAccountsBrowser(t *testing.T) {
+	f := newAuthFixture(t)
+	otherPlayer, _ := signedInOnOldHost(t, f, f.email("other"))
+	oldPlayer, oldSession := signedInOnOldHost(t, f, f.email("mover"))
+
+	res := handoffRoundTrip(t, f.server, "/", []*http.Cookie{oldPlayer, oldSession}, []*http.Cookie{otherPlayer})
+	if len(cookiesOf(res)) != 0 {
+		t.Errorf("cookies were set over another account's browser: %v", cookiesOf(res))
+	}
+	otherID, _ := unsign(f.server.appKey(), playerCookie, otherPlayer.Value)
+	owner, err := accounts.ForPlayer(context.Background(), f.pool, otherID)
+	if err != nil || owner == nil || owner.Email != f.email("other") {
+		t.Errorf("the other browser's owner = %+v (err %v), want %s", owner, err, f.email("other"))
 	}
 }
