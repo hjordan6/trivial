@@ -26,15 +26,21 @@ type Question struct {
 	WrongOptions []string
 }
 
-// Scores are the judge's three probabilities, each between 0 and 1.
+// Scores are the judge's four probabilities, each between 0 and 1.
 //
-// Acceptable alone is not enough to accept on. In testing it scored "Mary"
-// for "Typhoid Mary" at 0.76 and "Berlin" for "The Berlin Wall" at 0.88: the
-// model reads both as what the player meant, and both are wrong. The other two
-// scores are what catch those, and Accepts requires all three.
+// Acceptable and Misspelling are the two ways to a yes; NamesOtherThing and
+// TooVague are vetoes on either. Acceptable alone is not enough to accept on:
+// in testing it scored "Mary" for "Typhoid Mary" at 0.76 and "Berlin" for
+// "The Berlin Wall" at 0.88. The model reads both as what the player meant,
+// and both are wrong. The vetoes are what catch those.
 type Scores struct {
 	// Acceptable: would a fair host accept the answer for this question?
 	Acceptable float64
+	// Misspelling: is the answer the correct one, or an accepted spelling of
+	// it, written wrong? Acceptable lumps misspellings in with nicknames and
+	// abbreviations and scores a badly mangled one low -- "pallendrom" for
+	// "Palindrome" at 0.41 -- where this scores it at 0.97.
+	Misspelling float64
 	// NamesOtherThing: read on its own, does the answer name something real
 	// and different -- "Berlin", a city, for the Berlin Wall?
 	NamesOtherThing float64
@@ -48,6 +54,7 @@ type Scores struct {
 // Thresholds are the cut-offs Accepts applies.
 type Thresholds struct {
 	MinAcceptable      float64
+	MinMisspelling     float64
 	MaxNamesOtherThing float64
 	MaxTooVague        float64
 }
@@ -59,15 +66,25 @@ type Thresholds struct {
 // clear of the 0.11 the same answer moved by between runs: "Berlin" at 0.49
 // on NamesOtherThing, "Protestant" for "The Protestant Reformation" at 0.59 on
 // TooVague.
+//
+// MinMisspelling was added with the grader's tolerance cut to plain typos, and
+// measured on the 92 cases in scripts/jev-judge-test.py, three runs each: the
+// original set plus every answer typed in production that the old tolerance
+// accepted and the new one does not. It took right answers from 141 to 150 of
+// 168 judgments, wrong ones still 0 of 108. The highest-scoring wrong answer
+// to get past both vetoes was "Stein" for "John Steinbeck" at 0.41, 0.24
+// below the limit; one answer moved by at most 0.21 between runs.
 var DefaultThresholds = Thresholds{
 	MinAcceptable:      0.65,
+	MinMisspelling:     0.65,
 	MaxNamesOtherThing: 0.35,
 	MaxTooVague:        0.45,
 }
 
-// Accepts reports whether the scores clear every threshold.
+// Accepts reports whether the scores clear the thresholds: Acceptable or
+// Misspelling high enough, and neither veto raised.
 func (s Scores) Accepts(t Thresholds) bool {
-	return s.Acceptable >= t.MinAcceptable &&
+	return (s.Acceptable >= t.MinAcceptable || s.Misspelling >= t.MinMisspelling) &&
 		s.NamesOtherThing <= t.MaxNamesOtherThing &&
 		s.TooVague <= t.MaxTooVague
 }

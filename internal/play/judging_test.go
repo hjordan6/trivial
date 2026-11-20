@@ -27,7 +27,7 @@ func (f *fakeJudge) Score(_ context.Context, _ judge.Question, typed string) (ju
 }
 
 var (
-	yes = judge.Scores{Acceptable: 0.95, NamesOtherThing: 0.05, TooVague: 0.05, Model: "fake"}
+	yes = judge.Scores{Acceptable: 0.95, Misspelling: 0.25, NamesOtherThing: 0.05, TooVague: 0.05, Model: "fake"}
 	// Acceptable on its own, vetoed as too vague: the "Mary" case.
 	vague = judge.Scores{Acceptable: 0.9, NamesOtherThing: 0.05, TooVague: 0.9, Model: "fake"}
 )
@@ -60,8 +60,12 @@ func TestJudgeAcceptsAMissAndSavesItAsAnAlias(t *testing.T) {
 		t.Fatalf("accepted answer not saved as an alias: %v", err)
 	}
 	var accepted bool
-	if err := tx.QueryRow(ctx, `SELECT accepted FROM judged_answers WHERE question_id=$1 AND normalized='answer zero'`, qid).Scan(&accepted); err != nil || !accepted {
+	var misspelling float32
+	if err := tx.QueryRow(ctx, `SELECT accepted, misspelling FROM judged_answers WHERE question_id=$1 AND normalized='answer zero'`, qid).Scan(&accepted, &misspelling); err != nil || !accepted {
 		t.Fatalf("verdict not recorded as accepted: accepted=%v err=%v", accepted, err)
+	}
+	if misspelling != 0.25 {
+		t.Errorf("misspelling recorded as %v, want 0.25: every score is kept for re-tuning", misspelling)
 	}
 
 	// The next player who types it is graded by the alias, not the judge.

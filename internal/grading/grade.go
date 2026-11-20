@@ -31,11 +31,13 @@ type Result struct {
 // aliases and distractors. Input is normalized here; aliases and distractors
 // are passed already normalized.
 //
-// The bar an answer has to clear is deliberately generous about spelling and
-// deliberately strict about everything else: a player who knows the answer
-// but mangles it should score, while a player who typed a different answer
-// should not, however few edits separate the two words. See acceptable for
-// the three gates that split those cases apart.
+// The bar is deliberately narrow: an exact alias, or a small typo of one. A
+// player who knows the answer but mangles it worse than that is not lost --
+// the rejection goes to the answer judge (internal/judge), which reads the
+// question and can tell "chlorafil" from "Finding Dory". The grader's job is
+// to settle the obvious cases instantly and never accept a different answer,
+// so where the two pull apart it gives up forgiveness for precision. See
+// acceptable for the gates.
 func Grade(input string, normalizedAliases, normalizedDistractors []string) Result {
 	normalized := Normalize(input)
 	if normalized == "" {
@@ -44,11 +46,11 @@ func Grade(input string, normalizedAliases, normalizedDistractors []string) Resu
 
 	// A wrong multiple-choice option is a real answer to some other question,
 	// not a misspelling of this one, so proximity to one disqualifies the
-	// submission outright. This is what makes the generous tolerance safe:
-	// "Netball" is four edits from "Basketball" and would otherwise be
-	// accepted, but it is zero edits from a distractor. Distance is measured
-	// raw here — a distractor gets no tolerance of its own, it just has to be
-	// no further away than the alias that would otherwise have matched.
+	// submission outright: "Nigera" is one edit from "Nigeria" and would
+	// otherwise be accepted, but it is just as close to "Niger". Distance is
+	// measured raw here — a distractor gets no tolerance of its own, it just
+	// has to be no further away than the alias that would otherwise have
+	// matched.
 	nearestDistractor := -1
 	readsAsWrongOption := false
 	for _, distractor := range normalizedDistractors {
@@ -143,12 +145,8 @@ func WrongOptionFor(input string, normalizedDistractors []string) int {
 // Three gates, all of which must pass:
 //
 //   - Distance is within the alias's length-scaled tolerance (see toleranceFor).
-//   - The first letter matches. Players misspell the middles of words, not
-//     their beginnings — nobody who knows the answer is "Wakanda" types a
-//     leading Z. The first letter is also what separates most same-length
-//     wrong answers from the right one, so this gate costs almost nothing in
-//     forgiveness and buys most of the precision back.
-//   - At most a third of the edits are additions (see allowedAdditions).
+//   - Each word starts with the right letter (see sameInitials).
+//   - At most one character was added (see maxAdditions).
 //
 // An exact match short-circuits: the gates exist to police approximate
 // matches and must never reject a literal one.
@@ -159,10 +157,39 @@ func acceptable(input, alias string, distance int) bool {
 	if distance > toleranceFor(alias) {
 		return false
 	}
+	if !sameInitials(input, alias) {
+		return false
+	}
+	return netAdditions(input, alias) <= maxAdditions
+}
+
+// sameInitials reports whether input starts with the same letter as alias
+// and, when both have the same number of words, whether every word does.
+//
+// Players misspell the middles of words, not their beginnings -- nobody who
+// knows the answer is "Wakanda" types a leading Z. A changed first letter is
+// what most short wrong answers look like instead: "Kate Moss" for "Kate
+// Bush", "Little Rock Five" for "Little Rock Nine", "Jets" for "Mets". Each is
+// a couple of edits inside a long answer, and the whole-answer first letter
+// alone let them all through.
+//
+// Words are compared one to one only when the counts agree, because a space
+// typed or dropped ("radio head", "wutang clan") shifts every word after it
+// and says nothing about whether the player knew the answer.
+func sameInitials(input, alias string) bool {
 	if !sameFirstRune(input, alias) {
 		return false
 	}
-	return netAdditions(input, alias) <= allowedAdditions(distance)
+	in, al := strings.Fields(input), strings.Fields(alias)
+	if len(in) != len(al) {
+		return true
+	}
+	for i := range in {
+		if !sameFirstRune(in[i], al[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 func sameFirstRune(input, alias string) bool {
@@ -183,46 +210,41 @@ func netAdditions(input, alias string) int {
 	return extra
 }
 
-// allowedAdditions caps how much of an edit budget may be spent on characters
-// the player added rather than mistyped.
+// maxAdditions caps how many characters the player may have added rather than
+// mistyped.
 //
 // Additions are the dangerous edit. Dropping or fumbling letters produces a
 // misspelling of the same answer; adding letters produces a different answer,
 // which is why "Irish Grand National" is six edits from "Grand National" and
 // is emphatically not it. Substitutions and omissions can use the whole
-// budget; additions get a third of it.
+// budget.
 //
-// The floor of one is deliberate. A third of a one-edit budget is zero, which
-// would reject a doubled letter — "misssissippi" — and that is the single
-// most common typo there is. Forgiving it is the entire point of the
-// tolerance, so one addition is always allowed and the ratio governs from
-// there.
-func allowedAdditions(distance int) int {
-	if allowed := distance / 3; allowed > 1 {
-		return allowed
-	}
-	return 1
-}
+// One rather than none, because a doubled letter -- "misssissippi" -- is the
+// single most common typo there is.
+const maxAdditions = 1
 
 // maxTolerance is the most edits any alias will forgive. It is the ceiling of
-// the ladder in toleranceFor, reached only by aliases long enough that six
-// edits still leave the answer recognizable.
-const maxTolerance = 6
+// the ladder in toleranceFor.
+const maxTolerance = 3
 
 // toleranceFor returns the edit distance an alias will forgive.
 //
-// The ladder is deliberately generous — a player who knows the answer but
-// cannot spell it should score, and mangled spellings of long proper nouns
-// are the common case this exists for. Tolerance scales with alias length
-// rather than being flat, because the same edit budget means very different
-// things at either end: six edits off "george washington" is still plainly
-// that answer, while six edits off "paris" reaches every other five-letter
-// city on the board. Length is the only thing separating "forgiving" from
-// "accepts anything", so short answers stay tight even here.
+// The ladder covers plain typos and nothing more: a dropped, doubled, swapped
+// or fumbled letter or two. It used to run to six edits, and replaying every
+// answer typed in production showed what the upper rungs were buying: three
+// to six edits accepted "Berlin" for the Berlin Wall, "Gold" for the
+// California Gold Rush, "Stein" for Steinbeck, "Finding Dory" for Finding
+// Nemo and "Dallas Stars" for the Dallas Cowboys, alongside real misspellings
+// like "chlorafil". The grader cannot tell those apart; the answer judge can,
+// so everything past a typo is now its call.
 //
-// Tolerance alone is not what keeps a generous ladder honest — the first
-// letter and addition gates in acceptable do most of that work, and the
-// distractor check in Grade catches what they miss.
+// Tolerance scales with length because the same budget means very different
+// things at either end: three edits off "george washington" is still plainly
+// that answer, while one edit off "han" is "hun", a different people. Answers
+// of four characters or fewer get none.
+//
+// The initials and addition gates in acceptable, and the distractor check in
+// Grade, still apply within the budget.
 //
 // Answers containing digits get no tolerance at all: 1945 and 1946 are one
 // edit apart, and accepting the wrong year is a worse failure than rejecting
@@ -246,11 +268,11 @@ func toleranceFor(alias string) int {
 	}
 	switch n := utf8.RuneCountInString(alias); {
 	case n <= 4:
-		return 1
+		return 0
 	case n <= 8:
-		return 3
+		return 1
 	case n <= 12:
-		return 5
+		return 2
 	default:
 		return maxTolerance
 	}
