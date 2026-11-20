@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/hjordan6/trivial/internal/accounts"
 )
 
 // This file moves players from an old hostname to a new one without losing
@@ -102,17 +104,52 @@ func (s *Server) claimHandoff(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
-	// A browser that already has a player here may have played here, and
-	// replacing it would strand that run. The session is only meaningful with
-	// the player it was issued alongside, so it is skipped with it.
-	if s.optionalPlayer(r) == "" {
+	here := s.optionalPlayer(r)
+	if here == "" {
 		s.setPlayerCookie(w, playerID)
 		if userID != 0 {
 			s.setSessionCookie(w, userID, s.now())
 		}
 		s.logger().Info("handoff claimed", "player", playerID, "signed_in", userID != 0)
+	} else if userID != 0 {
+		// A browser that already has a player here may have played here, and
+		// replacing it would strand that run. One visit to the new host is
+		// enough to have one, so dropping the sign-in along with the player
+		// would sign out nearly everyone. Instead the sign-in comes across the
+		// way typing a code on this browser would bring it.
+		if err := s.carrySignIn(w, r, here, userID); err != nil {
+			// Worst case is the visitor arriving signed out, which a code fixes.
+			s.logger().Error("handoff sign-in", "player", here, "error", err)
+		}
 	}
 	http.Redirect(w, r, dest, http.StatusFound)
+}
+
+// carrySignIn signs the browser's existing player here in as userID, following
+// createSession's rule: an anonymous player joins the account, and a player
+// that already belongs to somebody else is left alone.
+func (s *Server) carrySignIn(w http.ResponseWriter, r *http.Request, here string, userID int64) error {
+	if s.Pool == nil {
+		return nil
+	}
+	if id, ok := s.sessionUserID(r); ok && id == userID {
+		return nil
+	}
+	owner, err := accounts.ForPlayer(r.Context(), s.Pool, here)
+	if err != nil {
+		return err
+	}
+	if owner != nil && owner.ID != userID {
+		return nil
+	}
+	if owner == nil {
+		if err := accounts.Attach(r.Context(), s.Pool, here, userID); err != nil {
+			return err
+		}
+	}
+	s.setSessionCookie(w, userID, s.now())
+	s.logger().Info("handoff signed in existing player", "player", here, "user", userID)
+	return nil
 }
 
 func (s *Server) readHandoff(token string) (playerID string, userID int64, dest string, ok bool) {

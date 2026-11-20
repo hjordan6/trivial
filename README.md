@@ -112,7 +112,9 @@ Page loads on an old host get a `302` to the same path on the new one. If the
 browser has a player cookie, the redirect goes through `/handoff` with a
 two-minute signed token carrying the player and any sign-in, and the new host
 sets the same cookies before sending the browser on. It never overwrites a
-player the browser already has on the new host. API calls and `/assets/` stay
+player the browser already has on the new host; if that player is anonymous and
+the browser was signed in on the old host, it joins that account and the
+browser arrives signed in, just as if a code had been entered there. API calls and `/assets/` stay
 served on the old host, so a tab that was open mid-game can still finish.
 
 For this to work, both hostnames have to reach this server. That means no
