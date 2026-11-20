@@ -28,11 +28,11 @@ watch(() => store.run?.id, () => {
 })
 
 async function reveal(id:number) {
-  card.value?.setOptions(await store.reveal(id))
+  card.value?.setChoices(await store.reveal(id))
 }
 async function answer(id:number, stage:'free_text'|'multiple_choice', value:string) {
   const result = await store.answer(id, stage, value)
-  if (stage === 'free_text' && !result.outcome) card.value?.setOptions(await store.reveal(id))
+  if (stage === 'free_text' && !result.outcome) card.value?.setChoices(await store.reveal(id))
 }
 // The sign-in gate sits between the last answer and the result, and is asked at
 // most once a day: "continue as guest" is remembered under the puzzle date, so

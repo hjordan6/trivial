@@ -181,3 +181,32 @@ func TestGradeReadsAsWrongOption(t *testing.T) {
 		}
 	}
 }
+
+// TestWrongOptionFor pins that the option struck out after a wrong typed
+// answer is the one ReadsAsWrongOption had in mind, and the nearest of them.
+func TestWrongOptionFor(t *testing.T) {
+	distractors := []string{"tonga trench", "java trench", "", "tonga trenches"}
+	tests := []struct {
+		input string
+		want  int
+	}{
+		{"Tonga Trench", 0},
+		{"tonga trensh", 0},
+		{"Java Trentch", 1},
+		{"tonga trenchez", 3},
+		{"mariana", -1},
+		{"", -1},
+		{"Zava Trench", -1},
+	}
+	for _, tt := range tests {
+		if got := WrongOptionFor(tt.input, distractors); got != tt.want {
+			t.Errorf("WrongOptionFor(%q) = %d, want %d", tt.input, got, tt.want)
+		}
+	}
+	for _, tt := range tests {
+		reads := Grade(tt.input, []string{"mariana trench"}, distractors).ReadsAsWrongOption
+		if reads != (tt.want >= 0) && tt.input != "" {
+			t.Errorf("Grade(%q).ReadsAsWrongOption = %v, but WrongOptionFor = %d", tt.input, reads, tt.want)
+		}
+	}
+}

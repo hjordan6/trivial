@@ -44,6 +44,8 @@ button:disabled { cursor: not-allowed; opacity: .35; }
 .card .link { border: 0; }
 .options { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .options button { text-align: left; font-size: 14px; }
+/* The wrong option the player already typed: read as that answer, and wrong. */
+.options button.option--struck { text-decoration: line-through; text-decoration-color: var(--orange); text-decoration-thickness: 2px; opacity: .5; }
 .answer { display: block; margin-top: 8px; font-size: 20px; }
 .card--star { background: var(--acid); }
 .card--circle { background: #c8f3dc; }

@@ -111,6 +111,32 @@ func Grade(input string, normalizedAliases, normalizedDistractors []string) Resu
 	return best
 }
 
+// WrongOptionFor reports which wrong option input reads as a spelling of, by
+// the same rules an alias is matched with -- the test behind
+// ReadsAsWrongOption. It returns the index into normalizedDistractors of the
+// nearest such option, or -1 when input reads as none of them.
+//
+// This is what lets the choices that follow a wrong typed answer strike out
+// the option the player already gave: they knew it, spelt it well enough to
+// count, and it was wrong.
+func WrongOptionFor(input string, normalizedDistractors []string) int {
+	normalized := Normalize(input)
+	if normalized == "" {
+		return -1
+	}
+	best, bestDistance := -1, 0
+	for i, distractor := range normalizedDistractors {
+		if distractor == "" {
+			continue
+		}
+		d := damerauLevenshtein(normalized, distractor)
+		if acceptable(normalized, distractor, d) && (best < 0 || d < bestDistance) {
+			best, bestDistance = i, d
+		}
+	}
+	return best
+}
+
 // acceptable reports whether input is close enough to alias to be read as a
 // misspelling of it. Distance is their already-computed edit distance.
 //

@@ -287,35 +287,58 @@ func questionData(ctx context.Context, q db.DBTX, runID string, qid int64) (Ques
 	return d, rows.Err()
 }
 
-func Reveal(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, now time.Time) ([]string, error) {
+// Choices are a question's multiple-choice options, in this run's order.
+type Choices struct {
+	Options []string `json:"options"`
+	// Struck is the option the player already typed and got wrong, when what
+	// they typed reads as a spelling of it by the grader's own rules. Showing
+	// it crossed out tells them the answer counted as that option -- they did
+	// not just misspell the right one too badly -- and that it is wrong.
+	Struck string `json:"struck,omitempty"`
+}
+
+func Reveal(ctx context.Context, q db.DBTX, runID string, v Viewer, qid int64, now time.Time) (Choices, error) {
 	r, err := Load(ctx, q, runID, v, now)
 	if err != nil {
-		return nil, err
+		return Choices{}, err
 	}
 	if r.CompletedAt != nil {
-		return nil, ErrExpired
+		return Choices{}, ErrExpired
 	}
 	d, err := questionData(ctx, q, runID, qid)
 	if err != nil {
-		return nil, err
+		return Choices{}, err
 	}
 	ct, err := q.Exec(ctx, `INSERT INTO run_answers(run_id,question_id,stage,first_touched_at) VALUES($1,$2,'multiple_choice',$3) ON CONFLICT(run_id,question_id) DO UPDATE SET stage='multiple_choice' WHERE run_answers.outcome IS NULL AND run_answers.stage='free_text'`, runID, qid, now)
 	if err != nil {
-		return nil, err
+		return Choices{}, err
 	}
-	if ct.RowsAffected() == 0 {
-		var stage Stage
-		var outcome *Outcome
-		if err := q.QueryRow(ctx, `SELECT stage,outcome FROM run_answers WHERE run_id=$1 AND question_id=$2`, runID, qid).Scan(&stage, &outcome); err != nil {
-			return nil, err
-		}
-		if stage != MultipleChoice || outcome != nil {
-			return nil, ErrAlreadyAnswered
-		}
+	var stage Stage
+	var outcome *Outcome
+	var typed *string
+	if err := q.QueryRow(ctx, `SELECT stage,outcome,free_text_submission FROM run_answers WHERE run_id=$1 AND question_id=$2`, runID, qid).Scan(&stage, &outcome, &typed); err != nil {
+		return Choices{}, err
+	}
+	if ct.RowsAffected() == 0 && (stage != MultipleChoice || outcome != nil) {
+		return Choices{}, ErrAlreadyAnswered
 	}
 	options := append([]string{d.Canonical}, d.Distractors...)
 	shuffle(options, r.OptionSeed, qid)
-	return options, nil
+	c := Choices{Options: options}
+	// A typed answer only reaches here unresolved, so it was rejected; the
+	// grader rejects one that reads as a wrong option, which is the case this
+	// names. Worked out on every reveal rather than stored, so a reload strikes
+	// the same option.
+	if typed != nil {
+		normalized := make([]string, len(d.Distractors))
+		for i, distractor := range d.Distractors {
+			normalized[i] = grading.Normalize(distractor)
+		}
+		if i := grading.WrongOptionFor(*typed, normalized); i >= 0 {
+			c.Struck = d.Distractors[i]
+		}
+	}
+	return c, nil
 }
 
 func AnswerQuestion(ctx context.Context, q db.DBTX, jd Judging, runID string, v Viewer, qid int64, stage Stage, submission string, now time.Time) (Answer, *grading.Result, error) {
